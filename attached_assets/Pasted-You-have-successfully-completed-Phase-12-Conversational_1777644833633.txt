@@ -1,0 +1,144 @@
+You have successfully completed Phase 12 (Conversational Chat System).
+
+Now we must solve the next critical production problem:
+
+Context overload and inefficient memory usage.
+
+---
+
+# 🚀 PHASE 13 — INTELLIGENT CONTEXT COMPRESSION & MEMORY OPTIMIZATION
+
+---
+
+# 🎯 OBJECTIVE
+
+Maintain conversational intelligence while preventing:
+
+* token explosion
+* slow response time
+* irrelevant context pollution
+
+---
+
+# 🧠 STEP 1 — AUTO SUMMARIZATION ENGINE
+
+When chat history exceeds threshold:
+
+* trigger summarization
+
+Rules:
+
+* keep last 5 messages untouched
+* summarize older messages into a compact memory block
+
+Store as:
+
+{
+type: "summary",
+content: "...compressed context..."
+}
+
+---
+
+# 🧠 STEP 2 — SMART CONTEXT BUILDER
+
+Replace naive context injection with:
+
+Context =
+
+* latest messages (last 5)
+* * summary block (if exists)
+
+Goal:
+Preserve meaning, reduce tokens.
+
+---
+
+# 🧠 STEP 3 — SESSION MEMORY LAYERS
+
+Create 3-tier memory:
+
+1. Short-term (recent chat)
+2. Mid-term (summary)
+3. Long-term (existing Phase 10 memory)
+
+Combine intelligently during execution.
+
+---
+
+# 🧠 STEP 4 — SUMMARIZATION TRIGGER LOGIC
+
+Trigger when:
+
+* messages > 10
+  OR
+* token estimate > threshold
+
+---
+
+# 🧠 STEP 5 — SUMMARIZATION QUALITY
+
+Use a strong reasoning model (Pro/Elite level)
+
+Prompt must preserve:
+
+* user intent
+* current task
+* constraints
+* decisions already made
+
+---
+
+# 🧠 STEP 6 — UI INDICATOR
+
+In Chat UI:
+
+* show "Context optimized" badge
+* optional expandable "View Summary"
+
+---
+
+# 🧠 STEP 7 — EDIT SAFETY
+
+If user edits an old prompt:
+
+* invalidate summary
+* rebuild context
+
+---
+
+# 🧠 STEP 8 — PERFORMANCE GOAL
+
+* reduce token usage by 50–80%
+* maintain output quality
+
+---
+
+# ⚠️ RULES
+
+* DO NOT break Phase 12 chat
+* DO NOT remove message history
+* ONLY compress internally
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. Summarization logic
+2. Context builder update
+3. UI indicators
+4. Memory structure
+5. Performance validation
+
+---
+
+# 🚀 FINAL GOAL
+
+System should behave like:
+
+"Smart AI that remembers everything important,
+but forgets unnecessary noise automatically."
+
+---
+
+This is REQUIRED for scaling and production readiness.

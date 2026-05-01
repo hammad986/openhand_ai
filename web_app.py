@@ -782,6 +782,13 @@ def _init_db():
             meta_json   TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_chat_session ON chat_messages(session_id, ts);
+
+        CREATE TABLE IF NOT EXISTS chat_summaries(
+            session_id  TEXT PRIMARY KEY,
+            summary     TEXT NOT NULL,
+            msg_count   INTEGER DEFAULT 0,
+            updated_at  REAL NOT NULL
+        );
         """)
         # Best-effort backfill for older DBs created before these columns existed
         for col, ddl in (("config_json",   "ALTER TABLE sessions ADD COLUMN config_json TEXT"),
@@ -863,6 +870,11 @@ def db_chat_add(sid, role, content, meta=None):
         c.execute(
             "INSERT INTO chat_messages(session_id,ts,role,content,meta_json) VALUES(?,?,?,?,?)",
             (sid, time.time(), role, content, json.dumps(meta) if meta else None))
+    # Phase 13 — trigger background summarization if message count threshold reached
+    try:
+        _maybe_trigger_summarization(sid)
+    except Exception:
+        pass
 
 
 def db_chat_get(sid, limit=30):
@@ -898,17 +910,115 @@ def db_chat_all_sessions(limit=10):
     return [r["session_id"] for r in rs]
 
 
-def _build_chat_context(sid, n=8):
-    """Return a context string from the last n chat messages for injection."""
+def _build_chat_context(sid, n=5):
+    """Return a context string using 3-tier memory: summary + last 5 messages + LTM."""
+    lines = []
+    # Tier 2 — Mid-term: compressed summary of older messages
+    summary = _get_chat_summary(sid)
+    if summary:
+        lines.append("=== Context summary (compressed earlier conversation) ===")
+        lines.append(summary)
+        lines.append("=== End of summary ===")
+    # Tier 1 — Short-term: most recent messages
     msgs = db_chat_get(sid, limit=n)
-    if not msgs:
-        return ""
-    lines = ["=== Conversation history (newest last) ==="]
-    for m in msgs:
-        label = "User" if m["role"] == "user" else "Assistant"
-        lines.append(f"{label}: {m['content'][:400]}")
-    lines.append("=== End of conversation history ===")
+    if msgs:
+        lines.append("=== Recent conversation (newest last) ===")
+        for m in msgs:
+            label = "User" if m["role"] == "user" else "Assistant"
+            lines.append(f"{label}: {m['content'][:400]}")
+        lines.append("=== End of recent conversation ===")
     return "\n".join(lines)
+
+
+# ── Phase 13: Context Compression & Memory Optimization ──────────────────────
+
+_P13_SUMMARIZE_THRESHOLD = 10   # messages before summarization kicks in
+_p13_summarize_lock = threading.Lock()
+_p13_in_progress: set = set()  # track sessions currently being summarized
+
+
+def _get_chat_summary(sid):
+    """Fetch the current compressed summary for a session (Tier 2 memory)."""
+    with _conn() as c:
+        row = c.execute(
+            "SELECT summary FROM chat_summaries WHERE session_id=?", (sid,)
+        ).fetchone()
+    return row["summary"] if row else None
+
+
+def _store_chat_summary(sid, summary_text, msg_count=0):
+    """Persist a compressed summary for a session."""
+    with _db_lock, _conn() as c:
+        c.execute(
+            "INSERT INTO chat_summaries(session_id,summary,msg_count,updated_at) VALUES(?,?,?,?) "
+            "ON CONFLICT(session_id) DO UPDATE SET summary=excluded.summary, "
+            "msg_count=excluded.msg_count, updated_at=excluded.updated_at",
+            (sid, summary_text, msg_count, time.time()))
+
+
+def _clear_chat_summary(sid):
+    """Invalidate the summary for a session (called on prompt edit)."""
+    with _db_lock, _conn() as c:
+        c.execute("DELETE FROM chat_summaries WHERE session_id=?", (sid,))
+
+
+def _summarize_chat_background(sid):
+    """Background thread: compress old messages into a summary using the LLM router."""
+    with _p13_summarize_lock:
+        if sid in _p13_in_progress:
+            return
+        _p13_in_progress.add(sid)
+    try:
+        all_msgs = db_chat_get(sid, limit=200)
+        if len(all_msgs) < _P13_SUMMARIZE_THRESHOLD:
+            _p13_in_progress.discard(sid)
+            return
+        # Summarize everything except the last 5 messages
+        to_compress = all_msgs[:-5]
+        if not to_compress:
+            _p13_in_progress.discard(sid)
+            return
+        convo_text = "\n".join(
+            f"{'User' if m['role']=='user' else 'Assistant'}: {m['content'][:500]}"
+            for m in to_compress
+        )
+        prompt = (
+            "You are compressing a conversation history into a compact memory block.\n"
+            "Preserve:\n"
+            "- User's core intent and overall goal\n"
+            "- Key decisions and constraints mentioned\n"
+            "- Current task status and what has been completed\n"
+            "- Important context (project names, technologies, requirements)\n\n"
+            "DO NOT include: pleasantries, minor details, repeated info.\n"
+            "Output ONLY the compressed summary paragraph (2-4 sentences).\n\n"
+            f"Conversation to compress:\n{convo_text[-3000:]}"
+        )
+        try:
+            from model_router import get_router
+            router = get_router()
+            res = router.call(prompt, task_type="reason", max_tokens=300)
+            summary_text = (res.get("text") or "").strip()
+            if summary_text:
+                _store_chat_summary(sid, summary_text, len(all_msgs))
+                app.logger.info(f"[Phase 13] Summary stored for session {sid} ({len(to_compress)} msgs compressed)")
+        except Exception as e:
+            app.logger.warning(f"[Phase 13] Summarization error: {e}")
+    finally:
+        _p13_in_progress.discard(sid)
+
+
+def _maybe_trigger_summarization(sid):
+    """Check if summarization is needed and fire it in a background thread."""
+    try:
+        with _conn() as c:
+            count = c.execute(
+                "SELECT COUNT(*) FROM chat_messages WHERE session_id=?", (sid,)
+            ).fetchone()[0]
+        if count >= _P13_SUMMARIZE_THRESHOLD:
+            t = threading.Thread(target=_summarize_chat_background, args=(sid,), daemon=True)
+            t.start()
+    except Exception:
+        pass
 
 
 def db_insert_log(sid, seq, ts, level, text):
@@ -1393,6 +1503,23 @@ def run_session(sid):
             db_chat_add(sid, "assistant", ai_reply,
                         meta={"status": status, "elapsed": usage["elapsed_seconds"],
                               "files": files[:10]})
+        except Exception:
+            pass
+        # Phase 14 — async self-improvement: reflect on the completed task
+        try:
+            if get_setting("p14_learning_enabled", True) and status != "stopped":
+                _task_str = (cur.get("task") or "")[:500]
+                _hist_str = result_text[:2000] if result_text else ""
+                _success = bool(success)
+                def _p14_reflect(_task=_task_str, _hist=_hist_str, _ok=_success):
+                    try:
+                        from evolution_engine import get_evolution_engine
+                        get_evolution_engine().reflect_on_task(_task, _ok, _hist)
+                        app.logger.info(f"[Phase 14] Reflection stored for task: {_task[:60]}")
+                    except Exception as e:
+                        app.logger.debug(f"[Phase 14] Reflect error: {e}")
+                t = threading.Thread(target=_p14_reflect, daemon=True)
+                t.start()
         except Exception:
             pass
         # Phase 17 — if this session is part of a chain, mark the
@@ -3004,6 +3131,11 @@ def api_chat_edit_message(sid, msg_id):
     if not new_prompt:
         return jsonify({"error": "prompt required"}), 400
     db_chat_delete_message(sid, msg_id)
+    # Phase 13 — invalidate summary since history changed
+    try:
+        _clear_chat_summary(sid)
+    except Exception:
+        pass
     return jsonify({"ok": True, "deleted_from": msg_id})
 
 
@@ -3011,7 +3143,29 @@ def api_chat_edit_message(sid, msg_id):
 def api_chat_clear(sid):
     """Clear all chat messages for a session."""
     db_chat_clear(sid)
+    # Phase 13 — also clear summary when chat is cleared
+    try:
+        _clear_chat_summary(sid)
+    except Exception:
+        pass
     return jsonify({"ok": True})
+
+
+@app.route("/api/chat/<sid>/summary", methods=["GET"])
+def api_chat_summary(sid):
+    """Phase 13 — return the current compressed context summary for a session."""
+    summary = _get_chat_summary(sid)
+    with _conn() as c:
+        count = c.execute(
+            "SELECT COUNT(*) FROM chat_messages WHERE session_id=?", (sid,)
+        ).fetchone()[0]
+    return jsonify({
+        "ok": True,
+        "has_summary": summary is not None,
+        "summary": summary,
+        "message_count": count,
+        "compressed": count > _P13_SUMMARIZE_THRESHOLD
+    })
 
 
 @app.route("/api/memory")
@@ -6619,6 +6773,94 @@ def api_evolution_stats():
         return jsonify({"ok": True, "data": get_evolution_engine().get_dashboard_stats()})
     except ImportError:
         return jsonify({"ok": False, "error": "not implemented"}), 501
+
+
+# ── Phase 14: Self-Improving AI — Learning API ────────────────────────────────
+
+@app.route("/api/learning/insights")
+def api_learning_insights():
+    """Return recent reflections, strategy stats, and prompt optimizations."""
+    try:
+        from evolution_engine import get_evolution_engine
+        stats = get_evolution_engine().get_dashboard_stats()
+        reflections = stats.get("reflections", [])
+        strategies  = stats.get("strategies", [])
+        prompts     = stats.get("prompts", [])
+        enabled     = get_setting("p14_learning_enabled", True)
+        auto_opt    = get_setting("p14_auto_optimize", True)
+        return jsonify({
+            "ok": True,
+            "learning_enabled": enabled,
+            "auto_optimize": auto_opt,
+            "reflections": reflections[:5],
+            "strategies": strategies,
+            "prompts": prompts[:5],
+            "total_reflections": len(reflections),
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/learning/settings", methods=["POST"])
+def api_learning_settings():
+    """Toggle Phase 14 learning features."""
+    data = request.get_json(silent=True) or {}
+    if "learning_enabled" in data:
+        set_setting("p14_learning_enabled", bool(data["learning_enabled"]))
+    if "auto_optimize" in data:
+        set_setting("p14_auto_optimize", bool(data["auto_optimize"]))
+    return jsonify({
+        "ok": True,
+        "learning_enabled": get_setting("p14_learning_enabled", True),
+        "auto_optimize": get_setting("p14_auto_optimize", True),
+    })
+
+
+@app.route("/api/learning/reset", methods=["POST"])
+def api_learning_reset():
+    """Clear all learning data (reflections, strategy stats, prompts)."""
+    try:
+        from evolution_engine import get_evolution_engine
+        import sqlite3 as _sql
+        eng = get_evolution_engine()
+        with _sql.connect(eng.db_path) as c:
+            c.execute("DELETE FROM reflections")
+            c.execute("DELETE FROM prompts")
+            c.execute("UPDATE strategy_stats SET successes=0, attempts=0, avg_score=0.0")
+            c.commit()
+        return jsonify({"ok": True, "message": "Learning memory cleared."})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/learning/enhance", methods=["POST"])
+def api_learning_enhance():
+    """Phase 14 — auto-enhance a user prompt using strategy memory."""
+    data = request.get_json(silent=True) or {}
+    original = (data.get("prompt") or "").strip()
+    if not original:
+        return jsonify({"ok": False, "error": "prompt required"}), 400
+    if not get_setting("p14_auto_optimize", True):
+        return jsonify({"ok": True, "enhanced": original, "changed": False})
+    try:
+        from evolution_engine import get_evolution_engine
+        eng = get_evolution_engine()
+        import sqlite3 as _sql
+        # Look for a relevant past meta_learning insight
+        with _sql.connect(eng.db_path) as c:
+            rows = c.execute(
+                "SELECT meta_learning FROM reflections WHERE success=1 "
+                "AND meta_learning IS NOT NULL ORDER BY ts DESC LIMIT 5"
+            ).fetchall()
+        hints = [r[0] for r in rows if r[0]]
+        if hints:
+            hint_block = " | ".join(hints[:3])
+            enhanced = f"{original}\n\n[System note: apply these proven strategies: {hint_block[:300]}]"
+            return jsonify({"ok": True, "enhanced": enhanced, "changed": True, "hints_used": len(hints)})
+        return jsonify({"ok": True, "enhanced": original, "changed": False})
+    except Exception as e:
+        return jsonify({"ok": True, "enhanced": original, "changed": False, "error": str(e)})
+
 
 @app.route("/api/governance/status")
 def api_governance_status():
