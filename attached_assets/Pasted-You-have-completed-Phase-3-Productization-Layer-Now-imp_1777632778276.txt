@@ -1,0 +1,136 @@
+You have completed Phase 3 (Productization Layer).
+
+Now implement PHASE 4: Intelligence & Personalization Layer.
+
+This phase is critical to transform the system into a premium AI product.
+
+---
+
+# 🎯 OBJECTIVE
+
+Add intelligence, memory, personalization, and user control features.
+
+---
+
+# 🧠 STEP 1: SESSION HISTORY SYSTEM
+
+Implement full session tracking:
+
+* Store all past sessions (task, result, logs, files)
+* Left sidebar → add "Session History"
+* Show:
+
+  * Title (auto-generated from prompt)
+  * Timestamp
+  * Status (success/error)
+
+## Actions:
+
+* Click → restore session
+* Load previous logs + files + output
+
+---
+
+# 🧠 STEP 2: PROMPT TEMPLATES SYSTEM
+
+Add predefined templates:
+
+Examples:
+
+* "Build a website"
+* "Fix bug in code"
+* "Create REST API"
+* "Optimize performance"
+
+## UI:
+
+* Show suggestion chips below command bar
+* Click → auto-fill input
+
+## Advanced:
+
+* Allow user to save custom templates
+
+---
+
+# 🧠 STEP 3: AI SUGGESTIONS ENGINE
+
+Make system proactive:
+
+* When user types → show suggestions
+* When error occurs → suggest fixes
+* When idle → show "Try this" prompts
+
+---
+
+# 💰 STEP 4: REAL-TIME COST / TOKEN TRACKER
+
+Add live tracking:
+
+* Show in header:
+
+  * Tokens used
+  * Estimated cost
+* Update every few seconds during execution
+
+---
+
+# 🎨 STEP 5: THEME SYSTEM (DARK / LIGHT)
+
+* Add toggle in header/settings
+* Smooth transition
+* Save preference in localStorage
+
+---
+
+# ⚡ STEP 6: UX INTELLIGENCE
+
+Improve interaction:
+
+* Auto-scroll logs/terminal
+* Highlight current step
+* Smooth transitions everywhere
+* No UI flicker
+
+---
+
+# 🧠 STEP 7: PERSONALIZATION
+
+* Remember:
+
+  * Last used model
+  * Last plan mode
+  * Last session
+
+---
+
+# 🚫 RULES
+
+* Do NOT break Phase 3
+* Do NOT remove features
+* Only enhance intelligently
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. Features implemented
+2. Backend changes
+3. UI changes
+4. How personalization works
+5. Performance improvements
+
+---
+
+# ⚡ FINAL GOAL
+
+System should feel like:
+
+* ChatGPT (smart)
+* Replit (powerful)
+* Cursor (developer-focused)
+* Notion (clean UX)
+
+---
+
+This phase is about INTELLIGENCE, not just UI.
