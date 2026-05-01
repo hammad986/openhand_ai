@@ -2736,6 +2736,93 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
   background: var(--accent);
   transition: width .4s ease;
 }
+
+/* ── Phase 12: Chat UI ────────────────────────────────────────────────────── */
+.p12-chat-wrap {
+  display: flex; flex-direction: column; height: 100%; overflow: hidden;
+}
+.p12-chat-msgs {
+  flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 12px;
+}
+.p12-chat-msgs::-webkit-scrollbar { width: 4px; }
+.p12-chat-msgs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.p12-msg {
+  display: flex; flex-direction: column; max-width: 88%;
+}
+.p12-msg.user { align-self: flex-end; align-items: flex-end; }
+.p12-msg.assistant { align-self: flex-start; align-items: flex-start; }
+.p12-msg-bubble {
+  padding: 10px 14px; border-radius: 12px; font-size: 0.84rem; line-height: 1.55;
+  word-break: break-word; white-space: pre-wrap;
+}
+.p12-msg.user .p12-msg-bubble {
+  background: var(--accent); color: #fff; border-bottom-right-radius: 4px;
+}
+.p12-msg.assistant .p12-msg-bubble {
+  background: var(--panel2); color: var(--text); border:1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+.p12-msg-meta {
+  display: flex; align-items: center; gap: 6px; margin-top: 3px;
+  font-size: 0.68rem; color: var(--muted);
+}
+.p12-msg-edit-btn {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: 0.7rem; padding: 1px 5px; border-radius: 4px;
+  opacity: 0; transition: opacity 0.15s;
+}
+.p12-msg:hover .p12-msg-edit-btn { opacity: 1; }
+.p12-msg-edit-btn:hover { background: var(--border); color: var(--text); }
+.p12-status-dot {
+  width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+}
+.p12-status-dot.success { background: var(--green); }
+.p12-status-dot.failed { background: var(--red); }
+.p12-status-dot.stopped { background: var(--yellow); }
+.p12-status-dot.running { background: var(--accent); animation: p12pulse 1s ease infinite; }
+@keyframes p12pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.p12-chat-footer {
+  border-top: 1px solid var(--border); padding: 8px 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.p12-continue-btn {
+  flex: 1; background: var(--panel2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); padding: 7px 12px;
+  font-size: 0.8rem; cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 6px;
+}
+.p12-continue-btn:hover { border-color: var(--accent); color: var(--accent); }
+.p12-clear-btn {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  color: var(--muted); padding: 7px 10px; font-size: 0.75rem; cursor: pointer;
+}
+.p12-clear-btn:hover { border-color: var(--red); color: var(--red); }
+.p12-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--muted); gap: 8px; font-size: 0.82rem;
+}
+.p12-empty-icon { font-size: 2rem; opacity: 0.4; }
+.p12-edit-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center; z-index: 9000;
+}
+.p12-edit-modal {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px; width: 520px; max-width: 92vw; display: flex; flex-direction: column; gap: 12px;
+}
+.p12-edit-modal h4 { margin: 0; font-size: 0.9rem; color: var(--text); }
+.p12-edit-modal textarea {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); padding: 10px; font-size: 0.84rem; resize: vertical;
+  min-height: 90px; font-family: inherit; line-height: 1.5;
+}
+.p12-edit-modal textarea:focus { outline: none; border-color: var(--accent); }
+.p12-edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.p12-edit-actions button {
+  padding: 7px 16px; border-radius: 7px; font-size: 0.82rem; cursor: pointer; border: none;
+}
+.p12-edit-cancel { background: var(--panel2); color: var(--muted); }
+.p12-edit-submit { background: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -3082,6 +3169,10 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           Code
           <span class="nx-tab-dot"></span>
         </button>
+        <button class="nx-tab" data-nxtab="chat" onclick="nxSetTab('chat');p12LoadChat(currentSession)">
+          💬 Chat
+          <span class="nx-tab-dot" id="p12ChatDot"></span>
+        </button>
 
         <!-- More ▾ dropdown for secondary tabs -->
         <div class="nx-more-wrap">
@@ -3144,6 +3235,24 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       <div class="nx-tab-content" id="nxTab-timeline"></div>
       <!-- Steps tab -->
       <div class="nx-tab-content" id="nxTab-steps"></div>
+      <!-- Phase 12: Chat tab -->
+      <div class="nx-tab-content" id="nxTab-chat">
+        <div class="p12-chat-wrap">
+          <div class="p12-chat-msgs" id="p12ChatMsgs">
+            <div class="p12-empty" id="p12ChatEmpty">
+              <div class="p12-empty-icon">💬</div>
+              <div>No conversation yet.</div>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">Run a task to start the conversation.</div>
+            </div>
+          </div>
+          <div class="p12-chat-footer" id="p12ChatFooter" style="display:none">
+            <button class="p12-continue-btn" id="p12ContinueBtn" onclick="p12Continue()">
+              <span>↩</span> Continue / modify this session…
+            </button>
+            <button class="p12-clear-btn" onclick="p12ClearChat()" title="Clear conversation history">🗑</button>
+          </div>
+        </div>
+      </div>
     </div><!-- /nx-center -->
 
     <div class="nx-divider" id="nxDivRight"></div>
@@ -14012,6 +14121,301 @@ window.setActiveTab = function(tab) {
 /* ── Init ───────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function () {
     console.log('[Phase 11] Multi-Agent Collaboration System active.');
+});
+
+})();
+</script>
+
+<!-- Phase 12: Edit Prompt Modal -->
+<div class="p12-edit-overlay" id="p12EditOverlay" style="display:none" onclick="p12CloseEditModal(event)">
+  <div class="p12-edit-modal" onclick="event.stopPropagation()">
+    <h4>✏️ Edit prompt</h4>
+    <textarea id="p12EditTextarea" rows="4" placeholder="Edit your prompt…"></textarea>
+    <div class="p12-edit-actions">
+      <button class="p12-edit-cancel" onclick="p12CloseEditModal()">Cancel</button>
+      <button class="p12-edit-submit" onclick="p12SubmitEdit()">Re-run ↩</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   Phase 12 — Conversational Context + Editable Prompt System
+   ══════════════════════════════════════════════════════════════════ */
+(function () {
+
+let _p12CurrentSid   = null;  // session whose chat we're showing
+let _p12EditMsgId    = null;  // message id being edited
+let _p12EditSid      = null;  // session containing the message being edited
+let _p12PollTimer    = null;
+
+/* ── helpers ─────────────────────────────────────────────────────── */
+function _p12escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function _p12fmt(ts) {
+    if (!ts) return '';
+    const d = new Date(ts * 1000);
+    return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+/* ── Load & render chat history ──────────────────────────────────── */
+window.p12LoadChat = async function(sid) {
+    if (!sid) { p12RenderEmpty(); return; }
+    _p12CurrentSid = sid;
+    try {
+        const r = await fetch(`/api/chat/${sid}?limit=50`);
+        const d = await r.json();
+        if (d.ok) {
+            p12RenderMessages(d.messages || []);
+            // Show the chat tab dot if there are messages
+            const dot = document.getElementById('p12ChatDot');
+            if (dot) dot.style.opacity = d.messages && d.messages.length ? '1' : '0';
+        }
+    } catch(e) {
+        console.warn('[Phase 12] chat load error', e);
+    }
+};
+
+function p12RenderEmpty() {
+    const box = document.getElementById('p12ChatMsgs');
+    const footer = document.getElementById('p12ChatFooter');
+    if (box) box.innerHTML = `<div class="p12-empty"><div class="p12-empty-icon">💬</div><div>No conversation yet.</div><div style="font-size:0.75rem;color:var(--muted);margin-top:4px">Run a task to start the conversation.</div></div>`;
+    if (footer) footer.style.display = 'none';
+}
+
+window.p12RenderMessages = function(messages) {
+    const box = document.getElementById('p12ChatMsgs');
+    const footer = document.getElementById('p12ChatFooter');
+    if (!box) return;
+    if (!messages || !messages.length) { p12RenderEmpty(); return; }
+
+    const isLastUser = messages.length && messages[messages.length - 1].role === 'user';
+    const html = messages.map((m, idx) => {
+        const meta = (() => { try { return JSON.parse(m.meta_json || '{}'); } catch(e) { return {}; } })();
+        const isLast = idx === messages.length - 1;
+        const editBtn = (m.role === 'user')
+            ? `<button class="p12-msg-edit-btn" title="Edit & re-run" onclick="p12OpenEditModal(${m.id},'${_p12escHtml(m.content.replace(/'/g,"\\'"))}')">✏️ Edit</button>`
+            : '';
+        const statusDot = (m.role === 'assistant' && meta.status)
+            ? `<span class="p12-status-dot ${meta.status}" title="${meta.status}"></span>`
+            : '';
+        const elapsed = meta.elapsed ? `<span>${Math.round(meta.elapsed)}s</span>` : '';
+        const files = (meta.files && meta.files.length)
+            ? `<span title="${meta.files.join(', ')}">${meta.files.length} file${meta.files.length>1?'s':''}</span>`
+            : '';
+        const linkedSid = meta.session_id || '';
+        const goBtn = (m.role === 'user' && linkedSid)
+            ? `<span style="cursor:pointer;color:var(--accent)" title="Go to session" onclick="if(typeof selectSession==='function')selectSession('${linkedSid}')">→ session</span>`
+            : '';
+        return `<div class="p12-msg ${m.role}" data-mid="${m.id}">
+  <div class="p12-msg-bubble">${_p12escHtml(m.content)}</div>
+  <div class="p12-msg-meta">
+    ${statusDot}
+    <span>${_p12fmt(m.ts)}</span>
+    ${elapsed}${files}${goBtn}${editBtn}
+  </div>
+</div>`;
+    }).join('');
+
+    box.innerHTML = html;
+    box.scrollTop = box.scrollHeight;
+    if (footer) footer.style.display = 'flex';
+    // Update continue button label
+    const cb = document.getElementById('p12ContinueBtn');
+    if (cb) cb.innerHTML = `<span>↩</span> Continue / modify this session…`;
+};
+
+/* ── Continue button: prefill task input ─────────────────────────── */
+window.p12Continue = function() {
+    const ta = document.getElementById('taskInput');
+    if (ta) {
+        ta.focus();
+        ta.placeholder = 'Describe what to change or continue…';
+    }
+    // switch back to logs tab so user sees the run
+    if (typeof nxSetTab === 'function') nxSetTab('logs');
+};
+
+/* ── Edit modal ──────────────────────────────────────────────────── */
+window.p12OpenEditModal = function(msgId, currentContent) {
+    _p12EditMsgId = msgId;
+    _p12EditSid   = _p12CurrentSid;
+    const ta = document.getElementById('p12EditTextarea');
+    if (ta) ta.value = currentContent;
+    const ov = document.getElementById('p12EditOverlay');
+    if (ov) ov.style.display = 'flex';
+    if (ta) ta.focus();
+};
+
+window.p12CloseEditModal = function(e) {
+    if (e && e.target !== document.getElementById('p12EditOverlay')) return;
+    document.getElementById('p12EditOverlay').style.display = 'none';
+    _p12EditMsgId = null;
+    _p12EditSid   = null;
+};
+
+window.p12SubmitEdit = async function() {
+    const ta = document.getElementById('p12EditTextarea');
+    const newPrompt = (ta ? ta.value : '').trim();
+    if (!newPrompt) return;
+    if (!_p12EditMsgId || !_p12EditSid) return;
+
+    // 1. Delete this message and all after it from chat history
+    try {
+        await fetch(`/api/chat/${_p12EditSid}/edit/${_p12EditMsgId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({prompt: newPrompt})
+        });
+    } catch(e) { console.warn('[Phase 12] edit delete error', e); }
+
+    // 2. Close modal
+    document.getElementById('p12EditOverlay').style.display = 'none';
+
+    // 3. Put prompt in taskInput and queue with context from the edited session
+    const taskInput = document.getElementById('taskInput');
+    if (taskInput) taskInput.value = newPrompt;
+    _p12QueueWithContext(newPrompt, _p12EditSid);
+
+    _p12EditMsgId = null;
+    _p12EditSid   = null;
+};
+
+/* ── Clear chat ──────────────────────────────────────────────────── */
+window.p12ClearChat = async function() {
+    if (!_p12CurrentSid) return;
+    if (!confirm('Clear the conversation history for this session?')) return;
+    try {
+        await fetch(`/api/chat/${_p12CurrentSid}`, {method: 'DELETE'});
+        p12RenderEmpty();
+        const dot = document.getElementById('p12ChatDot');
+        if (dot) dot.style.opacity = '0';
+    } catch(e) { console.warn('[Phase 12] clear error', e); }
+};
+
+/* ── Queue task with conversation context ─────────────────────────── */
+async function _p12QueueWithContext(task, continueSid) {
+    const model = document.getElementById('modelSelect') ? document.getElementById('modelSelect').value : '';
+    const planMode = (window.NX && window.NX.planMode) ? window.NX.planMode : 'elite';
+
+    const body = {task, model: model || null, plan_mode: planMode};
+    if (continueSid) body.continue_sid = continueSid;
+
+    try {
+        const resp = await fetch('/api/queue-task', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+            const toast = window.toast || window.showToast;
+            if (typeof toast === 'function') toast(data.error || 'Failed to queue task', 'err');
+            return;
+        }
+        // Clear the task input
+        const taskInput = document.getElementById('taskInput');
+        if (taskInput) taskInput.value = '';
+        // Update NX global state
+        if (window.NX) window.NX.activeSid = data.session_id;
+        if (typeof nxSetGlobalStatus === 'function') nxSetGlobalStatus('running');
+        // Update plan mode label
+        const planEl = document.getElementById('nxActivePlanMode');
+        if (planEl && window.NX_PLANS) {
+            const p = window.NX_PLANS[planMode] || window.NX_PLANS.elite;
+            if (p) { planEl.textContent = p.label; planEl.style.color = p.color; }
+        }
+        // Select the new session
+        if (typeof selectSession === 'function') selectSession(data.session_id);
+        if (typeof loadSessions === 'function') loadSessions();
+        if (typeof loadQueue === 'function') loadQueue();
+        // Reload chat after a short delay to show the new user message
+        setTimeout(() => p12LoadChat(data.chat_sid || data.session_id), 600);
+        // Switch to logs to see execution
+        if (typeof nxSetTab === 'function') nxSetTab('logs');
+    } catch(e) {
+        console.error('[Phase 12] queue error', e);
+    }
+}
+
+/* ── Patch the global task runners to route through Phase 12 ─────── */
+// Patch nxQueueTask (used by the Run button)
+const _p12_origNxQueueTask = window.nxQueueTask;
+window.nxQueueTask = async function() {
+    const taskInput = document.getElementById('taskInput');
+    const task = taskInput ? taskInput.value.trim() : '';
+    if (!task) {
+        if (typeof toast === 'function') toast('Please describe a task first.', 'err');
+        return;
+    }
+    // Inject uploaded context if any (preserve Phase 31 behaviour)
+    if (typeof _uploadedContext !== 'undefined' && _uploadedContext.length > 0) {
+        const ctx = _uploadedContext.map(u => u.context).join('\n\n');
+        if (taskInput && ctx) taskInput.value = ctx + '\n\n' + taskInput.value;
+        _uploadedContext = [];
+        if (typeof renderUploadChips === 'function') renderUploadChips();
+        if (typeof nxSyncContextBadgesFromChips === 'function') nxSyncContextBadgesFromChips();
+    }
+    const finalTask = taskInput ? taskInput.value.trim() : task;
+    const continueSid = (typeof currentSession !== 'undefined' && currentSession) || null;
+    await _p12QueueWithContext(finalTask, continueSid);
+};
+
+// Also patch window.queueTask (used by keyboard shortcuts and other callers)
+const _p12_origQueueTask = window.queueTask;
+window.queueTask = async function() {
+    const taskInput = document.getElementById('taskInput');
+    const task = taskInput ? taskInput.value.trim() : '';
+    if (!task) {
+        if (typeof toast === 'function') toast('Please enter a task.', 'err');
+        return;
+    }
+    const continueSid = (typeof currentSession !== 'undefined' && currentSession) || null;
+    await _p12QueueWithContext(task, continueSid);
+};
+
+/* ── Auto-reload chat when session is selected ────────────────────── */
+const _p12_origSelectSession = window.selectSession;
+window.selectSession = function(sid) {
+    if (typeof _p12_origSelectSession === 'function') _p12_origSelectSession(sid);
+    _p12CurrentSid = sid;
+    // If chat tab is active, reload chat
+    const chatTab = document.querySelector('[data-nxtab="chat"].active');
+    if (chatTab) p12LoadChat(sid);
+    // Show dot if this session has messages
+    fetch(`/api/chat/${sid}?limit=1`).then(r=>r.json()).then(d=>{
+        const dot = document.getElementById('p12ChatDot');
+        if (dot) dot.style.opacity = (d.ok && d.messages && d.messages.length) ? '1' : '0';
+    }).catch(()=>{});
+};
+
+/* ── Poll chat when running (to pick up assistant replies) ────────── */
+function _p12StartPoll(sid) {
+    _p12StopPoll();
+    _p12PollTimer = setInterval(() => {
+        if (!_p12CurrentSid) return;
+        const chatTab = document.querySelector('[data-nxtab="chat"].active');
+        if (chatTab) p12LoadChat(_p12CurrentSid);
+    }, 3000);
+}
+function _p12StopPoll() {
+    if (_p12PollTimer) { clearInterval(_p12PollTimer); _p12PollTimer = null; }
+}
+
+/* ── Init ──────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('[Phase 12] Conversational Context + Editable Prompt System active.');
+    // Keyboard shortcut: Escape closes edit modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const ov = document.getElementById('p12EditOverlay');
+            if (ov && ov.style.display !== 'none') {
+                ov.style.display = 'none';
+                _p12EditMsgId = null; _p12EditSid = null;
+            }
+        }
+    });
 });
 
 })();

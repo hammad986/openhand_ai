@@ -773,6 +773,15 @@ def _init_db():
             key   TEXT PRIMARY KEY,
             value TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS chat_messages(
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id  TEXT NOT NULL,
+            ts          REAL NOT NULL,
+            role        TEXT NOT NULL,
+            content     TEXT NOT NULL,
+            meta_json   TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_chat_session ON chat_messages(session_id, ts);
         """)
         # Best-effort backfill for older DBs created before these columns existed
         for col, ddl in (("config_json",   "ALTER TABLE sessions ADD COLUMN config_json TEXT"),
@@ -842,7 +851,64 @@ def db_delete_session(sid):
     with _db_lock, _conn() as c:
         c.execute("DELETE FROM logs WHERE session_id=?", (sid,))
         c.execute("DELETE FROM decisions WHERE session_id=?", (sid,))
+        c.execute("DELETE FROM chat_messages WHERE session_id=?", (sid,))
         c.execute("DELETE FROM sessions WHERE id=?", (sid,))
+
+
+# ── Phase 12: Chat / conversation helpers ─────────────────────────────────────
+
+def db_chat_add(sid, role, content, meta=None):
+    """Append a chat message to the conversation for this session."""
+    with _db_lock, _conn() as c:
+        c.execute(
+            "INSERT INTO chat_messages(session_id,ts,role,content,meta_json) VALUES(?,?,?,?,?)",
+            (sid, time.time(), role, content, json.dumps(meta) if meta else None))
+
+
+def db_chat_get(sid, limit=30):
+    """Return the last `limit` chat messages for a session, oldest first."""
+    with _conn() as c:
+        rs = c.execute(
+            "SELECT id,ts,role,content,meta_json FROM chat_messages "
+            "WHERE session_id=? ORDER BY ts DESC LIMIT ?", (sid, limit)).fetchall()
+    return list(reversed([dict(r) for r in rs]))
+
+
+def db_chat_delete_message(sid, msg_id):
+    """Delete a single chat message and all messages after it (for prompt editing)."""
+    with _db_lock, _conn() as c:
+        row = c.execute("SELECT ts FROM chat_messages WHERE id=? AND session_id=?",
+                        (msg_id, sid)).fetchone()
+        if row:
+            c.execute("DELETE FROM chat_messages WHERE session_id=? AND ts>=?",
+                      (sid, row["ts"]))
+
+
+def db_chat_clear(sid):
+    with _db_lock, _conn() as c:
+        c.execute("DELETE FROM chat_messages WHERE session_id=?", (sid,))
+
+
+def db_chat_all_sessions(limit=10):
+    """Return sids that have chat messages, most recent first."""
+    with _conn() as c:
+        rs = c.execute(
+            "SELECT DISTINCT session_id FROM chat_messages "
+            "ORDER BY ts DESC LIMIT ?", (limit,)).fetchall()
+    return [r["session_id"] for r in rs]
+
+
+def _build_chat_context(sid, n=8):
+    """Return a context string from the last n chat messages for injection."""
+    msgs = db_chat_get(sid, limit=n)
+    if not msgs:
+        return ""
+    lines = ["=== Conversation history (newest last) ==="]
+    for m in msgs:
+        label = "User" if m["role"] == "user" else "Assistant"
+        lines.append(f"{label}: {m['content'][:400]}")
+    lines.append("=== End of conversation history ===")
+    return "\n".join(lines)
 
 
 def db_insert_log(sid, seq, ts, level, text):
@@ -1315,6 +1381,20 @@ def run_session(sid):
              f"[Task finished — exit={exit_code} status={status} "
              f"calls={usage['calls']} ~tokens={usage['tokens_in_est']+usage['tokens_out_est']} "
              f"elapsed={usage['elapsed_seconds']}s]")
+        # Phase 12 — record AI response in chat history
+        try:
+            result_text = (db_session(sid) or {}).get("result") or ""
+            if status == "success":
+                ai_reply = result_text or f"Task completed successfully in {usage['elapsed_seconds']}s."
+            elif status == "stopped":
+                ai_reply = "Task was stopped."
+            else:
+                ai_reply = result_text or f"Task encountered an error (exit code {exit_code})."
+            db_chat_add(sid, "assistant", ai_reply,
+                        meta={"status": status, "elapsed": usage["elapsed_seconds"],
+                              "files": files[:10]})
+        except Exception:
+            pass
         # Phase 17 — if this session is part of a chain, mark the
         # parent chain task done now that the subprocess has finished.
         # The chain row's status auto-rolls-up inside mark_task_done.
@@ -2647,6 +2727,8 @@ def api_queue_task():
     task = (data.get("task") or "").strip()
     model = data.get("model") or None
     plan_mode = (data.get("plan_mode") or "elite").lower()
+    # Phase 12 — conversation context
+    continue_sid = (data.get("continue_sid") or "").strip() or None
     if plan_mode not in PLAN_CAPABILITIES:
         plan_mode = "elite"
     if not task:
@@ -2685,10 +2767,27 @@ def api_queue_task():
                          f"{MANAGED_LIMITS['rate_window_seconds']}s). "
                          "Switch to BYOK or wait."}), 429
 
-    sid = enqueue_task(task, model, cfg)
+    # ── Phase 12: Inject conversation context ────────────────────────────────
+    task_with_ctx = task
+    if continue_sid and db_session(continue_sid):
+        ctx = _build_chat_context(continue_sid, n=8)
+        if ctx:
+            task_with_ctx = f"{ctx}\n\nCurrent request: {task}"
+
+    sid = enqueue_task(task_with_ctx, model, cfg)
+
+    # Store user message in chat history — use the new session id as anchor
+    # but link the conversation to the continue_sid chain when continuing.
+    chat_sid = continue_sid if continue_sid and db_session(continue_sid) else sid
+    db_chat_add(chat_sid, "user", task, meta={"session_id": sid, "plan_mode": plan_mode})
+    # Also add to the new session if it's different from chat_sid
+    if chat_sid != sid:
+        db_chat_add(sid, "user", task, meta={"plan_mode": plan_mode})
+
     caps = PLAN_CAPABILITIES[plan_mode]
     return jsonify({"ok": True, "session_id": sid, "plan_mode": plan_mode,
-                    "plan_label": caps["label"], "max_steps": caps["max_steps"]})
+                    "plan_label": caps["label"], "max_steps": caps["max_steps"],
+                    "chat_sid": chat_sid})
 
 
 @app.route("/api/plan-config")
@@ -2871,6 +2970,48 @@ def api_decisions():
     sid = request.args.get("session_id")
     if not sid: return jsonify({"error": "session_id required"}), 400
     return jsonify({"decisions": db_decisions(sid)})
+
+
+# ── Phase 12: Chat / Conversation API ─────────────────────────────────────────
+
+@app.route("/api/chat/<sid>", methods=["GET"])
+def api_chat_get(sid):
+    """Return conversation history for a session."""
+    limit = int(request.args.get("limit", 30))
+    messages = db_chat_get(sid, limit=limit)
+    return jsonify({"ok": True, "messages": messages})
+
+
+@app.route("/api/chat/<sid>", methods=["POST"])
+def api_chat_add_message(sid):
+    """Manually add a message to a session's chat history (AI responses)."""
+    data = request.get_json() or {}
+    role = data.get("role", "assistant")
+    content = (data.get("content") or "").strip()
+    if not content:
+        return jsonify({"error": "content required"}), 400
+    if role not in ("user", "assistant", "system"):
+        role = "assistant"
+    db_chat_add(sid, role, content, meta=data.get("meta"))
+    return jsonify({"ok": True})
+
+
+@app.route("/api/chat/<sid>/edit/<int:msg_id>", methods=["POST"])
+def api_chat_edit_message(sid, msg_id):
+    """Delete a message and everything after it, re-queue with new prompt."""
+    data = request.get_json() or {}
+    new_prompt = (data.get("prompt") or "").strip()
+    if not new_prompt:
+        return jsonify({"error": "prompt required"}), 400
+    db_chat_delete_message(sid, msg_id)
+    return jsonify({"ok": True, "deleted_from": msg_id})
+
+
+@app.route("/api/chat/<sid>", methods=["DELETE"])
+def api_chat_clear(sid):
+    """Clear all chat messages for a session."""
+    db_chat_clear(sid)
+    return jsonify({"ok": True})
 
 
 @app.route("/api/memory")
