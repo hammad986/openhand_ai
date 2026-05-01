@@ -782,10 +782,10 @@
            shrink. Any user-saved values still win because inline
            --leftW / --rightW on :root take precedence over these. */
         @media (max-width: 1100px) {
-            :root { --leftW: 250px; --rightW: 300px; }
+            :root { --leftW: 0px; --rightW: 280px; }
         }
         @media (max-width: 820px) {
-            :root { --leftW: 220px; --rightW: 260px; }
+            :root { --leftW: 0px; --rightW: 260px; }
         }
 
         /* ── Phase 20.6 — Integrated code editor ── */
@@ -1207,7 +1207,7 @@
   --text-muted: #7878a0;
   --text-dim: #454560;
   --hdr: 52px;
-  --leftW: 260px;
+  --leftW: 0px;
   --rightW: 290px;
   --bottomH: 0px;
   --ease: cubic-bezier(0.4,0,0.2,1);
@@ -1452,6 +1452,84 @@ body {
 .nx-tab-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; padding: 0 6px; flex-shrink: 0; }
 .nx-tab-content { display: none; flex: 1; overflow: hidden; flex-direction: column; }
 .nx-tab-content.active { display: flex; }
+
+/* ── Secondary tabs — hidden behind More ── */
+.nx-tab.secondary { display: none; }
+.nx-tab.secondary.visible { display: flex; }
+.nx-more-wrap { position: relative; display: flex; align-items: center; }
+.nx-more-btn {
+  height: 38px; padding: 0 10px; border: none; background: transparent;
+  color: var(--text-dim); cursor: pointer; font-size: 11px; font-weight: 500;
+  font-family: 'Inter', sans-serif; white-space: nowrap;
+  display: flex; align-items: center; gap: 4px;
+  transition: color var(--dur), background var(--dur);
+}
+.nx-more-btn:hover { color: var(--text-muted); background: var(--panel2); }
+.nx-more-btn.open { color: var(--accent); }
+.nx-more-dropdown {
+  position: absolute; top: calc(100% + 2px); left: 0; z-index: 200;
+  background: var(--panel2); border: 1px solid var(--panel-border);
+  border-radius: 8px; padding: 4px; min-width: 140px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  display: none; flex-direction: column; gap: 1px;
+}
+.nx-more-dropdown.open { display: flex; }
+.nx-more-item {
+  padding: 7px 10px; border-radius: 5px; font-size: 11px; font-weight: 500;
+  color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px;
+  transition: background var(--dur), color var(--dur);
+}
+.nx-more-item:hover { background: var(--accent-dim); color: var(--text); }
+.nx-more-item.active { color: var(--accent); }
+
+/* ── Idle hero — shown when no session active ── */
+.nx-idle-hero {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 1; padding: 40px 24px; gap: 24px;
+  background: var(--surface); animation: nxFadeIn 0.4s var(--ease);
+  overflow: auto;
+}
+.nx-idle-hero.hidden { display: none; }
+@keyframes nxFadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+.nx-hero-logo {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; box-shadow: 0 0 24px var(--accent-glow);
+}
+.nx-hero-heading { font-size: 22px; font-weight: 700; color: var(--text); text-align: center; }
+.nx-hero-sub { font-size: 13px; color: var(--text-muted); text-align: center; max-width: 380px; line-height: 1.5; }
+.nx-hero-chips {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 480px;
+}
+.nx-hero-chip {
+  padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  background: var(--panel2); border: 1px solid var(--panel-border);
+  color: var(--text-muted); cursor: pointer;
+  transition: all var(--dur); font-family: 'Inter', sans-serif;
+}
+.nx-hero-chip:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--text); transform: translateY(-1px); }
+.nx-hero-hint { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+.nx-hero-hint kbd {
+  background: var(--panel2); border: 1px solid var(--panel-border); border-radius: 4px;
+  padding: 2px 6px; font-size: 10px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+}
+
+/* ── Command bar focus glow ── */
+#taskInput:focus { box-shadow: 0 0 0 2px var(--accent-glow), 0 0 16px var(--accent-glow); outline: none; }
+
+/* ── Error state: inspector pulse ── */
+.nx-right.error-pulse { animation: nxErrorPulse 0.5s ease 2; }
+@keyframes nxErrorPulse { 0%,100%{ box-shadow:none; } 50%{ box-shadow: inset 0 0 0 1px rgba(239,68,68,0.5); } }
+
+/* ── Running: left panel auto-open transition ── */
+#nxLeft { transition: width var(--dur) var(--ease); }
+#nxDivLeft { transition: opacity var(--dur) var(--ease); }
+
+/* ── Status bar running animation ── */
+@keyframes nxRunDot { 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
+#nxRunDot { animation: nxRunDot 1.2s ease infinite; }
 
 /* ── Right Panel — Inspector ── */
 .nx-right { }
@@ -1768,6 +1846,7 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <!-- ── CENTER: Tabbed Workspace ── -->
     <div class="nx-panel nx-center" id="nxCenter">
       <div class="nx-tab-bar" id="nxTabBar">
+        <!-- Primary tabs: always visible -->
         <button class="nx-tab active" data-nxtab="logs" onclick="nxSetTab('logs')">
           <span class="nx-pulse" id="nxLogPulse" style="display:none"></span>
           Logs
@@ -1781,33 +1860,52 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           Code
           <span class="nx-tab-dot"></span>
         </button>
-        <button class="nx-tab" data-nxtab="terminal" onclick="nxSetTab('terminal')">
-          Terminal
-          <span class="nx-tab-dot"></span>
-        </button>
-        <button class="nx-tab" data-nxtab="metrics" onclick="nxSetTab('metrics')">
-          Metrics
-          <span class="nx-tab-dot"></span>
-        </button>
-        <button class="nx-tab" data-nxtab="agents" onclick="nxSetTab('agents')">
-          Agents
-          <span class="nx-tab-dot"></span>
-        </button>
-        <button class="nx-tab" data-nxtab="timeline" onclick="nxSetTab('timeline')">
-          Timeline
-          <span class="nx-tab-dot"></span>
-        </button>
-        <button class="nx-tab" data-nxtab="steps" onclick="nxSetTab('steps')">
-          Steps
-          <span class="nx-tab-dot"></span>
-        </button>
+
+        <!-- More ▾ dropdown for secondary tabs -->
+        <div class="nx-more-wrap">
+          <button class="nx-more-btn" id="nxMoreBtn" onclick="nxToggleMore(event)">More ▾</button>
+          <div class="nx-more-dropdown" id="nxMoreDropdown">
+            <div class="nx-more-item" data-nxtab="terminal" onclick="nxSetTab('terminal');nxCloseMore()">💻 Terminal</div>
+            <div class="nx-more-item" data-nxtab="metrics" onclick="nxSetTab('metrics');nxCloseMore()">📊 Metrics</div>
+            <div class="nx-more-item" data-nxtab="agents" onclick="nxSetTab('agents');nxCloseMore()">🤖 Agents</div>
+            <div class="nx-more-item" data-nxtab="timeline" onclick="nxSetTab('timeline');nxCloseMore()">📅 Timeline</div>
+            <div class="nx-more-item" data-nxtab="steps" onclick="nxSetTab('steps');nxCloseMore()">🧐 Steps</div>
+          </div>
+        </div>
+
+        <!-- Hidden tab targets still needed for content -->
+        <button class="nx-tab secondary" data-nxtab="terminal" onclick="nxSetTab('terminal')">Terminal<span class="nx-tab-dot"></span></button>
+        <button class="nx-tab secondary" data-nxtab="metrics" onclick="nxSetTab('metrics')">Metrics<span class="nx-tab-dot"></span></button>
+        <button class="nx-tab secondary" data-nxtab="agents" onclick="nxSetTab('agents')">Agents<span class="nx-tab-dot"></span></button>
+        <button class="nx-tab secondary" data-nxtab="timeline" onclick="nxSetTab('timeline')">Timeline<span class="nx-tab-dot"></span></button>
+        <button class="nx-tab secondary" data-nxtab="steps" onclick="nxSetTab('steps')">Steps<span class="nx-tab-dot"></span></button>
 
         <!-- Tab-specific action bar -->
         <div class="nx-tab-actions" id="nxTabActions"></div>
       </div>
 
+      <!-- Idle hero — shown when no task is running -->
+      <div class="nx-idle-hero" id="nxIdleHero">
+        <div class="nx-hero-logo">A</div>
+        <div>
+          <div class="nx-hero-heading">What do you want to build?</div>
+          <div class="nx-hero-sub" style="margin-top:8px">Describe a task and the AI agent will plan, code, and run it — step by step.</div>
+        </div>
+        <div class="nx-hero-chips">
+          <button class="nx-hero-chip" onclick="nxSetTask('Build a Flask REST API with CRUD endpoints')">Flask REST API</button>
+          <button class="nx-hero-chip" onclick="nxSetTask('Create a login system with SQLite auth')">Login System</button>
+          <button class="nx-hero-chip" onclick="nxSetTask('Build a real-time dashboard with charts')">Dashboard</button>
+          <button class="nx-hero-chip" onclick="nxSetTask('Write unit tests for this project')">Generate Tests</button>
+          <button class="nx-hero-chip" onclick="nxSetTask('Optimize and refactor all Python files')">Refactor Code</button>
+          <button class="nx-hero-chip" onclick="nxSetTask('Add a REST API endpoint for file uploads')">File Upload API</button>
+        </div>
+        <div class="nx-hero-hint">
+          Type your task above and press <kbd>Ctrl+Enter</kbd> to start &nbsp;·&nbsp; <kbd>Ctrl+K</kbd> for commands
+        </div>
+      </div>
+
       <!-- Logs tab -->
-      <div class="nx-tab-content active" id="nxTab-logs"></div>
+      <div class="nx-tab-content" id="nxTab-logs"></div>
       <!-- Preview tab -->
       <div class="nx-tab-content" id="nxTab-preview"></div>
       <!-- Code/Files tab -->
@@ -1986,14 +2084,18 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
 
 const NX = {
   activeTab: 'logs',
-  leftOpen: true,
+  leftOpen: false,
   rightOpen: true,
   bottomOpen: false,
-  leftW: 260,
+  leftW: 0,
   rightW: 290,
   metricTimer: null,
   activeSid: null,
   paletteOpen: false,
+  idleCollapseTimer: null,
+  lastStatus: 'idle',
+  pollFast: null,
+  pollSlow: null,
 };
 
 // ── Slot map: nxTabId → legacy element ID ──
@@ -2095,21 +2197,59 @@ function nxInit() {
   // 10. Queue display
   setInterval(nxPollQueue, 3000);
 
+  // 11. Rotating placeholder text in command bar
+  nxStartPlaceholderRotation();
+
+  // 12. Apply initial layout (left panel collapsed)
+  nxApplyLayout();
+
   console.log('[NX] Advanced UI initialized');
+}
+
+// ── Rotating placeholder text ──
+function nxStartPlaceholderRotation() {
+  const prompts = [
+    'Describe what you want to build... (Ctrl+Enter to run)',
+    'Build a Flask REST API with user auth...',
+    'Create a React dashboard with live charts...',
+    'Fix the bug on line 42 of app.py...',
+    'Add file upload to my existing API...',
+    'Write unit tests for the auth module...',
+    'Refactor Python files to use async/await...',
+    'Build a real-time chat feature with WebSockets...',
+  ];
+  let idx = 0;
+  const inp = document.getElementById('taskInput');
+  if (!inp) return;
+  setInterval(() => {
+    if (document.activeElement === inp || inp.value) return;
+    idx = (idx + 1) % prompts.length;
+    inp.placeholder = prompts[idx];
+  }, 3500);
 }
 
 // ── Tab switching ──
 function nxSetTab(id) {
-  // Hide all
+  // Hide idle hero when any tab is selected
+  nxHideHero();
+
+  // Hide all tab contents
   document.querySelectorAll('.nx-tab-content').forEach(el => el.classList.remove('active'));
+  // Deactivate all tab buttons (primary + secondary)
   document.querySelectorAll('.nx-tab').forEach(btn => btn.classList.remove('active'));
 
-  // Show target
+  // Show target content
   const content = document.getElementById('nxTab-' + id);
-  const btn = document.querySelector(`[data-nxtab="${id}"]`);
+  const btn = document.querySelector(`.nx-tab:not(.secondary)[data-nxtab="${id}"]`) ||
+              document.querySelector(`[data-nxtab="${id}"]`);
   if (content) content.classList.add('active');
   if (btn) btn.classList.add('active');
   NX.activeTab = id;
+
+  // Update "More" dropdown active states
+  document.querySelectorAll('.nx-more-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.nxtab === id);
+  });
 
   nxUpdateTabActions(id);
 
@@ -2123,6 +2263,38 @@ function nxSetTab(id) {
   if (id === 'terminal') nxEnsureTerminal();
 }
 
+// ── Idle hero helpers ──
+function nxHideHero() {
+  const hero = document.getElementById('nxIdleHero');
+  if (hero) hero.classList.add('hidden');
+}
+function nxShowHero() {
+  const hero = document.getElementById('nxIdleHero');
+  if (hero) hero.classList.remove('hidden');
+  // Deactivate tab contents when hero is shown
+  document.querySelectorAll('.nx-tab-content').forEach(el => el.classList.remove('active'));
+}
+
+// ── More dropdown ──
+function nxToggleMore(e) {
+  e.stopPropagation();
+  const btn = document.getElementById('nxMoreBtn');
+  const dd = document.getElementById('nxMoreDropdown');
+  if (!dd) return;
+  const open = dd.classList.toggle('open');
+  if (btn) btn.classList.toggle('open', open);
+  if (open) {
+    const close = (ev) => { if (!dd.contains(ev.target)) { nxCloseMore(); document.removeEventListener('click', close); } };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+}
+function nxCloseMore() {
+  const btn = document.getElementById('nxMoreBtn');
+  const dd = document.getElementById('nxMoreDropdown');
+  if (btn) btn.classList.remove('open');
+  if (dd) dd.classList.remove('open');
+}
+
 function nxUpdateTabActions(id) {
   const bar = document.getElementById('nxTabActions');
   if (bar) bar.innerHTML = NX_TAB_ACTIONS[id] || '';
@@ -2131,7 +2303,7 @@ function nxUpdateTabActions(id) {
 // ── Panel toggles ──
 function nxToggleLeft() {
   NX.leftOpen = !NX.leftOpen;
-  NX.leftW = NX.leftOpen ? 260 : 0;
+  NX.leftW = NX.leftOpen ? 240 : 0;
   nxApplyLayout();
 }
 function nxToggleRight() {
@@ -2352,6 +2524,42 @@ function nxSetGlobalStatus(status) {
   // HITL strip
   const hitlStrip = document.getElementById('nxHitlStrip');
   if (hitlStrip) hitlStrip.style.display = status === 'running' ? 'block' : 'none';
+
+  // ── Smart panel behavior ──
+  const prev = NX.lastStatus;
+  NX.lastStatus = status;
+
+  if (status === 'running' && prev !== 'running') {
+    // Auto-expand left panel (thinking stream) when task starts
+    if (!NX.leftOpen) {
+      NX.leftOpen = true;
+      NX.leftW = 240;
+      nxApplyLayout();
+    }
+    // Switch to Logs tab and hide idle hero
+    nxHideHero();
+    nxSetTab('logs');
+    // Cancel any pending collapse timer
+    if (NX.idleCollapseTimer) { clearTimeout(NX.idleCollapseTimer); NX.idleCollapseTimer = null; }
+  }
+
+  if (status === 'error' && prev !== 'error') {
+    // Focus inspector error area with a pulse
+    const right = document.getElementById('nxRight');
+    if (right) { right.classList.add('error-pulse'); setTimeout(() => right.classList.remove('error-pulse'), 1200); }
+    // Make sure logs tab is visible
+    nxHideHero();
+    if (NX.activeTab === 'logs' || !NX.activeTab) nxSetTab('logs');
+  }
+
+  if (status === 'idle' && prev === 'running') {
+    // Collapse left panel after 4s when task completes
+    NX.idleCollapseTimer = setTimeout(() => {
+      NX.leftOpen = false;
+      NX.leftW = 0;
+      nxApplyLayout();
+    }, 4000);
+  }
 }
 
 // ── Queue polling ──
@@ -2496,7 +2704,14 @@ function nxOpenPanel(panel) {
 // ── Task helpers ──
 function nxSetTask(text) {
   const inp = document.getElementById('taskInput');
-  if (inp) { inp.value = text; inp.focus(); }
+  if (inp) {
+    inp.value = text;
+    inp.focus();
+    inp.setSelectionRange(text.length, text.length);
+  }
+  // Hide idle hero so the command bar is obvious
+  nxHideHero();
+  nxSetTab('logs');
 }
 
 // ── Toast ──
@@ -5862,8 +6077,17 @@ setActiveTab(activeTab);
 loadConfig(true);
 loadSessions();
 loadQueue();
-setInterval(() => { refreshSession(); loadQueue(); }, 1200);
-setInterval(loadSessions, 4000);
+// Adaptive poll: fast when running (3s), slow when idle (8s)
+(function nxAdaptivePoll() {
+  function tick() {
+    const running = NX.lastStatus === 'running';
+    refreshSession();
+    loadQueue();
+    setTimeout(tick, running ? 3000 : 8000);
+  }
+  setTimeout(tick, 3000);
+})();
+setInterval(loadSessions, 8000);
 // Refresh config in the background (managed status counters etc).
 // Phase 6.6: this poll is fully suppressed while the Settings modal is open
 // or the user is interacting with it. loadConfig() also re-checks both flags
