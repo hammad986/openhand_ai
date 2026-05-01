@@ -62,6 +62,18 @@ The UI was upgraded from the basic "Phase 57" bridge to a full feature-complete 
 - **Drag & Drop**: Drop files directly onto command bar for instant attachment
 - **Branding**: Animated SVG star logo with gradient rotation, logo hover animation
 
+### Phase 7: Structured Agent System
+- **5 Specialist Agents**: Code Reviewer, Debugger, Test Generator, Security Auditor, Performance Optimizer
+- **Plan-Gated Execution**: Lite → no agents; Pro → Debugger + Code Reviewer; Elite → full 5-agent pipeline
+- **Smart Triggering**: Debugger fires on errors; Security fires on backend/auth code; Optimizer fires on heavy/perf tasks; Code Reviewer always runs; Tester fires on code tasks
+- **Pipeline Order**: Debugger → Code Reviewer → Security Auditor → Performance Optimizer → Test Generator
+- **UI Integration**: Collapsible "Agents" section in the Inspector panel with status indicators, per-agent toggles, and inline results
+- **Master Toggle**: Enable/disable the entire agent system from Inspector
+- **Per-Agent Toggles**: Each agent has its own ON/OFF toggle
+- **Manual Re-run**: "Run Agent Pipeline" button to manually trigger after a session
+- **Backend**: `_P7_PIPELINES` dict (in-memory), threaded execution, 5 analysis functions in `web_app.py`
+- **New Endpoints**: `GET /api/p7/agents`, `GET|POST /api/p7/config`, `POST /api/p7/pipeline/run`, `GET /api/p7/pipeline/status/<sid>`, `POST /api/p7/pipeline/clear/<sid>`
+
 ## Running the App
 - **Workflow**: "Start application" — runs `python web_app.py`
 - **Port**: 5000

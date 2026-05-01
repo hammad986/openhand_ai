@@ -2078,6 +2078,91 @@ body {
 /* ── Right Panel — Inspector ── */
 .nx-right { }
 .nx-inspector-section { margin-bottom: 10px; }
+
+/* ── Phase 7: Agent System Panel ── */
+#p7AgentsSection { }
+.p7-master-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.p7-system-label { font-size: 11px; color: var(--text-muted); }
+.p7-toggle-switch {
+  position: relative; width: 32px; height: 17px; display: inline-block;
+}
+.p7-toggle-switch input { opacity: 0; width: 0; height: 0; }
+.p7-toggle-track {
+  position: absolute; cursor: pointer; inset: 0;
+  background: var(--panel-border); border-radius: 17px;
+  transition: background 200ms;
+}
+.p7-toggle-track::before {
+  content: ""; position: absolute; width: 13px; height: 13px;
+  left: 2px; top: 2px; background: #fff; border-radius: 50%;
+  transition: transform 200ms;
+}
+.p7-toggle-switch input:checked + .p7-toggle-track { background: var(--green, #4caf50); }
+.p7-toggle-switch input:checked + .p7-toggle-track::before { transform: translateX(15px); }
+
+.p7-agent-row {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--panel-border);
+  border-radius: 6px; padding: 6px 8px; margin-bottom: 5px;
+  transition: border-color 200ms, opacity 200ms;
+  position: relative; overflow: hidden;
+}
+.p7-agent-row.p7-running { border-color: var(--accent); }
+.p7-agent-row.p7-done    { border-color: var(--green, #4caf50); }
+.p7-agent-row.p7-error   { border-color: #bf4c4c; }
+.p7-agent-row.p7-skipped { opacity: 0.5; }
+.p7-agent-progress {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--accent); border-radius: 6px 0 0 6px;
+  transition: background 300ms;
+}
+.p7-running .p7-agent-progress { background: var(--accent); animation: p7Pulse 1s ease-in-out infinite; }
+.p7-done    .p7-agent-progress { background: var(--green, #4caf50); }
+.p7-error   .p7-agent-progress { background: #bf4c4c; }
+@keyframes p7Pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+.p7-agent-icon { font-size: 14px; min-width: 18px; text-align: center; }
+.p7-agent-body { flex: 1; min-width: 0; }
+.p7-agent-name { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.p7-agent-status { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+.p7-agent-toggle { flex-shrink: 0; }
+
+.p7-result-card {
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-radius: 5px; padding: 7px 8px; margin-top: 4px;
+  font-size: 10px; color: var(--text-muted); line-height: 1.5;
+  display: none;
+}
+.p7-result-card.visible { display: block; }
+.p7-result-summary { color: var(--text); font-weight: 500; margin-bottom: 4px; }
+.p7-result-item {
+  display: flex; gap: 5px; align-items: flex-start;
+  padding: 2px 0; border-bottom: 1px solid var(--panel-border);
+}
+.p7-result-item:last-child { border-bottom: none; }
+.p7-sev-high   { color: #bf4c4c; font-weight: 700; font-size: 9px; min-width: 36px; }
+.p7-sev-medium { color: #d6a94a; font-weight: 700; font-size: 9px; min-width: 36px; }
+.p7-sev-low    { color: #6c8ebf; font-weight: 700; font-size: 9px; min-width: 36px; }
+.p7-sev-ok     { color: var(--green, #4caf50); font-weight: 700; font-size: 9px; min-width: 36px; }
+
+.p7-run-btn {
+  width: 100%; margin-top: 6px; padding: 6px; background: var(--accent);
+  color: #fff; border: none; border-radius: 5px; font-size: 11px;
+  font-weight: 600; cursor: pointer; transition: opacity 150ms;
+}
+.p7-run-btn:hover { opacity: 0.85; }
+.p7-run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.p7-pipeline-stage {
+  font-size: 10px; color: var(--text-dim); text-align: center;
+  margin-bottom: 6px; height: 14px;
+}
+.p7-plan-badge {
+  font-size: 9px; background: var(--panel-border); color: var(--text-dim);
+  padding: 1px 5px; border-radius: 4px; margin-left: auto;
+}
 .nx-insp-label {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 6px;
@@ -2670,6 +2755,32 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           <div class="p5-route-info" id="p5RouteInfo" style="display:none">
             <div>Route: <span class="p5-ri-prov" id="p5RiProv">—</span></div>
             <div class="p5-ri-chain" id="p5RiChain"></div>
+          </div>
+        </div>
+
+        <!-- Phase 7: Agent System -->
+        <div class="nx-inspector-section" id="p7AgentsSection">
+          <div class="nx-insp-label" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="p7ToggleBody()">
+            <span>Agents</span>
+            <span id="p7CollapseIcon" style="font-size:9px;color:var(--text-dim)">▴</span>
+          </div>
+          <div id="p7Body">
+            <!-- Master toggle + plan badge -->
+            <div class="p7-master-toggle">
+              <span class="p7-system-label" id="p7PlanLabel">Elite Pipeline</span>
+              <label class="p7-toggle-switch" title="Enable/disable agent system">
+                <input type="checkbox" id="p7MasterToggle" checked onchange="p7SaveMasterToggle(this.checked)">
+                <span class="p7-toggle-track"></span>
+              </label>
+            </div>
+            <!-- Pipeline stage indicator -->
+            <div class="p7-pipeline-stage" id="p7StageLabel">Waiting for task…</div>
+            <!-- Agent rows (rendered by JS) -->
+            <div id="p7AgentList"></div>
+            <!-- Run button -->
+            <button class="p7-run-btn" id="p7RunBtn" onclick="p7ManualRun()" disabled>
+              ▶ Run Agent Pipeline
+            </button>
           </div>
         </div>
 
@@ -12178,5 +12289,376 @@ window.switchSettingsTab = function(tab) {
 };
 
 console.log('[Phase 6] Decision Intelligence Layer active. Priority:', p6Priority);
+})();
+
+/* ================================================================
+   PHASE 7 — STRUCTURED AGENT SYSTEM
+   5 specialist agents · plan-gated · smart-triggered · collapsible
+   ================================================================ */
+(function() {
+'use strict';
+
+/* ── State ──────────────────────────────────────────────────────── */
+let p7Agents        = [];          // from /api/p7/agents
+let p7Config        = null;        // from /api/p7/config
+let p7ActiveSid     = null;        // current session id being tracked
+let p7PollTimer     = null;        // polling interval handle
+let p7Collapsed     = false;       // panel collapsed state
+let p7LastLogText   = '';          // cached log text for manual run
+let p7LastTask      = '';          // cached task text
+let p7LastPlanMode  = 'elite';     // cached plan mode
+
+const P7_PLAN_LABELS = {
+    lite:  'Lite — Agents disabled',
+    pro:   'Pro — Optional agents',
+    elite: 'Elite — Full pipeline',
+};
+
+/* ── Utility ────────────────────────────────────────────────────── */
+function p7El(id) { return document.getElementById(id); }
+
+function p7SetStage(msg, color) {
+    const el = p7El('p7StageLabel');
+    if (!el) return;
+    el.textContent  = msg;
+    el.style.color  = color || '';
+}
+
+/* ── Collapse ───────────────────────────────────────────────────── */
+window.p7ToggleBody = function() {
+    p7Collapsed = !p7Collapsed;
+    const body = p7El('p7Body');
+    const icon = p7El('p7CollapseIcon');
+    if (body) body.style.display = p7Collapsed ? 'none' : '';
+    if (icon) icon.textContent   = p7Collapsed ? '▾' : '▴';
+};
+
+/* ── Load agents list from backend ─────────────────────────────── */
+async function p7LoadAgents() {
+    try {
+        const r = await fetch('/api/p7/agents');
+        const d = await r.json();
+        if (d.ok) p7Agents = d.agents;
+    } catch(e) {}
+}
+
+/* ── Load user config ───────────────────────────────────────────── */
+async function p7LoadConfig() {
+    try {
+        const r = await fetch('/api/p7/config');
+        const d = await r.json();
+        if (d.ok) {
+            p7Config = d.config;
+            const mt = p7El('p7MasterToggle');
+            if (mt) mt.checked = p7Config.enabled !== false;
+        }
+    } catch(e) {}
+}
+
+/* ── Save master toggle ─────────────────────────────────────────── */
+window.p7SaveMasterToggle = async function(enabled) {
+    try {
+        await fetch('/api/p7/config', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({enabled}),
+        });
+        if (p7Config) p7Config.enabled = enabled;
+        p7SetStage(enabled ? 'Agents enabled' : 'Agents disabled');
+    } catch(e) {}
+};
+
+/* ── Save individual agent toggle ───────────────────────────────── */
+window.p7SaveAgentToggle = async function(agentId, enabled) {
+    if (!p7Config) return;
+    const toggles = Object.assign({}, p7Config.toggles || {}, {[agentId]: enabled});
+    try {
+        await fetch('/api/p7/config', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({toggles}),
+        });
+        if (p7Config) p7Config.toggles = toggles;
+    } catch(e) {}
+};
+
+/* ── Render agent list ──────────────────────────────────────────── */
+function p7RenderAgents(pipelineAgents) {
+    const list = p7El('p7AgentList');
+    if (!list) return;
+    // Merge agents from pipeline state (if any) with config
+    const source = pipelineAgents || p7Agents.map(a => ({...a, status: 'pending'}));
+    const toggles = (p7Config && p7Config.toggles) || {};
+    list.innerHTML = source.map(ag => {
+        const isEnabled = toggles[ag.id] !== false;
+        const st = ag.status || 'pending';
+        const rowClass = `p7-agent-row p7-${st}`;
+        const statusText = {
+            pending: 'Waiting…',
+            running: 'Running…',
+            done:    ag.result?.summary || 'Complete',
+            skipped: ag.skipped_reason === 'disabled' ? 'Disabled' : 'Not triggered',
+            error:   ag.error || 'Error',
+        }[st] || st;
+
+        const elapsedTag = ag.elapsed ? ` <span style="color:var(--text-dim);font-size:9px">${ag.elapsed}s</span>` : '';
+
+        let resultHtml = '';
+        if (st === 'done' && ag.result) {
+            resultHtml = p7BuildResultHtml(ag.id, ag.result);
+        }
+
+        return `<div class="${rowClass}" id="p7Row-${ag.id}">
+  <div class="p7-agent-progress"></div>
+  <span class="p7-agent-icon">${ag.icon || '🤖'}</span>
+  <div class="p7-agent-body">
+    <div class="p7-agent-name">${ag.name}${elapsedTag}</div>
+    <div class="p7-agent-status" id="p7Status-${ag.id}">${statusText}</div>
+    ${resultHtml ? `<div class="p7-result-card visible" id="p7Result-${ag.id}">${resultHtml}</div>` : ''}
+  </div>
+  <label class="p7-toggle-switch p7-agent-toggle" title="Toggle this agent">
+    <input type="checkbox" ${isEnabled ? 'checked' : ''}
+      onchange="p7SaveAgentToggle('${ag.id}', this.checked)">
+    <span class="p7-toggle-track"></span>
+  </label>
+</div>`;
+    }).join('');
+}
+
+/* ── Build result HTML per agent type ───────────────────────────── */
+function p7BuildResultHtml(agentId, result) {
+    if (!result) return '';
+    const summary = `<div class="p7-result-summary">${escHtml(result.summary || '')}</div>`;
+
+    if (agentId === 'reviewer') {
+        const grade = result.grade || '?';
+        const color = grade === 'A' ? '#4caf50' : grade === 'B' ? '#6c8ebf' : grade === 'C' ? '#d6a94a' : '#bf4c4c';
+        const findings = (result.findings || []).slice(0, 3).map(f =>
+            `<div class="p7-result-item"><span class="p7-sev-medium">WARN</span><span>${escHtml(f.message)}</span></div>`).join('');
+        const positive = (result.positive || []).slice(0, 2).map(p =>
+            `<div class="p7-result-item"><span class="p7-sev-ok">✓</span><span>${escHtml(p)}</span></div>`).join('');
+        return `${summary}<div style="text-align:center;margin:4px 0">
+          <span style="font-size:22px;font-weight:700;color:${color}">${grade}</span>
+          <span style="font-size:10px;color:var(--text-dim)"> / ${result.score}/100</span>
+        </div>${findings}${positive}`;
+    }
+    if (agentId === 'debugger') {
+        const errs = (result.errors || []).slice(0, 3).map(e =>
+            `<div class="p7-result-item"><span class="p7-sev-high">ERR</span><span>${escHtml(e.explanation)}</span></div>`).join('');
+        const fixes = (result.fixes || []).slice(0, 2).map(f =>
+            `<div class="p7-result-item"><span class="p7-sev-ok">FIX</span><span>${escHtml(f)}</span></div>`).join('');
+        return `${summary}${errs}${fixes}`;
+    }
+    if (agentId === 'tester') {
+        const tests = (result.tests || []).slice(0, 3).map(t =>
+            `<div class="p7-result-item"><span class="p7-sev-low">TEST</span><span>${escHtml(t.suggestion)}</span></div>`).join('');
+        return `${summary}${tests}`;
+    }
+    if (agentId === 'security') {
+        const riskColor = result.risk_level === 'Clean' ? '#4caf50' : result.risk_level === 'Low' ? '#6c8ebf' : result.risk_level === 'Medium' ? '#d6a94a' : '#bf4c4c';
+        const findings = (result.findings || []).slice(0, 4).map(f => {
+            const sev = f.severity === 'HIGH' ? 'p7-sev-high' : f.severity === 'MEDIUM' ? 'p7-sev-medium' : 'p7-sev-low';
+            return `<div class="p7-result-item"><span class="${sev}">${f.severity}</span><span>${escHtml(f.message)}</span></div>`;
+        }).join('');
+        return `${summary}<div style="font-size:11px;font-weight:700;color:${riskColor};margin-bottom:4px">Risk: ${result.risk_level}</div>${findings}`;
+    }
+    if (agentId === 'optimizer') {
+        const suggs = (result.suggestions || []).slice(0, 3).map(s =>
+            `<div class="p7-result-item"><span class="p7-sev-low">OPT</span><span>${escHtml(s.suggestion)}</span></div>`).join('');
+        return `${summary}${suggs}`;
+    }
+    return summary;
+}
+
+function escHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ── Poll pipeline status ───────────────────────────────────────── */
+async function p7PollStatus(sid) {
+    try {
+        const r = await fetch(`/api/p7/pipeline/status/${sid}`);
+        if (!r.ok) return;
+        const d = await r.json();
+        if (!d.ok) return;
+        const state = d.state;
+        p7RenderAgents(state.agents);
+        const doneCount    = state.agents.filter(a => a.status === 'done').length;
+        const runningCount = state.agents.filter(a => a.status === 'running').length;
+        const total        = state.agents.filter(a => a.status !== 'skipped').length;
+
+        if (state.stage === 'running') {
+            p7SetStage(`Pipeline running — ${doneCount}/${total} complete`, 'var(--accent)');
+        } else if (state.stage === 'done') {
+            const elapsed = state.finished_at && state.created_at
+                ? `${(state.finished_at - state.created_at).toFixed(1)}s`
+                : '';
+            p7SetStage(`Pipeline complete ${elapsed ? `in ${elapsed}` : ''}`, 'var(--green, #4caf50)');
+            clearInterval(p7PollTimer);
+            p7PollTimer = null;
+            const btn = p7El('p7RunBtn');
+            if (btn) { btn.disabled = false; btn.textContent = '↺ Re-run Pipeline'; }
+        }
+    } catch(e) {}
+}
+
+/* ── Start polling ──────────────────────────────────────────────── */
+function p7StartPolling(sid) {
+    if (p7PollTimer) clearInterval(p7PollTimer);
+    p7PollTimer = setInterval(() => p7PollStatus(sid), 800);
+    // First poll immediately
+    p7PollStatus(sid);
+}
+
+/* ── Trigger pipeline (called after session completes) ──────────── */
+async function p7TriggerPipeline(sid, task, planMode, logText) {
+    if (!sid || planMode === 'lite') return;
+    const mt = p7El('p7MasterToggle');
+    if (mt && !mt.checked) return;
+    p7ActiveSid    = sid;
+    p7LastTask     = task;
+    p7LastPlanMode = planMode;
+    p7LastLogText  = logText;
+
+    const btn = p7El('p7RunBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Running…'; }
+    p7SetStage('Starting pipeline…', 'var(--accent)');
+
+    try {
+        const r = await fetch('/api/p7/pipeline/run', {
+            method:  'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({sid, task, plan_mode: planMode, log_text: logText}),
+        });
+        const d = await r.json();
+        if (d.ok) {
+            p7RenderAgents(d.state.agents);
+            p7StartPolling(sid);
+        } else {
+            p7SetStage(d.error || 'Pipeline unavailable');
+            if (btn) { btn.disabled = false; btn.textContent = '▶ Run Agent Pipeline'; }
+        }
+    } catch(e) {
+        p7SetStage('Pipeline error — check console');
+        if (btn) { btn.disabled = false; btn.textContent = '▶ Run Agent Pipeline'; }
+    }
+}
+
+/* ── Manual run button ──────────────────────────────────────────── */
+window.p7ManualRun = function() {
+    if (!p7ActiveSid) {
+        p7SetStage('No session available — run a task first');
+        return;
+    }
+    p7TriggerPipeline(p7ActiveSid, p7LastTask, p7LastPlanMode, p7LastLogText);
+};
+
+/* ── Update panel for plan mode ─────────────────────────────────── */
+function p7UpdateForPlan(planMode) {
+    p7LastPlanMode = planMode;
+    const label = p7El('p7PlanLabel');
+    if (label) label.textContent = P7_PLAN_LABELS[planMode] || planMode;
+    const btn = p7El('p7RunBtn');
+    if (btn) {
+        if (planMode === 'lite') {
+            btn.disabled = true;
+            btn.title = 'Agents require Pro or Elite plan';
+        } else if (p7ActiveSid) {
+            btn.disabled = false;
+        }
+    }
+}
+
+/* ── Hook into session completion ───────────────────────────────── */
+// Watch status badge for completion, then grab logs + trigger pipeline
+function p7MonitorSessions() {
+    const statusBadge = document.getElementById('nxGlobalStatus') ||
+                        document.getElementById('stStatus');
+    if (!statusBadge) return;
+
+    const obs = new MutationObserver(async () => {
+        const text = statusBadge.textContent.trim().toLowerCase();
+        if (text !== 'done' && text !== 'complete' && text !== 'success') return;
+
+        // Get active session id
+        const sid = (typeof currentSessionId !== 'undefined' && currentSessionId) ||
+                    (typeof nxCurrentSid !== 'undefined' && nxCurrentSid);
+        if (!sid || sid === p7ActiveSid) return;  // avoid double-trigger
+
+        // Get plan mode
+        const planBadge = document.getElementById('nxPlanBadge') ||
+                          document.getElementById('planModeSelect') ||
+                          document.querySelector('[data-plan]');
+        const planMode = (planBadge?.dataset?.plan || planBadge?.value ||
+                          localStorage.getItem('p4_prefs') && JSON.parse(localStorage.getItem('p4_prefs') || '{}').plan_mode ||
+                          'elite').toLowerCase();
+
+        if (planMode === 'lite') return;
+
+        // Grab log text from the log area
+        const logArea = document.getElementById('logArea') ||
+                        document.getElementById('nxLogs') ||
+                        document.querySelector('.nx-log-area');
+        const logText = logArea ? logArea.innerText || logArea.textContent : '';
+
+        // Get task text
+        const taskInput = document.getElementById('taskInput') ||
+                          document.querySelector('textarea[name="task"]');
+        const task = taskInput ? taskInput.value : '';
+
+        p7TriggerPipeline(sid, task, planMode, logText);
+    });
+    obs.observe(statusBadge, {childList: true, characterData: true, subtree: true});
+}
+
+/* ── Hook into plan mode selector ───────────────────────────────── */
+function p7WatchPlanMode() {
+    // Try to watch a plan selector if present
+    const possibleSelectors = ['planModeSelect', 'nxPlanSelect', 'p3PlanMode'];
+    for (const id of possibleSelectors) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', () => p7UpdateForPlan(el.value));
+        }
+    }
+    // Also watch localStorage-based plan changes via custom event
+    window.addEventListener('p7PlanChanged', e => {
+        if (e.detail?.plan) p7UpdateForPlan(e.detail.plan);
+    });
+}
+
+/* ── Session hook: enable Run button when a session becomes active ─ */
+function p7WatchSessionSelect() {
+    // Override selectSession if it exists
+    const origSelect = window.selectSession;
+    window.selectSession = function(sid, ...rest) {
+        if (origSelect) origSelect.call(this, sid, ...rest);
+        if (sid) {
+            p7ActiveSid = sid;
+            const btn = p7El('p7RunBtn');
+            const mt  = p7El('p7MasterToggle');
+            if (btn && mt?.checked && p7LastPlanMode !== 'lite') {
+                btn.disabled = false;
+                btn.textContent = '▶ Run Agent Pipeline';
+            }
+        }
+    };
+}
+
+/* ── Expose trigger for external hooks ──────────────────────────── */
+window.p7TriggerPipeline = p7TriggerPipeline;
+window.p7UpdateForPlan   = p7UpdateForPlan;
+
+/* ── Initialise ─────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async function() {
+    await Promise.all([p7LoadAgents(), p7LoadConfig()]);
+    p7RenderAgents(null);  // render skeleton with pending states
+    p7UpdateForPlan(p7LastPlanMode);
+    p7MonitorSessions();
+    p7WatchPlanMode();
+    p7WatchSessionSelect();
+    console.log('[Phase 7] Structured Agent System active. Agents:', p7Agents.map(a=>a.id));
+});
+
 })();
 </div></body></html>

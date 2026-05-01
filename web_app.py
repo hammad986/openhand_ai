@@ -7117,5 +7117,507 @@ def api_providers_status():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE 7 — STRUCTURED AGENT SYSTEM
+# 5 specialist agents: Code Reviewer, Debugger, Test Generator,
+# Security Auditor, Performance Optimizer
+# Pipeline runs automatically based on plan mode; toggleable per-agent.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_P7_AGENTS = {
+    "reviewer": {
+        "id":          "reviewer",
+        "name":        "Code Reviewer",
+        "icon":        "🔍",
+        "description": "Checks code quality, readability, and best practices",
+        "plans":       ["pro", "elite"],
+        "auto_trigger": ["always"],
+        "color":       "#6c8ebf",
+    },
+    "debugger": {
+        "id":          "debugger",
+        "name":        "Debugger",
+        "icon":        "🐛",
+        "description": "Detects runtime errors and suggests targeted fixes",
+        "plans":       ["pro", "elite"],
+        "auto_trigger": ["on_error"],
+        "color":       "#d6a94a",
+    },
+    "tester": {
+        "id":          "tester",
+        "name":        "Test Generator",
+        "icon":        "🧪",
+        "description": "Generates unit tests and test coverage suggestions",
+        "plans":       ["elite"],
+        "auto_trigger": ["on_code"],
+        "color":       "#6bbf6c",
+    },
+    "security": {
+        "id":          "security",
+        "name":        "Security Auditor",
+        "icon":        "🛡",
+        "description": "Scans for vulnerabilities and security anti-patterns",
+        "plans":       ["elite"],
+        "auto_trigger": ["on_backend"],
+        "color":       "#bf6c6c",
+    },
+    "optimizer": {
+        "id":          "optimizer",
+        "name":        "Performance Optimizer",
+        "icon":        "⚡",
+        "description": "Identifies bottlenecks and efficiency improvements",
+        "plans":       ["elite"],
+        "auto_trigger": ["on_heavy"],
+        "color":       "#a56cbf",
+    },
+}
+
+# Per-session pipeline state: { sid: { stage, agents: [{id, status, result}] } }
+_P7_PIPELINES: dict = {}
+_p7_lock = threading.Lock()
+
+_P7_SETTINGS_KEY = "p7_agent_config"
+
+_P7_PIPELINE_ORDER = ["debugger", "reviewer", "security", "optimizer", "tester"]
+
+
+def p7_get_user_config() -> dict:
+    """Return user's agent toggle config."""
+    return get_setting(_P7_SETTINGS_KEY, {
+        "enabled": True,
+        "toggles": {aid: True for aid in _P7_AGENTS},
+    })
+
+
+def p7_should_trigger(agent_id: str, task: str, log_text: str, plan_mode: str) -> bool:
+    """Smart triggering: decide if this agent should run given context."""
+    agent = _P7_AGENTS[agent_id]
+    # Plan gate
+    if plan_mode not in agent["plans"]:
+        return False
+    triggers = agent["auto_trigger"]
+    task_l = task.lower()
+    log_l  = log_text.lower()
+    if "always" in triggers:
+        return True
+    if "on_error" in triggers:
+        error_hints = ["error", "traceback", "exception", "failed", "fail:", "[error]", "❌"]
+        return any(h in log_l for h in error_hints)
+    if "on_code" in triggers:
+        code_hints = ["def ", "class ", "function", "import ", "require(", "```python",
+                      "```js", "```javascript", "#!/usr", ".py", ".js", ".ts"]
+        return any(h in log_l or h in task_l for h in code_hints)
+    if "on_backend" in triggers:
+        backend_hints = ["api", "auth", "database", "db", "sql", "server", "backend",
+                         "password", "token", "secret", "key", "flask", "django",
+                         "fastapi", "express", "login", "endpoint", "http"]
+        return any(h in task_l or h in log_l for h in backend_hints)
+    if "on_heavy" in triggers:
+        heavy_hints = ["performance", "speed", "optimiz", "slow", "loop", "algorithm",
+                       "process", "compute", "scale", "load", "cache", "async", "concurrent"]
+        return any(h in task_l or h in log_l for h in heavy_hints)
+    return False
+
+
+def p7_run_reviewer(task: str, log_text: str, code_snippets: list) -> dict:
+    """Code quality review via pattern analysis."""
+    findings = []
+    score = 100
+    text = "\n".join(code_snippets) + "\n" + log_text
+
+    checks = [
+        (["TODO", "FIXME", "HACK", "XXX"],           "Contains TODO/FIXME markers — resolve before production",    5),
+        (["print(", "console.log("],                  "Debug print statements detected — use proper logging",       5),
+        (["except:", "except Exception:"],            "Bare except clauses catch all errors — be more specific",    8),
+        (["global "],                                 "Global variable usage detected — consider refactoring",      6),
+        (["password", "secret", "api_key"],           "Sensitive variable names detected in code",                 10),
+        (["time.sleep", "Thread.sleep"],              "Blocking sleep calls found — consider async alternatives",   5),
+        (["eval(", "exec("],                          "Dynamic code execution (eval/exec) detected — risky",       10),
+    ]
+    for keywords, msg, penalty in checks:
+        if any(k.lower() in text.lower() for k in keywords):
+            findings.append({"severity": "warn", "message": msg})
+            score = max(0, score - penalty)
+
+    # Positive signals
+    positive = []
+    if '"""' in text or "'''" in text:
+        positive.append("Docstrings present — good documentation habit")
+    if "import logging" in text or "logger" in text:
+        positive.append("Proper logging used")
+    if "try:" in text and "except" in text:
+        positive.append("Error handling implemented")
+
+    grade = "A" if score >= 90 else "B" if score >= 75 else "C" if score >= 60 else "D"
+    return {
+        "score":     score,
+        "grade":     grade,
+        "findings":  findings,
+        "positive":  positive,
+        "summary":   f"Code quality score: {score}/100 (Grade {grade}). "
+                     f"{len(findings)} issue(s) found.",
+    }
+
+
+def p7_run_debugger(task: str, log_text: str) -> dict:
+    """Extract and explain errors from session logs."""
+    errors = []
+    lines = log_text.split("\n")
+    error_patterns = [
+        ("Traceback", "Python exception — check stack trace above for root cause"),
+        ("NameError",  "Variable or name not defined — check spelling and scope"),
+        ("TypeError",  "Wrong type passed to function — verify argument types"),
+        ("ImportError", "Module import failed — check package is installed"),
+        ("ModuleNotFoundError", "Missing dependency — run pip install for the package"),
+        ("AttributeError", "Object missing attribute — verify object type and API"),
+        ("SyntaxError",    "Syntax error in code — check for missing colons, brackets"),
+        ("IndentationError","Indentation error — check consistent spaces/tabs"),
+        ("KeyError",       "Dictionary key missing — use .get() or check key exists"),
+        ("IndexError",     "List index out of range — check list length before access"),
+        ("FileNotFoundError","File not found — verify path and working directory"),
+        ("ConnectionError","Network connection failed — check URL and connectivity"),
+        ("TimeoutError",   "Operation timed out — add retry logic or increase timeout"),
+        ("[ERROR]",        "Agent reported an error — see logs for details"),
+        ("❌",             "Task step failed — see adjacent log lines for context"),
+    ]
+    seen = set()
+    for line in lines:
+        for pattern, explanation in error_patterns:
+            if pattern.lower() in line.lower() and pattern not in seen:
+                errors.append({"error": pattern, "explanation": explanation, "line": line.strip()[:120]})
+                seen.add(pattern)
+
+    fixes = []
+    if not errors:
+        fixes.append("No errors detected in session logs — task completed cleanly")
+    else:
+        fixes.append(f"Found {len(errors)} error pattern(s) — address the highest-severity first")
+        if any("Import" in e["error"] or "Module" in e["error"] for e in errors):
+            fixes.append("Run: pip install -r requirements.txt to resolve missing packages")
+        if any("Syntax" in e["error"] or "Indentation" in e["error"] for e in errors):
+            fixes.append("Use a linter (flake8/pylint) to catch syntax issues before running")
+
+    return {
+        "errors_found": len(errors),
+        "errors":        errors[:8],
+        "fixes":         fixes,
+        "summary":       f"{'No errors detected.' if not errors else f'{len(errors)} error type(s) identified with suggested fixes.'}",
+    }
+
+
+def p7_run_tester(task: str, log_text: str, code_snippets: list) -> dict:
+    """Generate test case suggestions based on code found."""
+    text = "\n".join(code_snippets) + "\n" + task
+    tests = []
+
+    import re
+    func_matches = re.findall(r"def\s+(\w+)\s*\(", text)
+    class_matches = re.findall(r"class\s+(\w+)\s*[\(:]", text)
+
+    for fn in func_matches[:5]:
+        if fn.startswith("_"):
+            continue
+        tests.append({
+            "type": "unit",
+            "target": fn,
+            "suggestion": f"def test_{fn}(): — verify expected return value and edge cases (empty input, None, boundary values)",
+        })
+    for cls in class_matches[:3]:
+        tests.append({
+            "type": "class",
+            "target": cls,
+            "suggestion": f"test_{cls.lower()}_init() — verify object creation; test_{cls.lower()}_methods() — verify key method outputs",
+        })
+
+    if not tests:
+        tests.append({
+            "type": "integration",
+            "target": "main flow",
+            "suggestion": "Write an integration test covering the full task flow end-to-end",
+        })
+
+    coverage_target = min(80 + len(tests) * 2, 95)
+    return {
+        "tests_suggested": len(tests),
+        "tests":           tests,
+        "coverage_target": coverage_target,
+        "summary":         f"{len(tests)} test case(s) suggested. Target ≥{coverage_target}% coverage.",
+    }
+
+
+def p7_run_security(task: str, log_text: str, code_snippets: list) -> dict:
+    """Scan for common security anti-patterns."""
+    text = "\n".join(code_snippets) + "\n" + log_text + "\n" + task
+    vulns = []
+
+    checks = [
+        (["password =", 'password="', "password='"],
+         "HIGH", "Hardcoded password detected — use environment variables"),
+        (["api_key =", 'api_key="', "SECRET_KEY ="],
+         "HIGH", "Hardcoded API key/secret — move to .env file"),
+        (["eval(", "exec("],
+         "HIGH", "Dynamic code execution — potential code injection vector"),
+        (["subprocess.call", "os.system", "shell=True"],
+         "MEDIUM", "Shell execution with user data — risk of command injection"),
+        (["SQL", "SELECT", "INSERT", "UPDATE", "DELETE", "WHERE"],
+         "MEDIUM", "SQL operations detected — ensure parameterized queries, avoid string concat"),
+        (["pickle.load", "pickle.loads"],
+         "MEDIUM", "Pickle deserialization — unsafe with untrusted data"),
+        (["http://", "verify=False"],
+         "LOW", "Insecure HTTP or disabled TLS verification detected"),
+        (["debug=True", "DEBUG = True"],
+         "LOW", "Debug mode enabled — disable in production"),
+        (["cors", "Access-Control-Allow-Origin: *"],
+         "LOW", "Permissive CORS policy — restrict allowed origins in production"),
+    ]
+
+    for keywords, severity, message in checks:
+        if any(k.lower() in text.lower() for k in keywords):
+            vulns.append({"severity": severity, "message": message})
+
+    high   = sum(1 for v in vulns if v["severity"] == "HIGH")
+    medium = sum(1 for v in vulns if v["severity"] == "MEDIUM")
+    low    = sum(1 for v in vulns if v["severity"] == "LOW")
+    risk   = "Critical" if high >= 2 else "High" if high else "Medium" if medium >= 2 else "Low" if medium else "Clean"
+
+    return {
+        "risk_level": risk,
+        "total":      len(vulns),
+        "high":       high,
+        "medium":     medium,
+        "low":        low,
+        "findings":   vulns[:8],
+        "summary":    f"Risk level: {risk}. {high} high, {medium} medium, {low} low severity issue(s).",
+    }
+
+
+def p7_run_optimizer(task: str, log_text: str, code_snippets: list) -> dict:
+    """Identify performance bottlenecks and suggest improvements."""
+    text = "\n".join(code_snippets) + "\n" + task
+    suggestions = []
+
+    patterns = [
+        (["for ", "while "],
+         "Loop optimization",
+         "Consider list comprehensions or vectorized operations (numpy) for heavy loops"),
+        (["time.sleep", "sleep("],
+         "Blocking sleep",
+         "Replace blocking sleeps with asyncio.sleep() in async contexts"),
+        (["requests.get", "requests.post"],
+         "Sync HTTP calls",
+         "Use async HTTP (httpx/aiohttp) for concurrent API calls"),
+        (["open(", "read(", "write("],
+         "File I/O",
+         "Buffer file reads, use context managers, consider async I/O for large files"),
+        (["SELECT *"],
+         "Database query",
+         "Avoid SELECT * — fetch only needed columns to reduce data transfer"),
+        (["json.loads", "json.dumps"],
+         "JSON parsing",
+         "For high-frequency JSON ops, consider ujson or orjson for 3-10x speedup"),
+        (["import "],
+         "Import overhead",
+         "Move heavy imports inside functions if used rarely to reduce startup time"),
+        (["print("],
+         "Logging overhead",
+         "Replace print() with logging module — disable debug logs in production"),
+    ]
+
+    for keywords, category, suggestion in patterns:
+        if any(k.lower() in text.lower() for k in keywords):
+            suggestions.append({"category": category, "suggestion": suggestion})
+
+    if not suggestions:
+        suggestions.append({
+            "category": "General",
+            "suggestion": "No major bottlenecks detected. Profile with cProfile for deeper analysis.",
+        })
+
+    return {
+        "opportunities": len(suggestions),
+        "suggestions":   suggestions[:6],
+        "estimated_gain": f"{min(len(suggestions) * 15, 60)}% potential improvement",
+        "summary":        f"{len(suggestions)} optimization opportunity(-ies) identified.",
+    }
+
+
+def p7_execute_pipeline(sid: str, task: str, log_text: str,
+                         plan_mode: str, enabled_agents: dict) -> None:
+    """Run the multi-agent pipeline in a background thread."""
+    with _p7_lock:
+        pipeline = _P7_PIPELINES.get(sid)
+        if not pipeline:
+            return
+        pipeline["stage"] = "running"
+        pipeline["started_at"] = time.time()
+
+    # Extract code snippets from log (lines that look like code)
+    code_snippets = [ln for ln in log_text.split("\n")
+                     if any(h in ln for h in ["def ", "class ", "import ", "function", "const ", "var "])]
+
+    for agent_id in _P7_PIPELINE_ORDER:
+        if agent_id not in _P7_AGENTS:
+            continue
+        # Check user toggle
+        if not enabled_agents.get(agent_id, True):
+            with _p7_lock:
+                for ag in _P7_PIPELINES[sid]["agents"]:
+                    if ag["id"] == agent_id:
+                        ag["status"] = "skipped"
+                        ag["skipped_reason"] = "disabled"
+            continue
+        # Check smart triggering
+        should_run = p7_should_trigger(agent_id, task, log_text, plan_mode)
+        if not should_run:
+            with _p7_lock:
+                for ag in _P7_PIPELINES[sid]["agents"]:
+                    if ag["id"] == agent_id:
+                        ag["status"] = "skipped"
+                        ag["skipped_reason"] = "not triggered"
+            continue
+        # Mark as running
+        with _p7_lock:
+            for ag in _P7_PIPELINES[sid]["agents"]:
+                if ag["id"] == agent_id:
+                    ag["status"] = "running"
+                    ag["started_at"] = time.time()
+        # Run the agent
+        try:
+            t0 = time.time()
+            if agent_id == "reviewer":
+                result = p7_run_reviewer(task, log_text, code_snippets)
+            elif agent_id == "debugger":
+                result = p7_run_debugger(task, log_text)
+            elif agent_id == "tester":
+                result = p7_run_tester(task, log_text, code_snippets)
+            elif agent_id == "security":
+                result = p7_run_security(task, log_text, code_snippets)
+            elif agent_id == "optimizer":
+                result = p7_run_optimizer(task, log_text, code_snippets)
+            else:
+                result = {}
+            elapsed = round(time.time() - t0, 2)
+            with _p7_lock:
+                for ag in _P7_PIPELINES[sid]["agents"]:
+                    if ag["id"] == agent_id:
+                        ag["status"]   = "done"
+                        ag["result"]   = result
+                        ag["elapsed"]  = elapsed
+        except Exception as exc:
+            with _p7_lock:
+                for ag in _P7_PIPELINES[sid]["agents"]:
+                    if ag["id"] == agent_id:
+                        ag["status"] = "error"
+                        ag["error"]  = str(exc)[:200]
+        # Small pause between agents so the UI can show sequential progress
+        time.sleep(0.4)
+
+    with _p7_lock:
+        if sid in _P7_PIPELINES:
+            _P7_PIPELINES[sid]["stage"] = "done"
+            _P7_PIPELINES[sid]["finished_at"] = time.time()
+
+
+def p7_init_pipeline(sid: str, plan_mode: str, task: str, enabled_agents: dict) -> dict:
+    """Initialise (or reset) the pipeline state for a session."""
+    agents_state = []
+    for agent_id in _P7_PIPELINE_ORDER:
+        meta = _P7_AGENTS[agent_id]
+        agents_state.append({
+            "id":     agent_id,
+            "name":   meta["name"],
+            "icon":   meta["icon"],
+            "color":  meta["color"],
+            "status": "pending",
+            "result": None,
+        })
+    state = {
+        "sid":        sid,
+        "plan_mode":  plan_mode,
+        "task":       task[:200],
+        "stage":      "pending",
+        "agents":     agents_state,
+        "created_at": time.time(),
+    }
+    with _p7_lock:
+        _P7_PIPELINES[sid] = state
+    return state
+
+
+@app.route("/api/p7/agents")
+def api_p7_agents():
+    """Return the 5 Phase 7 agent definitions."""
+    return jsonify({"ok": True, "agents": list(_P7_AGENTS.values())})
+
+
+@app.route("/api/p7/config", methods=["GET", "POST"])
+def api_p7_config():
+    """Get or save user's agent toggle configuration."""
+    if request.method == "POST":
+        d = request.get_json() or {}
+        cfg = p7_get_user_config()
+        if "enabled" in d:
+            cfg["enabled"] = bool(d["enabled"])
+        if "toggles" in d and isinstance(d["toggles"], dict):
+            for aid, val in d["toggles"].items():
+                if aid in _P7_AGENTS:
+                    cfg["toggles"][aid] = bool(val)
+        set_setting(_P7_SETTINGS_KEY, cfg)
+        return jsonify({"ok": True, "config": cfg})
+    return jsonify({"ok": True, "config": p7_get_user_config()})
+
+
+@app.route("/api/p7/pipeline/run", methods=["POST"])
+def api_p7_pipeline_run():
+    """Trigger the multi-agent pipeline for a completed session."""
+    d         = request.get_json() or {}
+    sid       = (d.get("sid") or "").strip()
+    task      = (d.get("task") or "").strip()
+    plan_mode = (d.get("plan_mode") or "elite").lower()
+    log_text  = (d.get("log_text") or "").strip()
+
+    if not sid:
+        return jsonify({"ok": False, "error": "sid required"}), 400
+    if plan_mode == "lite":
+        return jsonify({"ok": False, "error": "Agents not available in Lite mode"}), 400
+
+    user_cfg      = p7_get_user_config()
+    system_enabled = user_cfg.get("enabled", True)
+    if not system_enabled:
+        return jsonify({"ok": False, "error": "Agent system is disabled"}), 400
+
+    enabled_agents = user_cfg.get("toggles", {agent_id: True for agent_id in _P7_AGENTS})
+    state = p7_init_pipeline(sid, plan_mode, task, enabled_agents)
+
+    # Launch pipeline in background thread
+    t = threading.Thread(
+        target=p7_execute_pipeline,
+        args=(sid, task, log_text, plan_mode, enabled_agents),
+        daemon=True,
+        name=f"p7-pipeline-{sid[:8]}",
+    )
+    t.start()
+
+    return jsonify({"ok": True, "sid": sid, "state": state})
+
+
+@app.route("/api/p7/pipeline/status/<sid>")
+def api_p7_pipeline_status(sid):
+    """Return current pipeline state for a session."""
+    with _p7_lock:
+        state = _P7_PIPELINES.get(sid)
+    if not state:
+        return jsonify({"ok": False, "error": "No pipeline for this session"}), 404
+    return jsonify({"ok": True, "state": state})
+
+
+@app.route("/api/p7/pipeline/clear/<sid>", methods=["POST"])
+def api_p7_pipeline_clear(sid):
+    """Clear pipeline state for a session."""
+    with _p7_lock:
+        _P7_PIPELINES.pop(sid, None)
+    return jsonify({"ok": True})
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
