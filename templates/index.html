@@ -13,7 +13,130 @@
             --voice-active:#e85050; --upload-hover:#1f3f6c;
             --hitl-pause:#d29922; --hitl-resume:#3fb950;
             --obs-card:#13191f; --obs-border:#2a3140;
+            /* Phase 4 additions */
+            --theme-transition: background 0.25s, color 0.25s, border-color 0.25s;
         }
+        /* Phase 4: Light theme */
+        body.light-theme {
+            --bg:#f6f8fa; --panel:#ffffff; --panel2:#f0f2f5; --border:#d0d7de;
+            --text:#1f2328; --muted:#57606a; --accent:#0969da;
+            --green:#1a7f37; --red:#cf222e; --yellow:#9a6700; --orange:#bc4c00; --purple:#8250df;
+            --obs-card:#f6f8fa; --obs-border:#d0d7de;
+        }
+        body.light-theme .nx-header { background:#ffffff; border-bottom-color:#d0d7de; }
+        body.light-theme .nx-panel { background:#ffffff; border-color:#d0d7de; }
+        body.light-theme .nx-cmd-wrap textarea { background:#f6f8fa; color:#1f2328; border-color:#d0d7de; }
+        body.light-theme .tab-content, body.light-theme .log-pane,
+        body.light-theme .log-area, body.light-theme #logArea { background:#f6f8fa; }
+        body.light-theme .log-line.log { color:#1f2328; }
+        body.light-theme .file-tree, body.light-theme .file-viewer-body,
+        body.light-theme .file-viewer-body pre { background:#f6f8fa; color:#1f2328; }
+        body.light-theme .nx-session-card { background:#f0f2f5; border-color:#d0d7de; }
+        body.light-theme .nx-example-chip { background:#f0f2f5; color:#0969da; border-color:#d0d7de; }
+        body.light-theme .nx-example-chip:hover { background:#ddf4ff; }
+        body.light-theme .p4-sess-item { background:#f0f2f5; }
+        body.light-theme .p4-sess-item:hover { background:#ddf4ff; border-color:#0969da; }
+        * { transition: var(--theme-transition); }
+        textarea, input, button, pre, code { transition: none !important; }
+
+        /* Phase 4: Token / cost tracker pill */
+        .p4-token-pill {
+            display:flex; align-items:center; gap:6px;
+            background:#161b22; border:1px solid #30363d;
+            border-radius:12px; padding:3px 10px;
+            font-size:0.72rem; color:#8b949e; cursor:default;
+            white-space:nowrap;
+        }
+        .p4-token-pill .p4-tk { color:#58a6ff; font-weight:600; }
+        .p4-token-pill .p4-cost { color:#3fb950; font-weight:600; }
+        body.light-theme .p4-token-pill { background:#f0f2f5; border-color:#d0d7de; }
+        body.light-theme .p4-token-pill .p4-tk { color:#0969da; }
+        body.light-theme .p4-token-pill .p4-cost { color:#1a7f37; }
+
+        /* Phase 4: Theme toggle button */
+        .p4-theme-btn {
+            background:transparent; border:1px solid #30363d; border-radius:8px;
+            color:#8b949e; cursor:pointer; font-size:0.85rem;
+            padding:4px 8px; line-height:1; transition:none !important;
+        }
+        .p4-theme-btn:hover { background:#21262d; color:#e6edf3; }
+        body.light-theme .p4-theme-btn { border-color:#d0d7de; color:#57606a; }
+        body.light-theme .p4-theme-btn:hover { background:#f0f2f5; color:#1f2328; }
+
+        /* Phase 4: Session history panel in left sidebar */
+        .p4-sess-section { margin:8px 0 4px; }
+        .p4-sess-title {
+            font-size:0.66rem; text-transform:uppercase; letter-spacing:0.09em;
+            color:#8b949e; font-weight:600; margin-bottom:6px;
+            display:flex; align-items:center; justify-content:space-between;
+        }
+        .p4-sess-title span { cursor:pointer; font-size:0.7rem; color:#58a6ff; }
+        .p4-sess-list { display:flex; flex-direction:column; gap:4px; }
+        .p4-sess-item {
+            background:#161b22; border:1px solid #30363d; border-radius:6px;
+            padding:7px 10px; cursor:pointer; transition:none !important;
+        }
+        .p4-sess-item:hover { background:#1c2230; border-color:#58a6ff44; }
+        .p4-sess-item .p4-si-name {
+            font-size:0.79rem; color:#e6edf3; font-weight:500;
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+        .p4-sess-item .p4-si-meta {
+            font-size:0.68rem; color:#8b949e; margin-top:2px;
+            display:flex; align-items:center; gap:6px;
+        }
+        .p4-sess-item .p4-si-dot {
+            width:6px; height:6px; border-radius:50%; flex-shrink:0;
+        }
+        .p4-sess-empty { color:#8b949e; font-size:0.76rem; font-style:italic; padding:6px 0; }
+
+        /* Phase 4: Prompt templates */
+        .p4-tpl-cats { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:7px; }
+        .p4-tpl-cat {
+            font-size:0.68rem; padding:2px 8px; border-radius:10px;
+            border:1px solid #30363d; background:transparent;
+            color:#8b949e; cursor:pointer; transition:none !important;
+        }
+        .p4-tpl-cat.active, .p4-tpl-cat:hover { background:#1f3f6c; color:#79c0ff; border-color:#58a6ff55; }
+        .p4-tpl-chips { display:flex; flex-wrap:wrap; gap:5px; }
+        .p4-custom-row { display:flex; gap:4px; margin-top:6px; }
+        .p4-custom-input {
+            flex:1; background:#0d1117; color:#e6edf3; border:1px solid #30363d;
+            border-radius:5px; padding:4px 8px; font-size:0.75rem; font-family:inherit;
+        }
+        .p4-custom-input:focus { outline:none; border-color:#58a6ff; }
+        .p4-custom-saved { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+        .p4-custom-chip {
+            background:#1a2a1a; color:#3fb950; border:1px solid #3fb95044;
+            border-radius:4px; padding:3px 8px; font-size:0.73rem; cursor:pointer;
+            display:flex; align-items:center; gap:5px; transition:none !important;
+        }
+        .p4-custom-chip:hover { background:#1f3f1f; }
+        .p4-custom-chip .p4-del { color:#8b949e; font-size:0.8rem; cursor:pointer; }
+        .p4-custom-chip .p4-del:hover { color:#f85149; }
+        body.light-theme .p4-tpl-cat { border-color:#d0d7de; color:#57606a; }
+        body.light-theme .p4-custom-input { background:#f6f8fa; color:#1f2328; border-color:#d0d7de; }
+
+        /* Phase 4: AI suggestion dropdown */
+        .p4-suggest-wrap { position:relative; }
+        .p4-suggest-box {
+            position:absolute; top:100%; left:0; right:0; z-index:200;
+            background:#161b22; border:1px solid #30363d; border-radius:8px;
+            box-shadow:0 8px 24px rgba(0,0,0,0.5); overflow:hidden;
+            display:none;
+        }
+        .p4-suggest-box.open { display:block; }
+        .p4-suggest-item {
+            padding:8px 12px; font-size:0.8rem; color:#c9d1d9; cursor:pointer;
+            border-bottom:1px solid #21262d;
+        }
+        .p4-suggest-item:last-child { border-bottom:0; }
+        .p4-suggest-item:hover { background:#1c2230; color:#fff; }
+        .p4-suggest-label { font-size:0.65rem; color:#8b949e; padding:5px 12px 2px;
+            text-transform:uppercase; letter-spacing:0.07em; }
+        body.light-theme .p4-suggest-box { background:#fff; border-color:#d0d7de; box-shadow:0 8px 24px rgba(0,0,0,0.1); }
+        body.light-theme .p4-suggest-item { color:#1f2328; border-bottom-color:#f0f2f5; }
+        body.light-theme .p4-suggest-item:hover { background:#f0f2f5; }
         * { box-sizing:border-box; margin:0; padding:0; }
         html, body { height:100%; overflow:hidden; }
         body {
@@ -1998,7 +2121,13 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <input type="file" id="nxFolderInput" style="display:none"
            webkitdirectory multiple
            onchange="nxHandleFolderUpload(this)">
-    <textarea id="taskInput" placeholder="Describe what you want to build… (Ctrl+Enter to run)" autocomplete="off" spellcheck="false"></textarea>
+    <div class="p4-suggest-wrap" style="flex:1;position:relative;display:flex;flex-direction:column">
+      <textarea id="taskInput" placeholder="Describe what you want to build… (Ctrl+Enter to run)" autocomplete="off" spellcheck="false"
+        oninput="p4OnTaskInput(this.value)"
+        onfocus="p4OnTaskInput(this.value)"
+        onblur="setTimeout(()=>p4CloseSuggest(),200)"></textarea>
+      <div class="p4-suggest-box" id="p4SuggestBox"></div>
+    </div>
     <button class="nx-cmd-attach" title="Voice input" id="nxVoiceBtn" onclick="toggleVoice()">🎤</button>
     <button class="nx-run-btn" id="runBtn" onclick="nxRunOrStop()">
       <span class="nx-live-dot" id="nxRunDot" style="display:none"></span>
@@ -2013,6 +2142,15 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       <span style="color:var(--text-dim)">▾</span>
     </div>
     <span class="nx-status-badge" id="nxGlobalStatus">Idle</span>
+    <!-- Phase 4: Live token + cost tracker -->
+    <div class="p4-token-pill" id="p4TokenPill" title="Tokens used · Estimated cost (session total)" style="display:none">
+      <span>🔢</span>
+      <span class="p4-tk" id="p4TkCount">0</span>tok
+      <span style="color:#30363d">·</span>
+      <span class="p4-cost">$<span id="p4CostVal">0.0000</span></span>
+    </div>
+    <!-- Phase 4: Theme toggle -->
+    <button class="p4-theme-btn" id="p4ThemeBtn" onclick="p4ToggleTheme()" title="Toggle light/dark theme">🌙</button>
     <button class="nx-icon-btn" title="Sessions (S)" onclick="nxOpenPanel('sessions')">📁 <span id="nxSessCount" style="font-size:11px;color:var(--text-muted)">0</span></button>
     <button class="nx-icon-btn" title="Command palette (Ctrl+K)" onclick="nxOpenPalette()">⌘K</button>
     <button class="nx-icon-btn" title="Settings" onclick="openSettings()">⚙</button>
@@ -2110,17 +2248,43 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           <div class="nx-think-label recall">Recall</div>
         </div>
 
-        <!-- Quick examples -->
-        <div style="margin-top:12px">
-          <div class="nx-think-label" style="margin-bottom:6px">Quick Start</div>
-          <div class="nx-quick-examples" id="nxExamples">
-            <button class="nx-example-chip" onclick="nxSetTask('Build a Flask REST API with CRUD endpoints')">Flask REST API</button>
-            <button class="nx-example-chip" onclick="nxSetTask('Create a login system with SQLite auth')">Login System</button>
-            <button class="nx-example-chip" onclick="nxSetTask('Build a real-time dashboard with charts')">Dashboard</button>
-            <button class="nx-example-chip" onclick="nxSetTask('Write unit tests for this project')">Generate Tests</button>
-            <button class="nx-example-chip" onclick="nxSetTask('Optimize and refactor all Python files')">Refactor Code</button>
+        <!-- Phase 4: Session History -->
+        <div class="p4-sess-section" id="p4SessSection">
+          <div class="p4-sess-title">
+            Recent Sessions
+            <span onclick="p4RefreshSessionHistory()" title="Refresh">↻</span>
+          </div>
+          <div class="p4-sess-list" id="p4SessList">
+            <div class="p4-sess-empty">No sessions yet</div>
           </div>
         </div>
+
+        <!-- Phase 4: Prompt Templates -->
+        <div style="margin-top:10px">
+          <div class="nx-think-label" style="margin-bottom:6px">Prompt Templates</div>
+          <div class="p4-tpl-cats" id="p4TplCats">
+            <button class="p4-tpl-cat active" onclick="p4SetTplCat('build',this)">Build</button>
+            <button class="p4-tpl-cat" onclick="p4SetTplCat('fix',this)">Fix</button>
+            <button class="p4-tpl-cat" onclick="p4SetTplCat('api',this)">API</button>
+            <button class="p4-tpl-cat" onclick="p4SetTplCat('test',this)">Test</button>
+            <button class="p4-tpl-cat" onclick="p4SetTplCat('saved',this)">⭐ Saved</button>
+          </div>
+          <div class="p4-tpl-chips" id="p4TplChips"></div>
+          <!-- Custom template save -->
+          <div class="p4-custom-row">
+            <input class="p4-custom-input" id="p4CustomTplInput" placeholder="Type task then ★ to save…"
+                   onkeydown="if(event.key==='Enter'){nxSetTask(this.value);this.value='';}">
+            <button class="nx-example-chip" onclick="p4SaveCustomTemplate()" title="Save as template">★</button>
+          </div>
+          <div class="p4-custom-saved" id="p4CustomSaved"></div>
+        </div>
+
+        <!-- Phase 4: AI suggestions (idle prompts) -->
+        <div id="p4IdleSuggest" style="margin-top:10px;display:none">
+          <div class="nx-think-label" style="margin-bottom:5px">💡 Try This</div>
+          <div class="p4-tpl-chips" id="p4IdleChips"></div>
+        </div>
+
       </div>
     </div><!-- /nx-left -->
 
@@ -10500,4 +10664,462 @@ async function loadProjectsDashboard() {
 
     } catch(e) { console.error('[Projects UI]', e); }
 }
+
+/* ================================================================
+   PHASE 4 — INTELLIGENCE & PERSONALIZATION LAYER
+   ================================================================ */
+(function() {
+'use strict';
+
+/* ── STEP 5: Theme System ──────────────────────────────────────── */
+const THEME_KEY = 'p4_theme';
+
+function p4ApplyTheme(theme) {
+    if (theme === 'light') {
+        document.body.classList.add('light-theme');
+        const btn = document.getElementById('p4ThemeBtn');
+        if (btn) btn.textContent = '☀️';
+    } else {
+        document.body.classList.remove('light-theme');
+        const btn = document.getElementById('p4ThemeBtn');
+        if (btn) btn.textContent = '🌙';
+    }
+    localStorage.setItem(THEME_KEY, theme);
+}
+
+window.p4ToggleTheme = function() {
+    const current = localStorage.getItem(THEME_KEY) || 'dark';
+    p4ApplyTheme(current === 'dark' ? 'light' : 'dark');
+};
+
+// Restore saved theme on load
+(function() {
+    const saved = localStorage.getItem(THEME_KEY) || 'dark';
+    p4ApplyTheme(saved);
+})();
+
+
+/* ── STEP 4: Real-Time Token / Cost Tracker ───────────────────── */
+let p4TokenPollTimer = null;
+let p4TotalTokens = 0;
+let p4TotalCost = 0;
+
+async function p4UpdateTokenTracker() {
+    try {
+        // Pull from active session stats if available
+        const sid = (typeof currentSession !== 'undefined') ? currentSession : null;
+        if (!sid) {
+            // Try costs totals
+            const r = await fetch('/api/costs/totals?hours=1');
+            if (!r.ok) return;
+            const d = await r.json();
+            if (d.ok && d.totals) {
+                const t = d.totals;
+                p4TotalTokens = (t.tokens_in_est || 0) + (t.tokens_out_est || 0);
+                p4TotalCost   = t.cost_usd || 0;
+            }
+        } else {
+            const r = await fetch(`/api/session/${sid}`);
+            if (!r.ok) return;
+            const d = await r.json();
+            const u = d.usage || d.resource_usage || null;
+            if (u) {
+                p4TotalTokens = (u.tokens_in_est || 0) + (u.tokens_out_est || 0);
+                p4TotalCost   = u.cost_usd || 0;
+            }
+        }
+        const pill   = document.getElementById('p4TokenPill');
+        const tkEl   = document.getElementById('p4TkCount');
+        const costEl = document.getElementById('p4CostVal');
+        if (pill) {
+            if (p4TotalTokens > 0 || p4TotalCost > 0) {
+                pill.style.display = 'flex';
+                if (tkEl)   tkEl.textContent   = p4TotalTokens.toLocaleString();
+                if (costEl) costEl.textContent  = p4TotalCost.toFixed(4);
+            } else {
+                pill.style.display = 'none';
+            }
+        }
+    } catch(e) {}
+}
+
+// Poll every 5s while page is visible
+function p4StartTokenPoll() {
+    if (p4TokenPollTimer) clearInterval(p4TokenPollTimer);
+    p4TokenPollTimer = setInterval(() => {
+        if (!document.hidden) p4UpdateTokenTracker();
+    }, 5000);
+    p4UpdateTokenTracker();
+}
+document.addEventListener('DOMContentLoaded', p4StartTokenPoll);
+
+
+/* ── STEP 1: Session History ──────────────────────────────────── */
+const P4_SESS_COLORS = {
+    done:'#3fb950', running:'#f0883e', failed:'#f85149',
+    stopped:'#d29922', queued:'#8b949e'
+};
+
+window.p4RefreshSessionHistory = async function() {
+    const list = document.getElementById('p4SessList');
+    if (!list) return;
+    try {
+        const r = await fetch('/api/sessions');
+        if (!r.ok) return;
+        const d = await r.json();
+        const sessions = (d.sessions || []).slice(0, 8);
+        if (!sessions.length) {
+            list.innerHTML = '<div class="p4-sess-empty">No sessions yet</div>';
+            return;
+        }
+        list.innerHTML = sessions.map(s => {
+            const name = (s.task || s.project_name || s.sid || '(no task)').slice(0, 48);
+            const ts   = s.created_at ? new Date(s.created_at * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+            const st   = s.status || 'queued';
+            const col  = P4_SESS_COLORS[st] || '#8b949e';
+            const sid  = s.sid || s.session_id || s.id || '';
+            return `<div class="p4-sess-item" onclick="p4RestoreSession('${escHTML(sid)}')" title="Click to restore session">
+                <div class="p4-si-name">${escHTML(name)}</div>
+                <div class="p4-si-meta">
+                  <span class="p4-si-dot" style="background:${col}"></span>
+                  <span>${escHTML(st)}</span>
+                  ${ts ? `<span style="margin-left:auto">${escHTML(ts)}</span>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) {}
+};
+
+function escHTML(s) {
+    return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+window.p4RestoreSession = function(sid) {
+    if (!sid) return;
+    if (typeof selectSession === 'function') {
+        selectSession(sid);
+        // Switch to Logs tab to show session output
+        if (typeof nxSetTab === 'function') nxSetTab('logs');
+        else if (typeof setActiveTab === 'function') setActiveTab('logs');
+    }
+    // Show toast
+    if (typeof toast === 'function') toast('Session restored', 'ok');
+    else if (typeof nxToast === 'function') nxToast('Session restored');
+};
+
+// Refresh session history every 15s and on page load
+document.addEventListener('DOMContentLoaded', () => {
+    p4RefreshSessionHistory();
+    setInterval(p4RefreshSessionHistory, 15000);
+});
+
+
+/* ── STEP 2: Prompt Templates System ─────────────────────────── */
+const P4_TEMPLATES = {
+    build: [
+        'Build a Flask REST API with CRUD endpoints and SQLite',
+        'Create a full-stack todo app with login',
+        'Build a real-time chat app using WebSockets',
+        'Create a landing page for a SaaS product',
+        'Build a file upload system with preview',
+        'Create a data visualization dashboard with charts',
+    ],
+    fix: [
+        'Fix all bugs and errors in this project',
+        'Debug the failing tests and make them pass',
+        'Fix the import errors and missing dependencies',
+        'Resolve all syntax errors in the codebase',
+        'Fix the authentication flow that is broken',
+    ],
+    api: [
+        'Build a REST API with JWT authentication',
+        'Create API endpoints for user management (CRUD)',
+        'Add rate limiting and input validation to all API routes',
+        'Build a webhook handler with retry logic',
+        'Create a GraphQL API with resolvers',
+    ],
+    test: [
+        'Write comprehensive unit tests for all functions',
+        'Create integration tests for the API endpoints',
+        'Add pytest fixtures and mock external calls',
+        'Generate test data and seed scripts',
+        'Set up CI/CD pipeline with automated testing',
+    ],
+};
+
+let p4CurrentCat = 'build';
+
+function p4RenderTplChips() {
+    const container = document.getElementById('p4TplChips');
+    const savedContainer = document.getElementById('p4CustomSaved');
+    if (!container) return;
+
+    if (p4CurrentCat === 'saved') {
+        container.innerHTML = '';
+        p4RenderSavedTemplates();
+        return;
+    }
+
+    const items = P4_TEMPLATES[p4CurrentCat] || [];
+    container.innerHTML = items.map(t =>
+        `<button class="nx-example-chip" onclick="nxSetTask(${JSON.stringify(t)})">${escHTML(t.length > 32 ? t.slice(0,32)+'…' : t)}</button>`
+    ).join('');
+    if (savedContainer) p4RenderSavedTemplates();
+}
+
+function p4RenderSavedTemplates() {
+    const container = document.getElementById('p4CustomSaved');
+    if (!container) return;
+    const saved = p4GetSavedTemplates();
+    if (!saved.length) {
+        if (p4CurrentCat === 'saved') {
+            const chipsEl = document.getElementById('p4TplChips');
+            if (chipsEl) chipsEl.innerHTML = '<span style="color:#8b949e;font-size:0.76rem;font-style:italic">No saved templates yet</span>';
+        }
+        container.innerHTML = '';
+        return;
+    }
+    const html = saved.map((t, i) =>
+        `<div class="p4-custom-chip" onclick="nxSetTask(${JSON.stringify(t)})">
+           <span>${escHTML(t.length > 28 ? t.slice(0,28)+'…' : t)}</span>
+           <span class="p4-del" onclick="event.stopPropagation();p4DeleteSavedTemplate(${i})" title="Delete">×</span>
+         </div>`
+    ).join('');
+    if (p4CurrentCat === 'saved') {
+        const chipsEl = document.getElementById('p4TplChips');
+        if (chipsEl) chipsEl.innerHTML = html;
+        container.innerHTML = '';
+    } else {
+        container.innerHTML = html;
+    }
+}
+
+function p4GetSavedTemplates() {
+    try { return JSON.parse(localStorage.getItem('p4_saved_tpls') || '[]'); } catch { return []; }
+}
+
+window.p4SaveCustomTemplate = function() {
+    const input = document.getElementById('p4CustomTplInput');
+    const val = (input ? input.value : '').trim();
+    if (!val) {
+        // Save current task input content
+        const ta = document.getElementById('taskInput');
+        const task = ta ? ta.value.trim() : '';
+        if (!task) { if (typeof toast === 'function') toast('Enter a task to save', 'err'); return; }
+        const saved = p4GetSavedTemplates();
+        if (!saved.includes(task)) { saved.unshift(task); localStorage.setItem('p4_saved_tpls', JSON.stringify(saved.slice(0,20))); }
+        if (typeof toast === 'function') toast('✅ Template saved', 'ok');
+        p4RenderSavedTemplates();
+        return;
+    }
+    const saved = p4GetSavedTemplates();
+    if (!saved.includes(val)) { saved.unshift(val); localStorage.setItem('p4_saved_tpls', JSON.stringify(saved.slice(0,20))); }
+    if (input) input.value = '';
+    if (typeof toast === 'function') toast('✅ Template saved', 'ok');
+    p4RenderSavedTemplates();
+};
+
+window.p4DeleteSavedTemplate = function(idx) {
+    const saved = p4GetSavedTemplates();
+    saved.splice(idx, 1);
+    localStorage.setItem('p4_saved_tpls', JSON.stringify(saved));
+    p4RenderSavedTemplates();
+};
+
+window.p4SetTplCat = function(cat, el) {
+    p4CurrentCat = cat;
+    document.querySelectorAll('.p4-tpl-cat').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    p4RenderTplChips();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    p4RenderTplChips();
+    p4RenderSavedTemplates();
+});
+
+
+/* ── STEP 3: AI Suggestions Engine ───────────────────────────── */
+const P4_SUGGESTIONS = {
+    flask:   ['Build a Flask REST API', 'Create a Flask login system', 'Add Flask-SQLAlchemy models'],
+    python:  ['Write a Python script to', 'Create a Python CLI tool', 'Build a Python data processor'],
+    react:   ['Build a React dashboard', 'Create a React component library', 'Add state management with Zustand'],
+    fix:     ['Fix all errors in the codebase', 'Debug the failing tests', 'Resolve import errors'],
+    test:    ['Write unit tests for all functions', 'Create pytest integration tests', 'Generate mock data for testing'],
+    api:     ['Build a REST API with JWT auth', 'Create CRUD endpoints for users', 'Add rate limiting to all routes'],
+    build:   ['Build a full-stack web app', 'Create a landing page', 'Build a real-time chat app'],
+    create:  ['Create a user authentication system', 'Create a dashboard with charts', 'Create a file upload handler'],
+    optimize:['Optimize database queries', 'Refactor and clean up the codebase', 'Improve API response times'],
+};
+
+const P4_IDLE_SUGGESTIONS = [
+    'Build a Flask REST API with authentication',
+    'Create a real-time dashboard with WebSocket updates',
+    'Write a web scraper with BeautifulSoup',
+    'Build a CLI tool with argument parsing',
+    'Create a CRUD app with SQLite database',
+    'Generate unit tests for the existing codebase',
+    'Build a file converter utility',
+    'Create a REST API client with retry logic',
+];
+
+function p4GetSuggestions(text) {
+    if (!text || text.length < 2) return [];
+    const lower = text.toLowerCase();
+    let matches = [];
+    for (const [key, items] of Object.entries(P4_SUGGESTIONS)) {
+        if (lower.includes(key)) {
+            matches = matches.concat(items.filter(s => !s.toLowerCase().startsWith(lower.slice(0,8))));
+        }
+    }
+    // Deduplicate and limit
+    return [...new Set(matches)].slice(0, 5);
+}
+
+window.p4OnTaskInput = function(val) {
+    const box = document.getElementById('p4SuggestBox');
+    if (!box) return;
+    const sugs = p4GetSuggestions(val);
+    if (!sugs.length || !val.trim()) { box.classList.remove('open'); return; }
+    box.innerHTML = '<div class="p4-suggest-label">Suggestions</div>' +
+        sugs.map(s => `<div class="p4-suggest-item" onmousedown="event.preventDefault();nxSetTask(${JSON.stringify(s)});p4CloseSuggest()">${escHTML(s)}</div>`).join('');
+    box.classList.add('open');
+};
+
+window.p4CloseSuggest = function() {
+    const box = document.getElementById('p4SuggestBox');
+    if (box) box.classList.remove('open');
+};
+
+// Show idle suggestions when no task is running
+function p4UpdateIdleSuggestions() {
+    const el = document.getElementById('p4IdleSuggest');
+    const chips = document.getElementById('p4IdleChips');
+    if (!el || !chips) return;
+    const isIdle = !currentSession ||
+        (typeof nxSetGlobalStatus !== 'undefined' && document.getElementById('nxGlobalStatus')?.textContent === 'Idle');
+    if (isIdle) {
+        const shuffled = P4_IDLE_SUGGESTIONS.sort(() => Math.random() - 0.5).slice(0, 3);
+        chips.innerHTML = shuffled.map(s =>
+            `<button class="nx-example-chip" onclick="nxSetTask(${JSON.stringify(s)})">${escHTML(s.length>32?s.slice(0,32)+'…':s)}</button>`
+        ).join('');
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    p4UpdateIdleSuggestions();
+    setInterval(p4UpdateIdleSuggestions, 20000);
+});
+
+
+/* ── STEP 7: Personalization ──────────────────────────────────── */
+const P4_PREFS_KEY = 'p4_prefs';
+
+function p4GetPrefs() {
+    try { return JSON.parse(localStorage.getItem(P4_PREFS_KEY) || '{}'); } catch { return {}; }
+}
+function p4SavePref(key, val) {
+    const p = p4GetPrefs();
+    p[key] = val;
+    localStorage.setItem(P4_PREFS_KEY, JSON.stringify(p));
+}
+
+// Remember + restore last plan mode
+document.addEventListener('DOMContentLoaded', () => {
+    const prefs = p4GetPrefs();
+    // Restore last plan mode
+    if (prefs.planMode && typeof nxSetPlan === 'function') {
+        setTimeout(() => nxSetPlan(prefs.planMode, true), 500);
+    }
+    // Hook into plan changes to save preference
+    const planOpts = document.querySelectorAll('.nx-plan-option');
+    planOpts.forEach(opt => {
+        opt.addEventListener('click', () => {
+            const mode = opt.querySelector('.nx-plan-name')?.textContent?.toLowerCase()?.trim();
+            if (mode) p4SavePref('planMode', mode);
+        });
+    });
+
+    // Restore last session
+    if (prefs.lastSession && typeof selectSession === 'function') {
+        setTimeout(() => {
+            if (!currentSession) selectSession(prefs.lastSession);
+        }, 800);
+    }
+});
+
+// Intercept session selection to save last session
+const _p4OrigSelectSession = window.selectSession;
+window.selectSession = function(sid) {
+    if (_p4OrigSelectSession) _p4OrigSelectSession.call(this, sid);
+    if (sid) {
+        p4SavePref('lastSession', sid);
+        // Update token tracker after session switch
+        setTimeout(p4UpdateTokenTracker, 1000);
+    }
+};
+
+// Remember last model (watch modelSelect changes)
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'modelSelect') {
+        p4SavePref('lastModel', e.target.value);
+    }
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const prefs = p4GetPrefs();
+    if (prefs.lastModel) {
+        const ms = document.getElementById('modelSelect');
+        if (ms && prefs.lastModel) {
+            // Retry after config loads
+            setTimeout(() => {
+                if (ms.value !== prefs.lastModel) {
+                    const opt = ms.querySelector(`option[value="${prefs.lastModel}"]`);
+                    if (opt) ms.value = prefs.lastModel;
+                }
+            }, 1500);
+        }
+    }
+});
+
+
+/* ── STEP 6: UX Intelligence ──────────────────────────────────── */
+// Smooth auto-scroll for logArea — respects the existing autoScroll checkbox
+(function p4EnhanceAutoScroll() {
+    document.addEventListener('DOMContentLoaded', () => {
+        const logArea = document.getElementById('logArea');
+        if (!logArea) return;
+        const obs = new MutationObserver(() => {
+            const cb = document.getElementById('autoScroll');
+            if (cb && cb.checked) {
+                logArea.scrollTo({ top: logArea.scrollHeight, behavior: 'smooth' });
+            }
+        });
+        obs.observe(logArea, { childList: true, subtree: true });
+    });
+})();
+
+// Highlight active plan step in logs with a subtle border
+(function p4HighlightCurrentStep() {
+    const origIngestLogRow = window.ingestLogRow;
+    if (!origIngestLogRow) return;
+    window.ingestLogRow = function(e, area) {
+        origIngestLogRow.call(this, e, area);
+        // Mark last log line with a subtle highlight if it's a step
+        if (e && e.text && (e.text.includes('Step') || e.text.includes('Executing'))) {
+            if (!area) return;
+            const last = area.lastElementChild;
+            if (last && last.classList.contains('log-line')) {
+                last.style.borderLeft = '2px solid #388bfd44';
+                last.style.paddingLeft = '6px';
+                // Remove highlight after 2s
+                setTimeout(() => { last.style.borderLeft = ''; last.style.paddingLeft = ''; }, 2000);
+            }
+        }
+    };
+})();
+
+console.log('[Phase 4] Intelligence & Personalization Layer active.');
+})();
 </div></body></html>

@@ -23,6 +23,15 @@ The UI was upgraded from the basic "Phase 57" bridge to a full feature-complete 
 - **Keyboard Shortcuts**: Ctrl+Enter (run), Ctrl+K (palette), Ctrl+S (save file), Escape (close)
 - **Resizable panels**: Drag handles between all 3 columns
 
+### Phase 4: Intelligence & Personalization Layer
+- **Dark/Light Theme**: Full theme toggle (🌙/☀️ button in header). CSS `light-theme` class on `<body>` with all vars overridden. Theme persisted in `localStorage` (`p4_theme`). Smooth variable-based transitions.
+- **Token/Cost Tracker Pill**: Live `🔢 Ntok · $X.XXXX` pill in header polling `/api/costs/totals` every 5s (and `/api/session/<sid>` when a session is active). Shows only when usage > 0.
+- **Session History**: Left panel `Recent Sessions` block lists last 8 sessions from `/api/sessions`, colored status dots, click-to-restore via `selectSession()`. Refreshes every 15s.
+- **Prompt Templates**: Categorized chips (Build / Fix / API / Test / Saved) in left panel with custom template save (★ button), saved to `localStorage` (`p4_saved_tpls`), deletable per-chip.
+- **AI Suggestion Dropdown**: Input-driven suggestion box under `taskInput` — matches keywords (flask, api, test, react, etc.) and shows completions. Closes on blur. Idle suggestions (3 random tasks) when no session is running.
+- **Personalization**: Last plan mode, last model, last session ID all persisted in `localStorage` (`p4_prefs`). Restored on page load after a 500-800ms delay to let UI initialize.
+- **UX Intelligence**: MutationObserver-based smooth auto-scroll for logArea (respects `autoScroll` checkbox). Step log-line highlighting for `Step`/`Executing` entries (brief left-border flash).
+
 ### Phase 3: Productization Layer
 - **Plan System**: 3 modes — Lite (fast/no planning, max 5 steps), Pro (reasoning+planning, max 15 steps), Elite (full autonomy, max 50 steps). Plan mode sent to backend with every task; capability flags (`ALLOW_PLANNING`, `ALLOW_REASONING`, `ALLOW_DEBUG`, `ALLOW_SELF_CORRECTION`, `MAX_AGENT_STEPS`) passed as env vars to agent subprocess.
 - **"+" Attach Menu**: Upload File, Upload Image, Upload Folder (multi-file), Import from GitHub — animated dropdown from command bar
