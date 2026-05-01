@@ -1,0 +1,148 @@
+We are implementing the FINAL monetization completion layer.
+
+The system already has plan logic (Free / Pro / Elite), but it is NOT connected to real payments.
+
+Your task: Convert it into a REAL SaaS billing system using Stripe.
+
+---
+
+# 🎯 OBJECTIVE
+
+Implement full payment + billing + notification system.
+
+---
+
+# 💳 PART 1 — STRIPE INTEGRATION
+
+Install Stripe SDK.
+
+Create:
+
+POST /api/billing/create-checkout-session
+
+Behavior:
+
+* Accept plan: pro or elite
+* Create Stripe Checkout Session
+* Use subscription mode
+
+Plans:
+
+* Pro → $20/month
+* Elite → $50/month
+
+Return checkout URL.
+
+---
+
+# 🔔 PART 2 — STRIPE WEBHOOK
+
+Create endpoint:
+
+POST /api/billing/webhook
+
+Handle events:
+
+* checkout.session.completed
+* invoice.paid
+* invoice.payment_failed
+
+On success:
+
+* update user plan in DB
+* set expiry date
+* store stripe_customer_id
+
+On failure:
+
+* downgrade plan or mark unpaid
+
+---
+
+# 👤 PART 3 — USER BILLING DATA
+
+Extend user table:
+
+* stripe_customer_id
+* plan_type
+* plan_expiry
+* billing_status
+
+---
+
+# 📄 PART 4 — INVOICE SUPPORT
+
+Expose endpoint:
+
+GET /api/billing/invoices
+
+Fetch from Stripe:
+
+* list invoices
+* return PDF links
+
+---
+
+# 📧 PART 5 — EMAIL NOTIFICATIONS
+
+Integrate email service (Resend or SendGrid)
+
+Send:
+
+* Payment success email
+* Subscription activated email
+* Payment failed email
+
+---
+
+# 🖥 PART 6 — UI UPDATE
+
+Update Plan UI:
+
+* Replace "Activate" with "Upgrade"
+* Call checkout API
+* Redirect to Stripe
+
+Add Billing section in Settings:
+
+* Current plan
+* Expiry date
+* Invoice list
+* Upgrade button
+
+---
+
+# 🔐 PART 7 — SECURITY
+
+* Verify webhook signature
+* Do not trust frontend for payment status
+* All plan changes must come from webhook
+
+---
+
+# 🧪 PART 8 — TESTING
+
+Use Stripe test mode:
+
+* test card: 4242 4242 4242 4242
+
+Verify:
+
+* payment success → plan updates
+* invoice appears
+* email sent
+
+---
+
+# 🚀 FINAL GOAL
+
+System becomes:
+
+✔ Real SaaS
+✔ Paid product
+✔ Production deployable
+
+---
+
+Do NOT skip webhook or invoice handling.
+Everything must be end-to-end functional.
