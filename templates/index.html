@@ -1319,6 +1319,156 @@ body {
 .nx-status-badge.running { background: var(--blue-dim); color: var(--blue); border-color: rgba(59,130,246,0.2); }
 .nx-status-badge.error { background: var(--red-dim); color: var(--red); border-color: rgba(239,68,68,0.2); }
 
+/* ── Phase 3: Logo animation ── */
+.nx-logo-icon {
+  animation: nxLogoSpin 8s linear infinite;
+  background: linear-gradient(135deg, var(--accent), #a855f7, var(--accent));
+  background-size: 200% 200%;
+  animation: nxLogoGrad 4s ease infinite;
+}
+@keyframes nxLogoGrad {
+  0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}
+}
+.nx-logo:hover .nx-logo-icon { transform: scale(1.1) rotate(8deg); transition: transform 0.3s; }
+
+/* ── Phase 3: Plan selector ── */
+.nx-plan-selector {
+  position: relative; flex-shrink: 0;
+}
+.nx-plan-badge {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 7px; cursor: pointer;
+  font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif;
+  border: 1px solid transparent; transition: all var(--dur);
+  white-space: nowrap; user-select: none;
+}
+.nx-plan-badge.lite  { background: rgba(63,185,80,0.12);  color: #3fb950; border-color: rgba(63,185,80,0.3); }
+.nx-plan-badge.pro   { background: rgba(56,139,253,0.12); color: #388bfd; border-color: rgba(56,139,253,0.3); }
+.nx-plan-badge.elite { background: rgba(188,140,255,0.12);color: #bc8cff; border-color: rgba(188,140,255,0.3); }
+.nx-plan-badge:hover { filter: brightness(1.2); }
+.nx-plan-badge .nx-plan-caret { opacity: 0.7; font-size: 9px; }
+.nx-plan-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 400;
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-radius: 10px; padding: 6px; min-width: 210px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  display: none;
+}
+.nx-plan-dropdown.open { display: block; animation: nxFadeIn 0.12s ease; }
+.nx-plan-option {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 10px; border-radius: 7px; cursor: pointer;
+  transition: background var(--dur);
+}
+.nx-plan-option:hover { background: var(--surface); }
+.nx-plan-option.active { background: var(--surface); }
+.nx-plan-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+.nx-plan-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.nx-plan-desc { font-size: 10px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+.nx-plan-check { margin-left: auto; color: var(--accent); font-size: 12px; }
+
+/* ── Phase 3: Plus/Attach menu ── */
+.nx-plus-btn {
+  background: none; border: 1px dashed var(--panel-border); color: var(--text-muted);
+  cursor: pointer; width: 26px; height: 26px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; line-height: 1; transition: all var(--dur); flex-shrink: 0;
+}
+.nx-plus-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+.nx-plus-menu {
+  position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 400;
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-radius: 10px; padding: 6px; min-width: 180px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+  display: none;
+}
+.nx-plus-menu.open { display: block; animation: nxFadeIn 0.12s ease; }
+.nx-plus-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 6px; cursor: pointer;
+  font-size: 12px; color: var(--text-muted); transition: all var(--dur);
+}
+.nx-plus-opt:hover { background: var(--surface); color: var(--text); }
+.nx-plus-opt-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+
+/* ── Phase 3: GitHub import modal ── */
+.nx-gh-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 500; display: none; align-items: center; justify-content: center;
+}
+.nx-gh-overlay.open { display: flex; animation: nxFadeIn 0.15s ease; }
+.nx-gh-modal {
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-radius: 14px; padding: 24px; width: 440px; max-width: 96vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.nx-gh-modal h3 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 6px; }
+.nx-gh-modal p  { font-size: 12px; color: var(--text-muted); margin: 0 0 16px; }
+.nx-gh-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--panel-border);
+  border-radius: 8px; padding: 9px 12px; color: var(--text);
+  font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+  box-sizing: border-box; transition: border-color var(--dur);
+}
+.nx-gh-input:focus { border-color: var(--accent); }
+.nx-gh-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+.nx-gh-btn {
+  padding: 7px 16px; border-radius: 7px; font-size: 12px; font-weight: 600;
+  font-family: 'Inter', sans-serif; cursor: pointer; border: none; transition: all var(--dur);
+}
+.nx-gh-btn.primary { background: var(--accent); color: white; }
+.nx-gh-btn.primary:hover { background: var(--accent-hover); }
+.nx-gh-btn.secondary { background: var(--surface); color: var(--text-muted); border: 1px solid var(--panel-border); }
+.nx-gh-btn.secondary:hover { color: var(--text); }
+.nx-gh-progress { display: none; margin-top: 12px; font-size: 11px; color: var(--text-muted); text-align: center; }
+.nx-gh-progress.visible { display: block; }
+
+/* ── Phase 3: Context badge (files/repo active) ── */
+.nx-context-bar {
+  display: none; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 4px 12px; background: rgba(56,139,253,0.06);
+  border-bottom: 1px solid rgba(56,139,253,0.15); flex-shrink: 0;
+  min-height: 28px;
+}
+.nx-context-bar.visible { display: flex; }
+.nx-ctx-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surface); border: 1px solid var(--panel-border);
+  border-radius: 20px; padding: 2px 8px 2px 6px;
+  font-size: 11px; color: var(--text-muted);
+}
+.nx-ctx-badge-icon { font-size: 12px; }
+.nx-ctx-badge-remove {
+  background: none; border: none; color: var(--text-dim); cursor: pointer;
+  padding: 0 0 0 4px; font-size: 13px; line-height: 1;
+}
+.nx-ctx-badge-remove:hover { color: var(--red); }
+.nx-ctx-label { font-size: 10px; color: var(--text-dim); margin-right: 2px; }
+
+/* ── Phase 3: Drop zone highlight ── */
+.nx-cmd-wrap.drag-over {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-dim) !important;
+  background: rgba(56,139,253,0.05);
+}
+.nx-cmd-wrap.drag-over::after {
+  content: 'Drop to attach';
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; font-size: 13px; color: var(--accent);
+  font-weight: 600; pointer-events: none; background: rgba(13,17,23,0.8);
+  border-radius: 10px;
+}
+.nx-cmd-wrap { position: relative; }
+
+/* ── Phase 3: Plan mode indicator on session card ── */
+.nx-plan-indicator {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; padding: 2px 8px; border-radius: 6px;
+  font-weight: 600;
+}
+
+@keyframes nxFadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: translateY(0); } }
+
 /* ── Main Layout ── */
 .nx-body {
   flex: 1; display: flex; flex-direction: column; overflow: hidden;
@@ -1778,20 +1928,77 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
 
 <!-- ── Header ── -->
 <header class="nx-header">
-  <div class="nx-logo">
-    <div class="nx-logo-icon">A</div>
+  <!-- Logo -->
+  <div class="nx-logo" title="Antigravity AI">
+    <div class="nx-logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+      </svg>
+    </div>
     <div>
       <div class="nx-logo-brand">Antigravity</div>
     </div>
     <span class="nx-logo-badge">AI</span>
   </div>
 
-  <div class="nx-cmd-wrap">
-    <textarea id="taskInput" placeholder="Describe what you want to build… (Ctrl+Enter to run)" autocomplete="off" spellcheck="false"></textarea>
-    <button class="nx-cmd-attach" title="Attach file" onclick="document.getElementById('nxFileInput').click()">📎</button>
+  <!-- Plan mode selector -->
+  <div class="nx-plan-selector" id="nxPlanSelector">
+    <div class="nx-plan-badge elite" id="nxPlanBadge" onclick="nxTogglePlanDropdown()" title="Execution plan mode">
+      <span id="nxPlanLabel">⚡ Elite</span>
+      <span class="nx-plan-caret">▾</span>
+    </div>
+    <div class="nx-plan-dropdown" id="nxPlanDropdown">
+      <div class="nx-plan-option" onclick="nxSetPlan('lite')">
+        <div class="nx-plan-dot" style="background:#3fb950"></div>
+        <div><div class="nx-plan-name">Lite</div><div class="nx-plan-desc">Fast responses, no planning</div></div>
+        <span class="nx-plan-check" id="nxPlanCheck-lite" style="display:none">✓</span>
+      </div>
+      <div class="nx-plan-option" onclick="nxSetPlan('pro')">
+        <div class="nx-plan-dot" style="background:#388bfd"></div>
+        <div><div class="nx-plan-name">Pro</div><div class="nx-plan-desc">Reasoning + multi-step planning</div></div>
+        <span class="nx-plan-check" id="nxPlanCheck-pro" style="display:none">✓</span>
+      </div>
+      <div class="nx-plan-option active" onclick="nxSetPlan('elite')">
+        <div class="nx-plan-dot" style="background:#bc8cff"></div>
+        <div><div class="nx-plan-name">Elite</div><div class="nx-plan-desc">Full autonomy · debug · self-correct</div></div>
+        <span class="nx-plan-check" id="nxPlanCheck-elite">✓</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Command bar -->
+  <div class="nx-cmd-wrap" id="nxCmdWrap">
+    <!-- Plus/attach menu -->
+    <div style="position:relative">
+      <button class="nx-plus-btn" id="nxPlusBtn" onclick="nxTogglePlusMenu()" title="Attach file, image, or import repo">+</button>
+      <div class="nx-plus-menu" id="nxPlusMenu">
+        <div class="nx-plus-opt" onclick="nxPlusMenu_file()">
+          <span class="nx-plus-opt-icon">📄</span> Upload File
+        </div>
+        <div class="nx-plus-opt" onclick="nxPlusMenu_image()">
+          <span class="nx-plus-opt-icon">🖼️</span> Upload Image
+        </div>
+        <div class="nx-plus-opt" onclick="nxPlusMenu_folder()">
+          <span class="nx-plus-opt-icon">📁</span> Upload Folder
+        </div>
+        <div class="nx-plus-opt" onclick="nxOpenGithubModal()">
+          <span class="nx-plus-opt-icon">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          </span> Import from GitHub
+        </div>
+      </div>
+    </div>
+    <!-- Hidden file inputs -->
     <input type="file" id="nxFileInput" style="display:none"
-           accept=".png,.jpg,.jpeg,.gif,.webp,.py,.js,.ts,.html,.css,.txt,.md,.json,.yaml,.yml,.csv,.sh"
+           accept=".py,.js,.ts,.html,.css,.txt,.md,.json,.yaml,.yml,.csv,.sh,.sql,.xml,.toml,.ini,.cfg"
            onchange="handleFileUpload(this)">
+    <input type="file" id="nxImageInput" style="display:none"
+           accept=".png,.jpg,.jpeg,.gif,.webp,.svg"
+           onchange="handleFileUpload(this)">
+    <input type="file" id="nxFolderInput" style="display:none"
+           webkitdirectory multiple
+           onchange="nxHandleFolderUpload(this)">
+    <textarea id="taskInput" placeholder="Describe what you want to build… (Ctrl+Enter to run)" autocomplete="off" spellcheck="false"></textarea>
     <button class="nx-cmd-attach" title="Voice input" id="nxVoiceBtn" onclick="toggleVoice()">🎤</button>
     <button class="nx-run-btn" id="runBtn" onclick="nxRunOrStop()">
       <span class="nx-live-dot" id="nxRunDot" style="display:none"></span>
@@ -1811,6 +2018,26 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <button class="nx-icon-btn" title="Settings" onclick="openSettings()">⚙</button>
   </div>
 </header>
+
+<!-- Phase 3: Context bar (shows active attachments/repo) -->
+<div class="nx-context-bar" id="nxContextBar">
+  <span class="nx-ctx-label">Context:</span>
+  <div id="nxCtxBadges" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center"></div>
+</div>
+
+<!-- Phase 3: GitHub import modal -->
+<div class="nx-gh-overlay" id="nxGhOverlay" onclick="nxCloseGithubModal(event)">
+  <div class="nx-gh-modal">
+    <h3>🔗 Import from GitHub</h3>
+    <p>Paste a public repo URL to clone and load its structure into your workspace.</p>
+    <input type="text" class="nx-gh-input" id="nxGhUrl" placeholder="https://github.com/user/repo" />
+    <div class="nx-gh-progress" id="nxGhProgress">Cloning repository…</div>
+    <div class="nx-gh-actions">
+      <button class="nx-gh-btn secondary" onclick="nxCloseGithubModal()">Cancel</button>
+      <button class="nx-gh-btn primary" onclick="nxImportGithub()">Import Repo</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── Body ── -->
 <div class="nx-body">
@@ -1842,6 +2069,10 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           <div class="nx-session-row" style="margin-top:4px">
             <span class="nx-session-label">Status</span>
             <span class="nx-session-val" id="nxCurStatus">Idle</span>
+          </div>
+          <div class="nx-session-row" style="margin-top:4px">
+            <span class="nx-session-label">Plan</span>
+            <span class="nx-session-val" id="nxActivePlanMode" style="color:#bc8cff;font-weight:600">⚡ Elite</span>
           </div>
         </div>
 
@@ -2155,6 +2386,11 @@ const NX = {
   lastStatus: 'idle',
   pollFast: null,
   pollSlow: null,
+  // Phase 3
+  planMode: 'elite',
+  plusMenuOpen: false,
+  planDropdownOpen: false,
+  ghRepo: null,   // loaded GitHub repo context
 };
 
 // ── Slot map: nxTabId → legacy element ID ──
@@ -2273,6 +2509,12 @@ function nxInit() {
 
   // 15. Watch decisions/output slots and show sections when they get content
   nxWatchInspectorSlots();
+
+  // 16. Phase 3: drag & drop on command bar
+  nxInitDragDrop();
+
+  // 17. Phase 3: set initial plan mode UI (silent — no toast on load)
+  nxSetPlan(NX.planMode, true);
 
   console.log('[NX] Advanced UI initialized');
 }
@@ -2714,14 +2956,297 @@ function nxWatchInspectorSlots() {
 // ── Run or Stop toggle ──
 function nxRunOrStop() {
   if (NX.lastStatus === 'running' && NX.activeSid) {
-    // Stop the current running task
     fetch('/api/session/' + NX.activeSid + '/stop', { method: 'POST' })
       .then(() => { nxSetGlobalStatus('idle'); })
       .catch(() => {});
   } else {
-    queueTask();
+    nxQueueTask();
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 3: Plan System, Plus Menu, GitHub Import, Context Badge
+// ═══════════════════════════════════════════════════════════════
+
+const NX_PLANS = {
+  lite:  { label: '⚡ Lite',  cls: 'lite',  color: '#3fb950', icon: '🟢' },
+  pro:   { label: '🔷 Pro',   cls: 'pro',   color: '#388bfd', icon: '🔷' },
+  elite: { label: '⚡ Elite', cls: 'elite', color: '#bc8cff', icon: '💜' },
+};
+
+// ── Plan selector ──
+function nxSetPlan(mode, silent) {
+  if (!NX_PLANS[mode]) return;
+  NX.planMode = mode;
+  const p = NX_PLANS[mode];
+  const badge = document.getElementById('nxPlanBadge');
+  const label = document.getElementById('nxPlanLabel');
+  if (badge) { badge.className = 'nx-plan-badge ' + p.cls; }
+  if (label) { label.textContent = p.label; }
+  // update checkmarks
+  ['lite','pro','elite'].forEach(m => {
+    const el = document.getElementById('nxPlanCheck-' + m);
+    if (el) el.style.display = m === mode ? '' : 'none';
+  });
+  // update active class
+  document.querySelectorAll('.nx-plan-option').forEach((el, i) => {
+    const modes = ['lite','pro','elite'];
+    el.classList.toggle('active', modes[i] === mode);
+  });
+  // Update session card plan indicator
+  const planEl = document.getElementById('nxActivePlanMode');
+  if (planEl) { planEl.textContent = p.label; planEl.style.color = p.color; }
+  nxClosePlanDropdown();
+  if (!silent) toast('Plan mode: ' + p.label.replace(/[⚡🔷💜🔷]/g,'').trim(), 'ok');
+}
+
+function nxTogglePlanDropdown() {
+  const dd = document.getElementById('nxPlanDropdown');
+  if (!dd) return;
+  NX.planDropdownOpen = !NX.planDropdownOpen;
+  dd.classList.toggle('open', NX.planDropdownOpen);
+  if (NX.planDropdownOpen) { nxClosePlusMenu(); }
+}
+function nxClosePlanDropdown() {
+  const dd = document.getElementById('nxPlanDropdown');
+  if (dd) dd.classList.remove('open');
+  NX.planDropdownOpen = false;
+}
+
+// ── Plus / Attach menu ──
+function nxTogglePlusMenu() {
+  const menu = document.getElementById('nxPlusMenu');
+  if (!menu) return;
+  NX.plusMenuOpen = !NX.plusMenuOpen;
+  menu.classList.toggle('open', NX.plusMenuOpen);
+  if (NX.plusMenuOpen) { nxClosePlanDropdown(); }
+}
+function nxClosePlusMenu() {
+  const menu = document.getElementById('nxPlusMenu');
+  if (menu) menu.classList.remove('open');
+  NX.plusMenuOpen = false;
+}
+function nxPlusMenu_file() {
+  nxClosePlusMenu();
+  const el = document.getElementById('nxFileInput');
+  if (el) el.click();
+}
+function nxPlusMenu_image() {
+  nxClosePlusMenu();
+  const el = document.getElementById('nxImageInput');
+  if (el) el.click();
+}
+function nxPlusMenu_folder() {
+  nxClosePlusMenu();
+  const el = document.getElementById('nxFolderInput');
+  if (el) el.click();
+}
+
+// ── GitHub import modal ──
+function nxOpenGithubModal() {
+  nxClosePlusMenu();
+  const ov = document.getElementById('nxGhOverlay');
+  if (ov) { ov.classList.add('open'); }
+  const inp = document.getElementById('nxGhUrl');
+  if (inp) { inp.value = ''; inp.focus(); }
+  const prog = document.getElementById('nxGhProgress');
+  if (prog) prog.classList.remove('visible');
+}
+function nxCloseGithubModal(ev) {
+  if (ev && ev.target !== document.getElementById('nxGhOverlay')) return;
+  const ov = document.getElementById('nxGhOverlay');
+  if (ov) ov.classList.remove('open');
+}
+async function nxImportGithub() {
+  const inp = document.getElementById('nxGhUrl');
+  const prog = document.getElementById('nxGhProgress');
+  const url = (inp ? inp.value : '').trim();
+  if (!url) { toast('Enter a GitHub repo URL', 'err'); return; }
+  if (prog) { prog.textContent = '⟳ Cloning repository…'; prog.classList.add('visible'); }
+  try {
+    const r = await fetch('/api/github/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ repo_url: url })
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) {
+      if (prog) prog.textContent = '✗ ' + (d.error || 'Import failed');
+      toast('GitHub import failed: ' + (d.error || 'unknown'), 'err');
+      return;
+    }
+    NX.ghRepo = { url, name: d.repo_name || url.split('/').pop(), data: d };
+    nxAddContextBadge('repo', '🔗 ' + (d.repo_name || 'repo'), url);
+    // Inject repo context into task input
+    const ta = document.getElementById('taskInput');
+    if (ta && !ta.value.trim()) {
+      ta.value = 'Analyze the repository at ' + url + ' and help me understand its structure.';
+    }
+    // Inject file context for queueTask
+    if (typeof _uploadedContext !== 'undefined') {
+      _uploadedContext.push({
+        filename: d.repo_name || 'repo',
+        context: 'GitHub Repository: ' + url + '\n' + (d.completion_plan || '').slice(0, 1000),
+        type: 'repo'
+      });
+    }
+    const ov = document.getElementById('nxGhOverlay');
+    if (ov) ov.classList.remove('open');
+    toast('✅ Repo imported: ' + (d.repo_name || url), 'ok');
+  } catch(e) {
+    if (prog) prog.textContent = '✗ Network error';
+    toast('GitHub import error: ' + e, 'err');
+  }
+}
+
+// ── Context badge system ──
+function nxAddContextBadge(type, label, detail) {
+  const container = document.getElementById('nxCtxBadges');
+  const bar = document.getElementById('nxContextBar');
+  if (!container || !bar) return;
+  const id = 'nxCtx-' + type + '-' + Date.now();
+  const badge = document.createElement('div');
+  badge.className = 'nx-ctx-badge';
+  badge.id = id;
+  badge.innerHTML = `<span class="nx-ctx-badge-icon">${label.split(' ')[0]}</span>
+    <span>${label.replace(/^[\S]+\s/,'')}</span>
+    <button class="nx-ctx-badge-remove" onclick="nxRemoveContextBadge('${id}', '${type}')" title="Remove">×</button>`;
+  badge.title = detail || label;
+  container.appendChild(badge);
+  bar.classList.add('visible');
+}
+function nxRemoveContextBadge(id, type) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  if (type === 'repo') { NX.ghRepo = null; }
+  // Remove matching context from _uploadedContext
+  if (typeof _uploadedContext !== 'undefined' && type === 'repo') {
+    _uploadedContext = _uploadedContext.filter(u => u.type !== 'repo');
+  }
+  const container = document.getElementById('nxCtxBadges');
+  const bar = document.getElementById('nxContextBar');
+  if (container && bar && !container.children.length) {
+    bar.classList.remove('visible');
+  }
+}
+function nxSyncContextBadgesFromChips() {
+  // Sync upload chips to context bar for the header
+  const container = document.getElementById('nxCtxBadges');
+  const bar = document.getElementById('nxContextBar');
+  if (!container || !bar) return;
+  // Remove old file badges (keep repo badges)
+  Array.from(container.children).forEach(el => {
+    if (!el.id.includes('-repo-')) el.remove();
+  });
+  if (typeof _uploadedContext !== 'undefined') {
+    _uploadedContext.forEach((u, i) => {
+      if (u.type === 'repo') return; // already shown
+      const icon = u.type === 'image' ? '🖼' : '📄';
+      const badge = document.createElement('div');
+      badge.className = 'nx-ctx-badge';
+      badge.innerHTML = `<span class="nx-ctx-badge-icon">${icon}</span>
+        <span>${u.filename}</span>
+        <button class="nx-ctx-badge-remove" onclick="nxRemoveCtxFile(${i})" title="Remove">×</button>`;
+      container.appendChild(badge);
+    });
+    bar.classList.toggle('visible', _uploadedContext.length > 0 || !!NX.ghRepo);
+  }
+}
+function nxRemoveCtxFile(idx) {
+  if (typeof _uploadedContext !== 'undefined') {
+    _uploadedContext.splice(idx, 1);
+    renderUploadChips();
+    nxSyncContextBadgesFromChips();
+  }
+}
+
+// ── Drag and drop on command bar ──
+function nxInitDragDrop() {
+  const wrap = document.getElementById('nxCmdWrap');
+  if (!wrap) return;
+  wrap.addEventListener('dragover', e => {
+    e.preventDefault();
+    wrap.classList.add('drag-over');
+  });
+  wrap.addEventListener('dragleave', e => {
+    if (!wrap.contains(e.relatedTarget)) wrap.classList.remove('drag-over');
+  });
+  wrap.addEventListener('drop', async e => {
+    e.preventDefault();
+    wrap.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files);
+    if (!files.length) return;
+    for (const file of files.slice(0, 5)) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      const fakeInput = { files: dt.files };
+      await handleFileUpload(fakeInput);
+    }
+    nxSyncContextBadgesFromChips();
+  });
+}
+
+// ── Folder upload (summarize multiple files) ──
+async function nxHandleFolderUpload(input) {
+  const files = Array.from(input.files || []).slice(0, 20);
+  if (!files.length) return;
+  toast(`Uploading ${files.length} file(s)…`, 'ok');
+  let count = 0;
+  for (const file of files) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    await handleFileUpload({ files: dt.files });
+    count++;
+  }
+  nxSyncContextBadgesFromChips();
+  toast(`✅ ${count} file(s) attached`, 'ok');
+  input.value = '';
+}
+
+// ── Enhanced queueTask that includes plan_mode ──
+function nxQueueTask() {
+  const task = (document.getElementById('taskInput') || {}).value || '';
+  if (!task.trim()) { toast('Please describe a task first.', 'err'); return; }
+  const model = document.getElementById('modelSelect') ? document.getElementById('modelSelect').value : '';
+  // inject file context if any
+  if (typeof _uploadedContext !== 'undefined' && _uploadedContext.length > 0) {
+    const ta = document.getElementById('taskInput');
+    const ctx = _uploadedContext.map(u => u.context).join('\n\n');
+    if (ta && ctx) ta.value = ctx + '\n\n' + ta.value;
+    _uploadedContext = [];
+    if (typeof renderUploadChips === 'function') renderUploadChips();
+    nxSyncContextBadgesFromChips();
+  }
+  const taskFinal = (document.getElementById('taskInput') || {}).value || '';
+  fetch('/api/queue-task', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ task: taskFinal, model: model || null, plan_mode: NX.planMode })
+  }).then(r => r.json()).then(d => {
+    if (!d.ok) { toast(d.error || 'Failed to queue', 'err'); return; }
+    document.getElementById('taskInput').value = '';
+    NX.activeSid = d.session_id;
+    nxSetGlobalStatus('running');
+    if (typeof selectSession === 'function') selectSession(d.session_id);
+    if (typeof loadSessions === 'function') loadSessions();
+    if (typeof loadQueue === 'function') loadQueue();
+    // Show plan mode in left panel
+    const planEl = document.getElementById('nxActivePlanMode');
+    const p = NX_PLANS[NX.planMode] || NX_PLANS.elite;
+    if (planEl) {
+      planEl.textContent = p.label;
+      planEl.style.color = p.color;
+    }
+  }).catch(e => toast('Queue error: ' + e, 'err'));
+}
+
+// ── Close menus on outside click ──
+document.addEventListener('click', e => {
+  const planSel = document.getElementById('nxPlanSelector');
+  const plusWrap = document.getElementById('nxPlusBtn') && document.getElementById('nxPlusBtn').parentElement;
+  if (planSel && !planSel.contains(e.target)) nxClosePlanDropdown();
+  if (plusWrap && !plusWrap.contains(e.target)) nxClosePlusMenu();
+});
 
 // ── Queue polling ──
 async function nxPollQueue() {
@@ -7960,6 +8485,7 @@ async function handleFileUpload(input) {
 
 function renderUploadChips() {
     const container = $('uploadChips');
+    if (!container) return;
     container.innerHTML = _uploadedContext.map((u, i) =>
         `<span class="upload-chip">
             <span>${u.type === 'image' ? '🖼️' : '📄'}</span>
@@ -7967,6 +8493,8 @@ function renderUploadChips() {
             <span class="chip-remove" onclick="removeUpload(${i})">×</span>
         </span>`
     ).join('');
+    // Sync to Phase 3 context bar
+    if (typeof nxSyncContextBadgesFromChips === 'function') nxSyncContextBadgesFromChips();
 }
 
 function removeUpload(idx) {

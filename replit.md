@@ -12,16 +12,24 @@ A lightweight, self-fixing autonomous coding agent with a multi-LLM router (auto
 - **Templates**: HTML UI in `/templates/`
 - **Session data**: SQLite (`sessions.db`) + per-session workspaces (`./workspace/<sid>/`)
 
-## UI — NX Advanced Interface (v2)
+## UI — NX Advanced Interface (v2) + Phase 3 Productization
 The UI was upgraded from the basic "Phase 57" bridge to a full feature-complete platform UI:
-- **Header**: Logo + command bar (Ctrl+Enter to run) + voice/attach + model selector + status badge + sessions + ⌘K command palette + settings
-- **Left Panel** (280px, resizable): AI Thinking stream (Thoughts/Decisions/Recall), session card, HITL controls (pause/resume/inject), quick start examples
+- **Header**: Logo (SVG star, gradient animation) + Plan selector (Lite/Pro/Elite badge) + command bar + "+" attach menu + voice + model selector + status badge + sessions + ⌘K palette + settings
+- **Left Panel** (280px, resizable): AI Thinking stream, session card (shows active plan mode), HITL controls, quick start examples
 - **Center Panel** (tabbed): Logs, Preview, Code/Files (Monaco), Terminal (PTY), Metrics, Agents, Timeline, Steps
-- **Right Inspector** (290px, resizable): Live status stats (elapsed/steps/tokens/queue), model info, system metrics (CPU/memory with bars), error card with Fix-with-AI, decisions, output
+- **Right Inspector** (290px, resizable): Live status stats, model info, system metrics, error card + Fix-with-AI, decisions, output
 - **Status Bar**: Model name | Mode | Status | Session | Keyboard hints
 - **Command Palette** (Ctrl+K): All major actions searchable
 - **Keyboard Shortcuts**: Ctrl+Enter (run), Ctrl+K (palette), Ctrl+S (save file), Escape (close)
 - **Resizable panels**: Drag handles between all 3 columns
+
+### Phase 3: Productization Layer
+- **Plan System**: 3 modes — Lite (fast/no planning, max 5 steps), Pro (reasoning+planning, max 15 steps), Elite (full autonomy, max 50 steps). Plan mode sent to backend with every task; capability flags (`ALLOW_PLANNING`, `ALLOW_REASONING`, `ALLOW_DEBUG`, `ALLOW_SELF_CORRECTION`, `MAX_AGENT_STEPS`) passed as env vars to agent subprocess.
+- **"+" Attach Menu**: Upload File, Upload Image, Upload Folder (multi-file), Import from GitHub — animated dropdown from command bar
+- **GitHub Import**: Modal UI calls `/api/github/import`, shows repo context badge, auto-fills task input
+- **Context Bar**: Shows active file/repo badges below header, removable, auto-hides when empty
+- **Drag & Drop**: Drop files directly onto command bar for instant attachment
+- **Branding**: Animated SVG star logo with gradient rotation, logo hover animation
 
 ## Running the App
 - **Workflow**: "Start application" — runs `python web_app.py`

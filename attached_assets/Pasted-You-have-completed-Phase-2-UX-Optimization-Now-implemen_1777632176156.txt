@@ -1,0 +1,151 @@
+You have completed Phase 2 (UX Optimization).
+
+Now implement PHASE 3: Productization Layer.
+
+This phase will transform the system into a real SaaS AI product.
+
+---
+
+# 🎯 OBJECTIVE
+
+Add:
+
+1. User Plan System (Lite / Pro / Elite)
+2. Advanced Input UX (File / Image / Repo)
+3. Strong Product Identity (Branding + Logo)
+4. Capability Gating (based on plan)
+
+---
+
+# 🧠 STEP 1: PLAN SYSTEM (CRITICAL)
+
+Implement 3 user modes:
+
+## Lite
+
+* No planning
+* No deep reasoning
+* Fast responses only
+* No debugging
+* Limited steps
+
+## Pro
+
+* Includes reasoning + planning
+* Multi-step execution
+* BUT no deep debugging / self-correction
+
+## Elite
+
+* Full capability:
+
+  * Planning
+  * Reasoning
+  * Debugging
+  * Self-correction
+  * Tool chaining
+  * Autonomous behavior
+
+---
+
+## Backend Requirements
+
+* Add `PLAN_MODE` in session/config
+* Modify ModelRouter / WorkflowEngine behavior based on mode
+* Add capability flags:
+
+  * allow_reasoning
+  * allow_debug
+  * allow_planning
+  * max_steps
+
+---
+
+## UI Requirements
+
+* Add plan selector near command bar
+* Show current mode badge (Lite / Pro / Elite)
+* Visual difference (color-coded)
+
+---
+
+# 📂 STEP 2: ADVANCED INPUT SYSTEM
+
+Replace basic input with professional system:
+
+## Add "+" button (hover icon visible)
+
+On click open menu:
+
+* Upload File
+* Upload Image
+* Upload Folder
+* Import from GitHub
+
+---
+
+## Behavior
+
+* Show attached files preview (like ChatGPT / Gemini)
+* Allow removing attachments
+* Send attachments with task context
+
+---
+
+## GitHub Import
+
+* Accept repo URL
+* Clone and load into workspace
+* Show file tree
+
+---
+
+# 🎨 STEP 3: BRANDING & LOGO
+
+* Add proper logo (top-left)
+* Add hover animations
+* Add product identity (not generic UI)
+
+---
+
+# ⚡ STEP 4: SMART UX IMPROVEMENTS
+
+* Show attachment chips below command bar
+* Drag & drop file support
+* Loading indicators per file
+* Error handling (invalid repo, large file, etc.)
+
+---
+
+# 🧠 STEP 5: CONTEXT AWARE SYSTEM
+
+* If file uploaded → AI uses it
+* If repo loaded → AI analyzes structure
+* Show context badge (Files / Repo active)
+
+---
+
+# 🚫 RULES
+
+* DO NOT break existing system
+* DO NOT remove current features
+* ONLY enhance
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. What backend changes added
+2. What UI components added
+3. How plan system works internally
+4. Final UX improvements summary
+
+---
+
+# ⚡ FINAL GOAL
+
+System should feel like:
+
+ChatGPT + Replit + Cursor AI
+
+Fully interactive, powerful, and user-controlled.

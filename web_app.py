@@ -458,6 +458,40 @@ MANAGED_LIMITS = {
     "rate_window_seconds":   int(os.getenv("MANAGED_RATE_WINDOW", "3600")),
 }
 
+# ── Plan system capability gates (Phase 3) ───────────────────────────────────
+PLAN_CAPABILITIES = {
+    "lite": {
+        "allow_planning":   False,
+        "allow_reasoning":  False,
+        "allow_debug":      False,
+        "allow_self_correction": False,
+        "max_steps":        5,
+        "label":            "Lite",
+        "description":      "Fast responses, no planning or deep reasoning",
+        "color":            "#3fb950",
+    },
+    "pro": {
+        "allow_planning":   True,
+        "allow_reasoning":  True,
+        "allow_debug":      False,
+        "allow_self_correction": False,
+        "max_steps":        15,
+        "label":            "Pro",
+        "description":      "Reasoning + planning, multi-step execution",
+        "color":            "#388bfd",
+    },
+    "elite": {
+        "allow_planning":   True,
+        "allow_reasoning":  True,
+        "allow_debug":      True,
+        "allow_self_correction": True,
+        "max_steps":        50,
+        "label":            "Elite",
+        "description":      "Full autonomy: planning, debugging, self-correction, tool chaining",
+        "color":            "#bc8cff",
+    },
+}
+
 
 def mask_key(value):
     """Return a safe display form of an API key. Never expose the full value."""
@@ -818,6 +852,16 @@ def env_for_session(cfg):
     # 4) explicitly control local fallback based on user selection — never
     #    let an inherited env enable Ollama when the user did not pick it.
     env["ALLOW_LOCAL_FALLBACK"] = "1" if "local" in cfg.get("providers", []) else "0"
+
+    # 5) Plan mode capability gates (Phase 3)
+    plan_mode = cfg.get("plan_mode", "elite")
+    caps = PLAN_CAPABILITIES.get(plan_mode, PLAN_CAPABILITIES["elite"])
+    env["PLAN_MODE"]               = plan_mode
+    env["ALLOW_PLANNING"]          = "1" if caps["allow_planning"]        else "0"
+    env["ALLOW_REASONING"]         = "1" if caps["allow_reasoning"]       else "0"
+    env["ALLOW_DEBUG"]             = "1" if caps["allow_debug"]           else "0"
+    env["ALLOW_SELF_CORRECTION"]   = "1" if caps["allow_self_correction"] else "0"
+    env["MAX_AGENT_STEPS"]         = str(caps["max_steps"])
 
     return env
 
@@ -2101,6 +2145,9 @@ def api_queue_task():
     data = request.get_json() or {}
     task = (data.get("task") or "").strip()
     model = data.get("model") or None
+    plan_mode = (data.get("plan_mode") or "elite").lower()
+    if plan_mode not in PLAN_CAPABILITIES:
+        plan_mode = "elite"
     if not task:
         return jsonify({"error": "Task text required"}), 400
 
@@ -2108,6 +2155,9 @@ def api_queue_task():
     ok, err, _ = validate_config(cfg)
     if not ok:
         return jsonify({"error": f"Stored config invalid: {err}. Open settings to fix."}), 400
+
+    # Inject plan mode into session config
+    cfg["plan_mode"] = plan_mode
 
     # Managed-mode rate limiting
     if cfg.get("mode") == "managed":
@@ -2123,7 +2173,15 @@ def api_queue_task():
                          "Switch to BYOK or wait."}), 429
 
     sid = enqueue_task(task, model, cfg)
-    return jsonify({"ok": True, "session_id": sid})
+    caps = PLAN_CAPABILITIES[plan_mode]
+    return jsonify({"ok": True, "session_id": sid, "plan_mode": plan_mode,
+                    "plan_label": caps["label"], "max_steps": caps["max_steps"]})
+
+
+@app.route("/api/plan-config")
+def api_plan_config():
+    """Return available plan modes and their capabilities."""
+    return jsonify({"plans": PLAN_CAPABILITIES})
 
 
 @app.route("/api/queue")
