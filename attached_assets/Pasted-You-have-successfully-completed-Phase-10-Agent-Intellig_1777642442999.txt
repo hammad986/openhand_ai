@@ -1,0 +1,169 @@
+You have successfully completed Phase 10 (Agent Intelligence + Memory System).
+
+Now implement **PHASE 11 — MULTI-AGENT COLLABORATION SYSTEM (AI TEAM ARCHITECTURE)**.
+
+This is a major architectural upgrade. Follow strictly.
+
+---
+
+# 🎯 OBJECTIVE
+
+Transform the system from a single-agent executor into a **multi-agent collaborative AI system**.
+
+---
+
+# 🧠 STEP 1 — DEFINE AGENT ROLES
+
+Create 4 specialized agents:
+
+### 1. Manager Agent (🧠)
+
+* Breaks user task into sub-tasks
+* Assigns tasks to agents
+* Tracks progress
+
+---
+
+### 2. Research Agent (🔍)
+
+* Uses browser / API tools
+* Fetches data
+* Gathers references
+
+---
+
+### 3. Coding Agent (💻)
+
+* Writes code
+* Modifies files
+* Handles implementation
+
+---
+
+### 4. Debug Agent (🛠️)
+
+* Fixes errors
+* Analyzes failures
+* Improves output
+
+---
+
+# 🧠 STEP 2 — TASK DECOMPOSITION
+
+Modify workflow:
+
+Instead of:
+task → plan → execute
+
+Use:
+
+task → Manager → sub-tasks → assign → execute → merge
+
+---
+
+# 🧠 STEP 3 — INTER-AGENT COMMUNICATION
+
+Create communication system:
+
+* shared memory (context)
+* message passing
+
+Example:
+Research → sends data → Coding
+Coding → sends errors → Debug
+
+---
+
+# 🧠 STEP 4 — SHARED MEMORY
+
+Create:
+
+* team_memory table / object
+
+Store:
+
+* task results
+* intermediate outputs
+* agent messages
+
+---
+
+# 🧠 STEP 5 — EXECUTION FLOW
+
+Pipeline:
+
+1. Manager creates plan
+2. Assign sub-task
+3. Agent executes
+4. Result stored
+5. Next agent uses result
+
+---
+
+# ⚡ STEP 6 — FAILURE HANDLING
+
+If any agent fails:
+
+* Debug agent activates
+* Retry with improved context
+
+---
+
+# 🎨 STEP 7 — UI INTEGRATION
+
+Add new panel:
+
+"AI Team"
+
+Show:
+
+* active agents
+* current task per agent
+* status (running / done / failed)
+
+Add logs:
+
+[Manager] Planning...
+[Research] Fetching data...
+[Coding] Writing code...
+[Debug] Fixing error...
+
+---
+
+# 📊 STEP 8 — CONTROL SYSTEM
+
+Add controls:
+
+* pause/resume team
+* stop execution
+* view agent messages
+
+---
+
+# ⚠️ RULES
+
+* DO NOT break Phase 9 routing
+* DO NOT remove single-agent fallback
+* Keep system stable
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. Agent architecture
+2. Communication system
+3. Workflow update
+4. UI changes
+5. Failure handling
+
+---
+
+# 🚀 FINAL GOAL
+
+System should behave like:
+
+"A coordinated AI team working together to complete complex tasks"
+
+---
+
+This is NOT a feature. This is a SYSTEM EVOLUTION.

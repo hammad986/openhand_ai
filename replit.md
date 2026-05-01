@@ -101,6 +101,24 @@ The UI was upgraded from the basic "Phase 57" bridge to a full feature-complete 
 - **Auto-sync**: JS polls every 30s; re-fetches on plan-selector change and task events
 - **New Endpoints**: `GET /api/p9/routing?plan_mode=`, `POST /api/p9/route-for-role`, `GET /api/p9/fallback-log`, `GET /api/p9/providers`
 
+### Phase 10: Agent Intelligence & Memory System
+- **Short-term memory (STM)**: In-memory per-session deque (last 20 tasks) via `_P10_STM`
+- **`p10_record_task(sid, task, result, success)`**: Appends a timestamped entry to STM + long-term memory
+- **`p10_inject_context(sid, task)`**: Retrieves recent STM + semantic matches from LongTermMemory; formats a context block injected into prompts
+- **`p10_self_correct_prompt(sid, task, prev_error)`**: Builds "retry prompt" that includes prior failure + learned hints
+- **`p10_get_score(sid)`**: Returns quality score dict (calls, success_rate, retry_rate, grade, quality_score)
+- **New Endpoints**: `GET /api/agent/score`, `GET /api/memory/recent`, `GET /api/memory/insights`
+- **Inspector panel**: "🧠 Intelligence Score" section shows grade badge (A-F), success rate, total calls, last 5 memory items with coloured left-border (✓ success / ✗ fail)
+- **Auto-refresh**: Polls `/api/agent/score` + `/api/memory/recent` every 45s; also refreshes on `nxTaskDone` event
+
+### Phase 11: Multi-Agent Collaboration System
+- **`P11AgentTeam` class**: 4-agent pipeline — Manager (plan) → Research (gather) → Coding (implement) → Debug (verify)
+- **Run lifecycle**: `start(task)` spawns a background thread; status tracked in `_P11_RUNS` dict; each step updates `steps[]` + `log_lines[]`
+- **Cancellation**: `cancel()` sets a threading `Event`; each agent step checks it before proceeding
+- **New Endpoints**: `POST /api/p11/team/run`, `GET /api/p11/team/status`, `POST /api/p11/team/cancel`, `GET /api/p11/team/list`
+- **"🤖 AI Team" center tab**: Agent cards grid (Manager/Research/Coding/Debug) with live status coloring; scrollable log stream; task input + Run/Cancel buttons
+- **Tab switching**: setActiveTab patched with `_p11_origSetTab` wrapper to show/hide `#tabAiteam` panel
+
 ## Running the App
 - **Workflow**: "Start application" — runs `python web_app.py`
 - **Port**: 5000

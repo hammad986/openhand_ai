@@ -2459,6 +2459,189 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
   border-top: 1px solid var(--panel-border);
 }
 
+/* ── Phase 10 — Memory & Intelligence ───────────────────────────── */
+.p10-mem-section {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+}
+.p10-mem-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+.p10-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.p10-score-label { font-size: 10px; color: var(--text-dim); }
+.p10-score-val   { font-size: 11px; font-weight: 700; color: var(--accent); }
+.p10-grade-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  width: 22px; height: 22px;
+  line-height: 22px;
+  text-align: center;
+  border-radius: 5px;
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+}
+.p10-mem-item {
+  font-size: 10px;
+  padding: 3px 6px;
+  background: var(--bg);
+  border-radius: 4px;
+  margin-bottom: 3px;
+  border-left: 2px solid transparent;
+  line-height: 1.4;
+}
+.p10-mem-item.fail  { border-left-color: #f87171; }
+.p10-mem-item.success { border-left-color: #4caf50; }
+.p10-mem-item.insight { border-left-color: #bc8cff; }
+
+/* ── Phase 11 — AI Team Panel ────────────────────────────────────── */
+.p11-team-tab {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.p11-team-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--panel-border);
+  flex-shrink: 0;
+}
+.p11-team-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.p11-status-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  background: var(--panel);
+  color: var(--text-dim);
+  border: 1px solid var(--panel-border);
+}
+.p11-status-badge.running { background:#4caf5022;color:#4caf50;border-color:#4caf5044; }
+.p11-status-badge.paused  { background:#f59e0b22;color:#f59e0b;border-color:#f59e0b44; }
+.p11-status-badge.done    { background:#388bfd22;color:#388bfd;border-color:#388bfd44; }
+.p11-status-badge.failed  { background:#f8717122;color:#f87171;border-color:#f8717144; }
+.p11-team-controls {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.p11-ctrl-btn {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.p11-ctrl-btn:hover { background: var(--hover); }
+.p11-ctrl-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.p11-ctrl-btn.primary:hover { filter: brightness(1.1); }
+.p11-task-input-wrap {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.p11-task-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}
+.p11-task-input:focus { border-color: var(--accent); }
+.p11-agents-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px 14px;
+  flex-shrink: 0;
+}
+.p11-agent-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 10px;
+  transition: border-color .2s;
+}
+.p11-agent-card.running { border-color: #4caf50; box-shadow: 0 0 0 1px #4caf5033; }
+.p11-agent-card.done    { border-color: #388bfd; }
+.p11-agent-card.failed  { border-color: #f87171; }
+.p11-agent-icon  { font-size: 18px; margin-bottom: 4px; }
+.p11-agent-name  { font-size: 11px; font-weight: 700; color: var(--text); }
+.p11-agent-status { font-size: 9px; margin-top: 2px; text-transform: uppercase;
+                     font-weight: 600; letter-spacing: .05em; }
+.p11-agent-status.idle    { color: var(--text-dim); }
+.p11-agent-status.running { color: #4caf50; }
+.p11-agent-status.done    { color: #388bfd; }
+.p11-agent-status.failed  { color: #f87171; }
+.p11-agent-task {
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.p11-log-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 14px 10px;
+  font-size: 10.5px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+.p11-log-entry {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--panel-border)11;
+  line-height: 1.5;
+}
+.p11-log-ts    { color: var(--muted); min-width: 44px; font-size: 9.5px; }
+.p11-log-agent { font-weight: 700; min-width: 64px; font-size: 9.5px; }
+.p11-log-msg   { color: var(--text-dim); }
+.p11-log-agent.manager  { color: #bc8cff; }
+.p11-log-agent.research { color: #388bfd; }
+.p11-log-agent.coding   { color: #4caf50; }
+.p11-log-agent.debug    { color: #f59e0b; }
+
 /* ── Phase 9 — Active Routing Panel ─────────────────────────────── */
 .p9-routing-section {
   margin-top: 8px;
@@ -3017,6 +3200,29 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           <!-- Phase 8: Usage mini-block -->
           <div class="p8-insp-usage" id="p8InspUsage" style="display:none">
             <div id="p8InspUsageContent"></div>
+          </div>
+
+          <!-- Phase 10: Memory Context + Intelligence Score -->
+          <div class="p10-mem-section" id="p10MemSection">
+            <div class="p10-mem-title">🧠 Intelligence Score</div>
+            <div class="p10-score-row">
+              <span class="p10-score-label">Grade</span>
+              <span class="p10-grade-badge" id="p10Grade">—</span>
+            </div>
+            <div class="p10-score-row">
+              <span class="p10-score-label">Success rate</span>
+              <span class="p10-score-val" id="p10SuccessRate">—</span>
+            </div>
+            <div class="p10-score-row">
+              <span class="p10-score-label">Total calls</span>
+              <span class="p10-score-val" id="p10Calls">0</span>
+            </div>
+            <div style="margin-top:8px">
+              <div class="p10-mem-title" style="margin-bottom:5px">📋 Session Memory</div>
+              <div id="p10MemItems">
+                <div style="font-size:10px;color:var(--muted)">No tasks recorded yet.</div>
+              </div>
+            </div>
           </div>
 
           <!-- Phase 9: Active Model Routing -->
@@ -4415,6 +4621,10 @@ window.addEventListener('load', nxInit);
             <button class="tab-btn" data-tab="enterprise" onclick="setActiveTab('enterprise')" id="enterpriseTabBtn">
                 🏢 Enterprise <span class="tab-badge" id="entBadge" style="background:#f0883e22;color:#f0883e">P35</span>
             </button>
+            <!-- Phase 11 — AI Team tab -->
+            <button class="tab-btn" data-tab="aiteam" onclick="setActiveTab('aiteam')" id="p11TeamTabBtn">
+                🤖 AI Team <span class="tab-badge" id="p11TeamBadge" style="background:#4caf5022;color:#4caf50">P11</span>
+            </button>
 
             <!-- per-tab action strips -->
             <span class="tab-actions" id="tabActLogs">
@@ -5049,6 +5259,52 @@ window.addEventListener('load', nxInit);
                     <div id="entCaps" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 0"></div>
                 </div>
             </div>
+        </div>
+
+        <!-- Phase 11 — AI Team Tab -->
+        <div class="tab-content hidden" id="tabAiteam" style="padding:0;overflow:hidden">
+          <div class="p11-team-tab">
+            <div class="p11-team-header">
+              <span class="p11-team-title">🤖 AI Team</span>
+              <span class="p11-status-badge" id="p11TeamStatus">Idle</span>
+              <div class="p11-team-controls">
+                <button class="p11-ctrl-btn" onclick="p11CancelTeam()" id="p11CancelBtn" disabled>Cancel</button>
+                <button class="p11-ctrl-btn primary" onclick="p11RunTeam()" id="p11RunBtn">▶ Run Team</button>
+              </div>
+            </div>
+            <div class="p11-task-input-wrap">
+              <textarea class="p11-task-input" id="p11TaskInput" rows="2" placeholder="Describe a task for the AI team to solve together…"></textarea>
+            </div>
+            <div class="p11-agents-grid" id="p11AgentsGrid">
+              <div class="p11-agent-card" id="p11CardManager">
+                <div class="p11-agent-icon">🧠</div>
+                <div class="p11-agent-name">Manager</div>
+                <div class="p11-agent-status idle" id="p11StatusManager">idle</div>
+                <div class="p11-agent-task" id="p11TaskManager">—</div>
+              </div>
+              <div class="p11-agent-card" id="p11CardResearch">
+                <div class="p11-agent-icon">🔍</div>
+                <div class="p11-agent-name">Research</div>
+                <div class="p11-agent-status idle" id="p11StatusResearch">idle</div>
+                <div class="p11-agent-task" id="p11TaskResearch">—</div>
+              </div>
+              <div class="p11-agent-card" id="p11CardCoding">
+                <div class="p11-agent-icon">💻</div>
+                <div class="p11-agent-name">Coding</div>
+                <div class="p11-agent-status idle" id="p11StatusCoding">idle</div>
+                <div class="p11-agent-task" id="p11TaskCoding">—</div>
+              </div>
+              <div class="p11-agent-card" id="p11CardDebug">
+                <div class="p11-agent-icon">🐛</div>
+                <div class="p11-agent-name">Debug</div>
+                <div class="p11-agent-status idle" id="p11StatusDebug">idle</div>
+                <div class="p11-agent-task" id="p11TaskDebug">—</div>
+              </div>
+            </div>
+            <div class="p11-log-area" id="p11LogArea">
+              <div style="color:var(--muted);font-size:10px;padding:6px 0">Team log will appear here once a run starts…</div>
+            </div>
+          </div>
         </div>
 
     <div class="col-resize" id="splitCR" title="Drag to resize"></div>
@@ -10855,6 +11111,7 @@ console.log('[Phase 35] Enterprise Autonomous System Dashboard active.');
 </script>
 </body>
 </html>
+<script>
 
 async function loadEvolutionDashboard() {
     const btn = $('evoRefreshBtn');
@@ -13501,4 +13758,262 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 })();
+
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 10 — Agent Intelligence & Memory System (UI)
+   ═══════════════════════════════════════════════════════════════════ */
+(function () {
+'use strict';
+
+const _p10 = id => document.getElementById(id);
+
+/* ── Grade helper ──────────────────────────────────────────────── */
+function _p10Grade(score) {
+    if (score >= 90) return { grade: 'A', color: '#4caf50' };
+    if (score >= 75) return { grade: 'B', color: '#8bc34a' };
+    if (score >= 60) return { grade: 'C', color: '#f59e0b' };
+    if (score >= 40) return { grade: 'D', color: '#ff9800' };
+    return { grade: 'F', color: '#f87171' };
+}
+
+/* ── Render intelligence score in Inspector ─────────────────────── */
+function p10RenderScore(data) {
+    const gradeEl   = _p10('p10Grade');
+    const rateEl    = _p10('p10SuccessRate');
+    const callsEl   = _p10('p10Calls');
+    if (!gradeEl) return;
+
+    const score     = data.score ?? 0;
+    const g         = _p10Grade(score);
+    gradeEl.textContent = g.grade;
+    gradeEl.style.color = g.color;
+    gradeEl.style.borderColor = g.color + '66';
+
+    if (rateEl) rateEl.textContent = data.success_rate != null
+        ? (data.success_rate * 100).toFixed(0) + '%' : '—';
+    if (callsEl) callsEl.textContent = data.total_calls ?? 0;
+}
+
+/* ── Render recent memory items in Inspector ────────────────────── */
+function p10RenderMemory(items) {
+    const wrap = _p10('p10MemItems');
+    if (!wrap) return;
+    if (!items || !items.length) {
+        wrap.innerHTML = '<div style="font-size:10px;color:var(--muted)">No tasks recorded yet.</div>';
+        return;
+    }
+    wrap.innerHTML = items.slice(0, 5).map(it => {
+        const cls = it.success === false ? 'fail' : (it.success === true ? 'success' : '');
+        const icon = it.success === false ? '✗' : (it.success === true ? '✓' : '·');
+        const txt  = (it.task || it.summary || '').substring(0, 70);
+        return `<div class="p10-mem-item ${cls}">${icon} ${txt}</div>`;
+    }).join('');
+}
+
+/* ── Fetch + render cycle ───────────────────────────────────────── */
+async function p10Refresh() {
+    try {
+        const [scoreR, memR] = await Promise.all([
+            fetch('/api/agent/score'),
+            fetch('/api/memory/recent?limit=5'),
+        ]);
+        const scoreD = await scoreR.json();
+        const memD   = await memR.json();
+        if (scoreD.ok !== false) {
+            const s = scoreD.score || scoreD;
+            p10RenderScore({
+                score        : Math.round((s.success_rate ?? s.quality_score ?? 1) * 100),
+                success_rate : s.success_rate ?? s.quality_score,
+                total_calls  : s.calls ?? s.session_count ?? 0,
+            });
+        }
+        const items = memD.session_stm || memD.tasks || memD.recent || [];
+        p10RenderMemory(items);
+    } catch(e) {}
+}
+
+/* ── Hook into task completion events ──────────────────────────── */
+document.addEventListener('nxTaskDone', p10Refresh);
+
+/* ── Init ───────────────────────────────────────────────────────── */
+let _p10Timer = null;
+document.addEventListener('DOMContentLoaded', function () {
+    p10Refresh();
+    _p10Timer = setInterval(p10Refresh, 45000);
+    console.log('[Phase 10] Agent Intelligence & Memory System active.');
+});
+
+window.p10Refresh = p10Refresh;
+
+})();
+
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 11 — Multi-Agent Collaboration System (UI)
+   ═══════════════════════════════════════════════════════════════════ */
+(function () {
+'use strict';
+
+const _p11 = id => document.getElementById(id);
+
+let _p11ActiveSid = null;
+let _p11Polling   = null;
+
+/* ── Append a line to the team log area ────────────────────────── */
+function p11Log(agent, msg) {
+    const area = _p11('p11LogArea');
+    if (!area) return;
+    const now = new Date();
+    const ts  = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const entry = document.createElement('div');
+    entry.className = 'p11-log-entry';
+    entry.innerHTML = `<span class="p11-log-ts">${ts}</span><span class="p11-log-agent ${(agent||'').toLowerCase()}">${agent}</span><span class="p11-log-msg">${msg}</span>`;
+    area.appendChild(entry);
+    area.scrollTop = area.scrollHeight;
+}
+
+/* ── Update an agent card's status/task ────────────────────────── */
+function p11SetCard(agent, status, task) {
+    const nameUp = agent.charAt(0).toUpperCase() + agent.slice(1);
+    const statEl = _p11('p11Status' + nameUp);
+    const taskEl = _p11('p11Task'   + nameUp);
+    const card   = _p11('p11Card'   + nameUp);
+    if (statEl) { statEl.textContent = status; statEl.className = 'p11-agent-status ' + status; }
+    if (taskEl) taskEl.textContent = task || '—';
+    if (card) { card.className = 'p11-agent-card ' + (status !== 'idle' ? status : ''); }
+}
+
+/* ── Set team status badge ──────────────────────────────────────── */
+function p11SetStatus(status, text) {
+    const el = _p11('p11TeamStatus');
+    if (!el) return;
+    el.textContent = text || status;
+    el.className = 'p11-status-badge ' + status;
+}
+
+/* ── Reset all agent cards to idle ─────────────────────────────── */
+function p11ResetCards() {
+    ['manager','research','coding','debug'].forEach(a => p11SetCard(a, 'idle', '—'));
+}
+
+/* ── Clear log area ─────────────────────────────────────────────── */
+function p11ClearLog() {
+    const area = _p11('p11LogArea');
+    if (area) area.innerHTML = '';
+}
+
+/* ── Poll for team run status ───────────────────────────────────── */
+async function p11PollStatus(sid) {
+    try {
+        const r = await fetch(`/api/p11/team/status?sid=${encodeURIComponent(sid)}`);
+        const d = await r.json();
+        if (!d.ok) return;
+
+        const s = d.status;
+        p11SetStatus(s, s.charAt(0).toUpperCase() + s.slice(1));
+
+        const steps = d.steps || [];
+        steps.forEach(st => {
+            p11SetCard(st.agent, st.status, st.summary || st.task || '');
+        });
+
+        if (d.log_lines && d.log_lines.length) {
+            p11ClearLog();
+            d.log_lines.forEach(l => p11Log(l.agent || 'System', l.message || l.msg || ''));
+        }
+
+        if (s === 'done' || s === 'failed' || s === 'stopped') {
+            clearInterval(_p11Polling);
+            _p11Polling = null;
+            const runBtn    = _p11('p11RunBtn');
+            const cancelBtn = _p11('p11CancelBtn');
+            if (runBtn)    runBtn.disabled = false;
+            if (cancelBtn) cancelBtn.disabled = true;
+            if (s === 'done') {
+                p11Log('System', '✅ Team run complete.');
+                p11SetStatus('done', 'Done');
+            } else if (s === 'failed') {
+                p11Log('System', '❌ Team run failed.');
+                p11SetStatus('failed', 'Failed');
+            } else {
+                p11Log('System', '⚠ Run stopped.');
+                p11SetStatus('paused', 'Stopped');
+            }
+        }
+    } catch(e) {
+        p11Log('System', 'Poll error: ' + e.message);
+    }
+}
+
+/* ── Start a team run ───────────────────────────────────────────── */
+window.p11RunTeam = async function () {
+    const task = (_p11('p11TaskInput')?.value || '').trim();
+    if (!task) {
+        alert('Please describe a task for the AI team.');
+        return;
+    }
+    const sid = (typeof currentSession !== 'undefined' && currentSession) || '';
+    if (!sid) {
+        alert('Please create or select a session first.');
+        return;
+    }
+    const runBtn    = _p11('p11RunBtn');
+    const cancelBtn = _p11('p11CancelBtn');
+    if (runBtn)    runBtn.disabled = true;
+    if (cancelBtn) cancelBtn.disabled = false;
+
+    _p11ActiveSid = sid;
+    p11ClearLog();
+    p11ResetCards();
+    p11SetStatus('running', 'Running');
+    p11Log('System', `▶ Starting team run for session [${sid.substring(0,8)}]…`);
+    p11Log('System', `Task: "${task.substring(0,80)}"`);
+
+    try {
+        const r = await fetch('/api/p11/team/run', {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify({ task, sid }),
+        });
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.error || 'Run failed to start');
+        p11Log('System', `Status: ${d.status}`);
+        _p11Polling = setInterval(() => p11PollStatus(sid), 2000);
+    } catch(e) {
+        p11Log('System', '❌ ' + e.message);
+        p11SetStatus('failed', 'Error');
+        if (runBtn)    runBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = true;
+    }
+};
+
+/* ── Cancel the active run ──────────────────────────────────────── */
+window.p11CancelTeam = async function () {
+    if (!_p11ActiveSid) return;
+    try {
+        await fetch('/api/p11/team/pause', {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify({ sid: _p11ActiveSid }),
+        });
+        p11Log('System', '⚠ Pause/cancel request sent…');
+    } catch(e) {}
+};
+
+/* ── Patch setActiveTab to show/hide the aiteam panel ────────────── */
+const _p11_origSetTab = window.setActiveTab;
+window.setActiveTab = function(tab) {
+    if (typeof _p11_origSetTab === 'function') _p11_origSetTab(tab);
+    const el = document.getElementById('tabAiteam');
+    if (!el) return;
+    if (tab === 'aiteam') el.classList.remove('hidden');
+    else el.classList.add('hidden');
+};
+
+/* ── Init ───────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('[Phase 11] Multi-Agent Collaboration System active.');
+});
+
+})();
+</script>
 </div></body></html>

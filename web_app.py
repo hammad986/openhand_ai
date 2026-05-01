@@ -8115,5 +8115,576 @@ def api_p9_providers():
     })
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE 10 — AGENT INTELLIGENCE + MEMORY SYSTEM
+# Short-term session buffer · LTM integration · Self-correction · Scores
+# ═══════════════════════════════════════════════════════════════════════════════
+
+import collections
+
+# ── Short-term memory: last 5 tasks per session ─────────────────────────────
+_P10_STM: dict = {}          # sid → deque of task_records
+_P10_STM_LIMIT = 5
+_P10_SCORES: dict = {}       # sid → {success, fail, retries, quality_sum, calls}
+
+def _p10_stm(sid: str) -> collections.deque:
+    if sid not in _P10_STM:
+        _P10_STM[sid] = collections.deque(maxlen=_P10_STM_LIMIT)
+    return _P10_STM[sid]
+
+def p10_record_task(sid: str, task: str, status: str, model: str,
+                    error: str | None = None, retries: int = 0,
+                    duration_sec: float = 0.0):
+    """Record a completed task into both short-term memory and update scores."""
+    record = {
+        "ts":       time.strftime("%H:%M:%S"),
+        "task":     task[:200],
+        "status":   status,   # "success" | "fail" | "retry"
+        "model":    model,
+        "error":    (error or "")[:300],
+        "retries":  retries,
+        "duration": round(duration_sec, 1),
+    }
+    _p10_stm(sid).append(record)
+
+    # Update scores
+    sc = _P10_SCORES.setdefault(sid, {
+        "success": 0, "fail": 0, "retries": 0, "quality_sum": 0.0, "calls": 0
+    })
+    sc["calls"]   += 1
+    sc["retries"] += retries
+    if status == "success":
+        sc["success"]     += 1
+        sc["quality_sum"] += max(0.0, 1.0 - retries * 0.2)
+    else:
+        sc["fail"]        += 1
+
+    # Mirror to long-term memory (best-effort)
+    try:
+        from long_term_memory import get_ltm
+        ltm = get_ltm()
+        ltm.remember(
+            kind="task_result",
+            task=task[:200],
+            content=f"Status: {status}. Model: {model}. Retries: {retries}. Error: {error or 'none'}",
+            meta={"model": model, "retries": retries, "sid": sid},
+            success=(status == "success"),
+        )
+    except Exception:
+        pass
+
+def p10_get_session_memory(sid: str) -> list:
+    """Return the last N tasks for this session as a list (newest first)."""
+    return list(reversed(list(_p10_stm(sid))))
+
+def p10_inject_context(sid: str, task: str, prompt: str) -> str:
+    """Prepend lightweight memory context to a prompt.
+    Keeps injection small (< 500 chars) to avoid slowing down the model.
+    """
+    ctx_lines = []
+
+    # 1. Short-term failures from this session
+    failures = [r for r in _p10_stm(sid) if r["status"] != "success"]
+    if failures:
+        last_fail = failures[-1]
+        ctx_lines.append(
+            f"[Memory] Last failure in this session: '{last_fail['task'][:80]}' "
+            f"failed with: {last_fail['error'][:120]}. Avoid repeating."
+        )
+
+    # 2. Similar solved task from LTM (best-effort)
+    try:
+        from long_term_memory import get_ltm
+        ltm = get_ltm()
+        solved = ltm.have_we_solved(task)
+        if solved:
+            ctx_lines.append(
+                f"[Memory] Similar task solved before: {solved.get('content','')[:120]}"
+            )
+    except Exception:
+        pass
+
+    if not ctx_lines:
+        return prompt
+    ctx = "\n".join(ctx_lines)
+    return f"{ctx}\n\n{prompt}"
+
+def p10_self_correct_prompt(original_prompt: str, error: str, attempt: int) -> str:
+    """Generate an improved retry prompt incorporating the previous error."""
+    if attempt == 0:
+        return original_prompt
+    correction = (
+        f"[Self-Correction Attempt {attempt}] "
+        f"The previous attempt failed with: {error[:200]}. "
+        "Please modify your approach: try a different strategy, "
+        "fix the specific error mentioned, and do not repeat the same mistake. "
+    )
+    return f"{correction}\n\n{original_prompt}"
+
+def p10_get_score(sid: str) -> dict:
+    sc = _P10_SCORES.get(sid, {})
+    if not sc or sc.get("calls", 0) == 0:
+        return {
+            "success_rate":    1.0,
+            "retry_rate":      0.0,
+            "quality_score":   1.0,
+            "calls":           0,
+            "success":         0,
+            "fail":            0,
+        }
+    calls   = sc["calls"]
+    success = sc["success"]
+    fail    = sc["fail"]
+    retries = sc["retries"]
+    quality = sc["quality_sum"] / max(success, 1)
+    return {
+        "success_rate":  round(success / calls, 3),
+        "retry_rate":    round(retries / calls, 3),
+        "quality_score": round(quality, 3),
+        "calls":         calls,
+        "success":       success,
+        "fail":          fail,
+        "retries":       retries,
+    }
+
+
+@app.route("/api/memory/recent")
+def api_memory_recent():
+    """Return recent task memory: per-session short-term + LTM recent tasks."""
+    sid   = request.args.get("sid", "")
+    limit = min(int(request.args.get("limit", 20)), 50)
+
+    stm_records  = p10_get_session_memory(sid) if sid else []
+    ltm_records  = []
+    insights     = []
+
+    try:
+        from long_term_memory import get_ltm
+        ltm = get_ltm()
+        ltm_records = ltm.search("task_result", k=limit)
+    except Exception:
+        pass
+
+    try:
+        c = sqlite3.connect(os.path.join(BASE_DIR, "memory.db"))
+        c.row_factory = sqlite3.Row
+        for r in c.execute("SELECT task,status,api_used,created_at FROM tasks "
+                           "ORDER BY id DESC LIMIT ?", (limit,)):
+            ltm_records.append(dict(r))
+        c.close()
+    except Exception:
+        pass
+
+    return jsonify({
+        "ok":         True,
+        "session_stm": stm_records,
+        "recent":     ltm_records[:limit],
+    })
+
+
+@app.route("/api/memory/insights")
+def api_memory_insights():
+    """Return learned patterns and insights from long-term memory."""
+    limit   = min(int(request.args.get("limit", 10)), 30)
+    learnings = []
+    patterns  = []
+
+    try:
+        c = sqlite3.connect(os.path.join(BASE_DIR, "memory.db"))
+        c.row_factory = sqlite3.Row
+        for r in c.execute("SELECT category,insight,created_at FROM learnings "
+                           "ORDER BY id DESC LIMIT ?", (limit,)):
+            learnings.append(dict(r))
+        c.close()
+    except Exception:
+        pass
+
+    try:
+        from long_term_memory import get_ltm
+        ltm  = get_ltm()
+        hits = ltm.recall_patterns("code task", k=limit)
+        patterns = [{"pattern": h.get("task",""), "content": h.get("content","")[:120]}
+                    for h in hits]
+    except Exception:
+        pass
+
+    # Synthetic insights from STM across all sessions
+    synthetic = []
+    all_records = []
+    for deq in _P10_STM.values():
+        all_records.extend(deq)
+    failures = [r for r in all_records if r["status"] != "success"]
+    if failures:
+        error_types = {}
+        for r in failures:
+            err = (r.get("error") or "")[:60]
+            error_types[err] = error_types.get(err, 0) + 1
+        top_err = max(error_types, key=error_types.get)
+        synthetic.append({
+            "category": "frequent_failure",
+            "insight":  f"Most common error pattern: {top_err} ({error_types[top_err]} times)"
+        })
+
+    return jsonify({
+        "ok":        True,
+        "learnings": learnings,
+        "patterns":  patterns,
+        "synthetic": synthetic,
+    })
+
+
+@app.route("/api/agent/score")
+def api_agent_score():
+    """Return agent intelligence score for a session (or global aggregate)."""
+    sid = request.args.get("sid", "")
+
+    if sid:
+        score = p10_get_score(sid)
+    else:
+        # Aggregate across all sessions
+        if not _P10_SCORES:
+            score = {"success_rate": 1.0, "retry_rate": 0.0,
+                     "quality_score": 1.0, "calls": 0}
+        else:
+            total_calls   = sum(s["calls"]       for s in _P10_SCORES.values())
+            total_success = sum(s["success"]      for s in _P10_SCORES.values())
+            total_fail    = sum(s["fail"]         for s in _P10_SCORES.values())
+            total_retries = sum(s["retries"]      for s in _P10_SCORES.values())
+            total_qual    = sum(s["quality_sum"]  for s in _P10_SCORES.values())
+            score = {
+                "success_rate":  round(total_success / max(total_calls, 1), 3),
+                "retry_rate":    round(total_retries / max(total_calls, 1), 3),
+                "quality_score": round(total_qual    / max(total_success, 1), 3),
+                "calls":         total_calls,
+                "success":       total_success,
+                "fail":          total_fail,
+                "retries":       total_retries,
+            }
+
+    score["grade"] = (
+        "A" if score["success_rate"] >= 0.9 else
+        "B" if score["success_rate"] >= 0.75 else
+        "C" if score["success_rate"] >= 0.5 else "D"
+    )
+    score["session_count"] = len(_P10_SCORES)
+    return jsonify({"ok": True, "score": score, "sid": sid})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE 11 — MULTI-AGENT COLLABORATION SYSTEM
+# Manager · Research · Coding · Debug  —  AI Team Architecture
+# ═══════════════════════════════════════════════════════════════════════════════
+
+import threading as _threading
+
+_P11_AGENT_DEFS = [
+    {"id": "manager",  "name": "Manager",  "icon": "🧠",
+     "desc": "Breaks tasks into sub-tasks and assigns agents"},
+    {"id": "research", "name": "Research", "icon": "🔍",
+     "desc": "Fetches references and gathers context"},
+    {"id": "coding",   "name": "Coding",   "icon": "💻",
+     "desc": "Writes and modifies code"},
+    {"id": "debug",    "name": "Debug",    "icon": "🛠️",
+     "desc": "Fixes errors and improves output"},
+]
+_P11_TEAMS: dict = {}   # sid → P11AgentTeam
+
+
+class P11AgentTeam:
+    """Lightweight 4-agent pipeline.  Runs in a background thread per session.
+    Uses the existing LLMRouter for actual inference calls.
+    """
+
+    MAX_LOG = 200
+
+    def __init__(self, sid: str):
+        self.sid       = sid
+        self._lock     = _threading.Lock()
+        self._thread   = None
+        self._stop_evt = _threading.Event()
+        self._paused   = _threading.Event()
+        self._paused.set()  # not paused initially
+
+        # Agent state
+        self.agents    = {a["id"]: {
+            "id":     a["id"],
+            "name":   a["name"],
+            "icon":   a["icon"],
+            "desc":   a["desc"],
+            "status": "idle",        # idle | running | done | failed
+            "task":   "",
+            "result": "",
+        } for a in _P11_AGENT_DEFS}
+
+        # Team-level state
+        self.status       = "idle"   # idle | running | paused | done | failed
+        self.current_task = ""
+        self.sub_tasks    = []
+        self.team_memory  = {}       # shared context between agents
+        self.log          = collections.deque(maxlen=self.MAX_LOG)
+        self.started_at   = None
+        self.finished_at  = None
+
+    # ── Logging ───────────────────────────────────────────────────────────
+    def _log(self, agent_id: str, msg: str, level: str = "info"):
+        entry = {
+            "ts":    time.strftime("%H:%M:%S"),
+            "agent": agent_id,
+            "msg":   msg,
+            "level": level,
+        }
+        self.log.append(entry)
+
+    def _set_agent(self, agent_id: str, status: str,
+                   task: str = "", result: str = ""):
+        with self._lock:
+            a = self.agents[agent_id]
+            a["status"] = status
+            if task:   a["task"]   = task
+            if result: a["result"] = result
+
+    # ── Run pipeline ──────────────────────────────────────────────────────
+    def run(self, task: str, plan_mode: str = "lite"):
+        if self.status == "running":
+            return
+        self.current_task = task
+        self.status       = "running"
+        self.started_at   = time.strftime("%H:%M:%S")
+        self._stop_evt.clear()
+
+        self._thread = _threading.Thread(
+            target=self._pipeline,
+            args=(task, plan_mode),
+            daemon=True,
+        )
+        self._thread.start()
+
+    def _pipeline(self, task: str, plan_mode: str):
+        """Main pipeline: Manager → Research → Coding → Debug."""
+        router = None
+        try:
+            router = _get_editor_llm()
+        except Exception:
+            pass
+
+        def _llm(prompt: str, agent_id: str, role: str = "coding",
+                 max_tok: int = 1024) -> str:
+            """Call LLM with P9 routing or fallback to a simple message."""
+            if self._stop_evt.is_set():
+                raise InterruptedError("Stopped")
+            if router is None:
+                return f"[{agent_id}] Simulated response (no LLM router available)"
+            try:
+                resp, _ = router.chat_role_p9(
+                    plan_mode=plan_mode,
+                    role=role,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=max_tok,
+                )
+                return resp
+            except Exception as e:
+                return f"[{agent_id}] LLM error: {str(e)[:100]}"
+
+        # ── Step 1: Manager — decompose task ─────────────────────────────
+        self._set_agent("manager", "running", task=task)
+        self._log("manager", f"Planning task: {task[:80]}")
+        mgr_prompt = (
+            f"You are a Manager AI. Break this task into 2-4 concrete sub-tasks:\n\n"
+            f"Task: {task}\n\n"
+            "Respond with a numbered list of sub-tasks only. Be concise (1 line each)."
+        )
+        mgr_result = _llm(mgr_prompt, "manager", role="planning", max_tok=512)
+        if self._stop_evt.is_set(): return self._finish("stopped")
+        self.sub_tasks = [
+            line.strip() for line in mgr_result.split("\n")
+            if line.strip() and not line.strip().startswith("#")
+        ][:4]
+        self.team_memory["plan"] = mgr_result
+        self._set_agent("manager", "done", result=mgr_result[:200])
+        self._log("manager", f"Plan ready: {len(self.sub_tasks)} sub-tasks")
+
+        # ── Step 2: Research — gather context ────────────────────────────
+        self._paused.wait()
+        self._set_agent("research", "running", task=f"Researching: {task[:60]}")
+        self._log("research", "Gathering context and references")
+        res_prompt = (
+            f"You are a Research AI. The task is:\n{task}\n\n"
+            f"The plan:\n{mgr_result[:300]}\n\n"
+            "Briefly identify: key technical concepts, relevant libraries/tools, "
+            "and any important considerations. Be concise (< 200 words)."
+        )
+        res_result = _llm(res_prompt, "research", role="planning", max_tok=600)
+        if self._stop_evt.is_set(): return self._finish("stopped")
+        self.team_memory["research"] = res_result
+        self._set_agent("research", "done", result=res_result[:200])
+        self._log("research", "Research complete — context ready for Coding")
+
+        # ── Step 3: Coding — implement ───────────────────────────────────
+        self._paused.wait()
+        self._set_agent("coding", "running", task=f"Implementing: {task[:60]}")
+        self._log("coding", "Writing implementation")
+        coding_prompt = (
+            f"You are a Coding AI. Implement the following:\n\n"
+            f"Task: {task}\n\n"
+            f"Plan:\n{mgr_result[:300]}\n\n"
+            f"Research context:\n{res_result[:300]}\n\n"
+            "Write clean, working code. Include brief comments."
+        )
+        coding_result = _llm(coding_prompt, "coding", role="coding", max_tok=1500)
+        if self._stop_evt.is_set(): return self._finish("stopped")
+        self.team_memory["code"] = coding_result
+        self._set_agent("coding", "done", result=coding_result[:200])
+        self._log("coding", "Implementation complete — passing to Debug")
+
+        # ── Step 4: Debug — review and improve ───────────────────────────
+        self._paused.wait()
+        self._set_agent("debug", "running", task="Reviewing and fixing code")
+        self._log("debug", "Reviewing implementation for bugs")
+        debug_prompt = (
+            f"You are a Debug AI. Review this code for bugs, errors, or improvements:\n\n"
+            f"```\n{coding_result[:1200]}\n```\n\n"
+            "List any bugs found and provide the corrected version. "
+            "If no bugs found, say 'Code looks correct.' and briefly explain why."
+        )
+        debug_result = _llm(debug_prompt, "debug", role="debug", max_tok=1200)
+        self.team_memory["debug"] = debug_result
+        self._set_agent("debug", "done", result=debug_result[:200])
+        self._log("debug", "Code review complete")
+
+        # ── Done ──────────────────────────────────────────────────────────
+        self._finish("done")
+
+        # Record into P10 memory
+        try:
+            p10_record_task(
+                sid=self.sid,
+                task=task,
+                status="success",
+                model=f"team/{plan_mode}",
+                duration_sec=0.0,
+            )
+        except Exception:
+            pass
+
+    def _finish(self, status: str):
+        with self._lock:
+            self.status      = status
+            self.finished_at = time.strftime("%H:%M:%S")
+        self._log("manager", f"Team finished — status: {status}")
+        # Reset idle agents that never ran
+        for a in self.agents.values():
+            if a["status"] == "idle" and status in ("stopped", "failed"):
+                a["status"] = "idle"
+
+    def pause(self):
+        self._paused.clear()
+        self.status = "paused"
+        self._log("manager", "Team paused")
+
+    def resume(self):
+        self._paused.set()
+        self.status = "running"
+        self._log("manager", "Team resumed")
+
+    def stop(self):
+        self._stop_evt.set()
+        self._paused.set()  # unblock if paused
+        self.status = "stopped"
+        self._log("manager", "Team stopped by user")
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            return {
+                "sid":         self.sid,
+                "status":      self.status,
+                "task":        self.current_task,
+                "sub_tasks":   self.sub_tasks,
+                "started_at":  self.started_at,
+                "finished_at": self.finished_at,
+                "agents":      {aid: dict(a) for aid, a in self.agents.items()},
+                "log":         list(self.log)[-50:],
+                "memory_keys": list(self.team_memory.keys()),
+            }
+
+
+def _p11_get_team(sid: str) -> P11AgentTeam:
+    if sid not in _P11_TEAMS:
+        _P11_TEAMS[sid] = P11AgentTeam(sid)
+    return _P11_TEAMS[sid]
+
+
+@app.route("/api/p11/agents")
+def api_p11_agents():
+    """Return agent definitions."""
+    return jsonify({"ok": True, "agents": _P11_AGENT_DEFS})
+
+
+@app.route("/api/p11/team/status")
+def api_p11_team_status():
+    """Return current team state for a session."""
+    sid = request.args.get("sid", "")
+    if not sid:
+        return jsonify({"ok": False, "error": "sid required"}), 400
+    team = _p11_get_team(sid)
+    return jsonify({"ok": True, **team.snapshot()})
+
+
+@app.route("/api/p11/team/run", methods=["POST"])
+def api_p11_team_run():
+    """Start the multi-agent team on a task."""
+    d         = request.get_json() or {}
+    sid       = d.get("sid", "")
+    task      = (d.get("task") or "").strip()
+    plan_mode = (d.get("plan_mode") or "lite").lower()
+
+    if not sid or not task:
+        return jsonify({"ok": False, "error": "sid and task required"}), 400
+
+    # Inject P10 memory context
+    task_with_ctx = p10_inject_context(sid, task, task)
+
+    team = _p11_get_team(sid)
+    # Reset if previously done/failed
+    if team.status in ("done", "failed", "stopped", "idle"):
+        _P11_TEAMS[sid] = P11AgentTeam(sid)
+        team = _P11_TEAMS[sid]
+
+    team.run(task_with_ctx, plan_mode)
+    return jsonify({"ok": True, "sid": sid, "status": team.status})
+
+
+@app.route("/api/p11/team/pause", methods=["POST"])
+def api_p11_team_pause():
+    sid  = (request.get_json() or {}).get("sid", "")
+    if not sid: return jsonify({"ok": False, "error": "sid required"}), 400
+    _p11_get_team(sid).pause()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/p11/team/resume", methods=["POST"])
+def api_p11_team_resume():
+    sid  = (request.get_json() or {}).get("sid", "")
+    if not sid: return jsonify({"ok": False, "error": "sid required"}), 400
+    _p11_get_team(sid).resume()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/p11/team/stop", methods=["POST"])
+def api_p11_team_stop():
+    sid  = (request.get_json() or {}).get("sid", "")
+    if not sid: return jsonify({"ok": False, "error": "sid required"}), 400
+    _p11_get_team(sid).stop()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/p11/team/memory")
+def api_p11_team_memory():
+    """Return the team shared memory for a session."""
+    sid  = request.args.get("sid", "")
+    if not sid: return jsonify({"ok": False, "error": "sid required"}), 400
+    team = _p11_get_team(sid)
+    return jsonify({"ok": True, "memory": team.team_memory})
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
