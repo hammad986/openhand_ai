@@ -7116,6 +7116,103 @@ def api_goal_chain_status(cid):
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@app.route("/api/goal/graph/<int:cid>")
+def api_goal_graph(cid):
+    """Phase 17 — Return DAG graph structure for a goal chain."""
+    runner = _get_chain_runner()
+    if runner is None:
+        return jsonify({"ok": False, "error": "unavailable"}), 503
+    try:
+        chain = runner.memory.get_chain(cid)
+        if not chain:
+            return jsonify({"ok": False, "error": "not found"}), 404
+        chain_data = chain.get("chain", {})
+        tasks_data = chain.get("tasks", [])
+        task_ids = {t["id"] for t in tasks_data}
+
+        nodes = []
+        for t in tasks_data:
+            deps_raw = t.get("depends_on", "") or ""
+            deps = []
+            for tok in deps_raw.split(","):
+                tok = tok.strip()
+                if tok:
+                    try:
+                        deps.append(int(tok))
+                    except ValueError:
+                        pass
+            status = t.get("status", "pending")
+            attempts = t.get("attempts", 0)
+            is_bottleneck = attempts >= 2 and status in ("running", "pending")
+            nodes.append({
+                "id": t["id"],
+                "name": (t.get("goal") or f"Task {t['id']}")[:70],
+                "status": status,
+                "retries": attempts,
+                "last_error": (t.get("last_error") or "")[:300],
+                "priority": round(float(t.get("priority") or 0), 3),
+                "importance": t.get("importance", 5),
+                "is_bottleneck": is_bottleneck,
+                "depends_on": [d for d in deps if d in task_ids],
+            })
+
+        edges = []
+        for t in tasks_data:
+            deps_raw = t.get("depends_on", "") or ""
+            for tok in deps_raw.split(","):
+                tok = tok.strip()
+                if tok:
+                    try:
+                        dep_id = int(tok)
+                        if dep_id in task_ids:
+                            edges.append({"from": dep_id, "to": t["id"]})
+                    except ValueError:
+                        pass
+
+        if not edges and len(nodes) > 1:
+            for i in range(len(nodes) - 1):
+                edges.append({"from": nodes[i]["id"], "to": nodes[i + 1]["id"]})
+
+        progress = runner.memory.chain_progress(cid)
+        return jsonify({
+            "ok": True,
+            "chain_id": cid,
+            "goal": (chain_data.get("goal") or "")[:200],
+            "status": chain_data.get("status", "unknown"),
+            "nodes": nodes,
+            "edges": edges,
+            "progress": progress,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/goal/graph/<int:cid>/task/<int:tid>/retry", methods=["POST"])
+def api_goal_graph_retry_task(cid, tid):
+    """Phase 17 — Reset a failed task back to pending for retry."""
+    runner = _get_chain_runner()
+    if runner is None:
+        return jsonify({"ok": False, "error": "unavailable"}), 503
+    try:
+        runner.memory.reset_task_for_retry(tid, "")
+        return jsonify({"ok": True, "task_id": tid})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/goal/graph/<int:cid>/task/<int:tid>/skip", methods=["POST"])
+def api_goal_graph_skip_task(cid, tid):
+    """Phase 17 — Mark a pending/running task as skipped."""
+    runner = _get_chain_runner()
+    if runner is None:
+        return jsonify({"ok": False, "error": "unavailable"}), 503
+    try:
+        runner.memory.set_task_skipped(tid, "Manually skipped by user")
+        return jsonify({"ok": True, "task_id": tid})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route("/api/goals/chain/<int:cid>/run", methods=["POST"])
 def api_goal_chain_run(cid):
     """Phase 16 — Run the next pending task in a goal chain."""

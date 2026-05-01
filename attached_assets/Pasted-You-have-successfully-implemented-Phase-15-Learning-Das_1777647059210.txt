@@ -1,0 +1,186 @@
+You have successfully implemented Phase 15 (Learning Dashboard) and Phase 16 (Autonomous Goal Mode).
+
+Now we move to a critical visibility and orchestration upgrade:
+
+---
+
+# 🚀 PHASE 17 — TASK GRAPH VISUALIZATION + EXECUTION ENGINE
+
+---
+
+# 🎯 OBJECTIVE
+
+Make the autonomous system fully transparent and controllable by visualizing:
+
+* task dependencies
+* execution order
+* parallel branches
+* bottlenecks
+
+---
+
+# 🧠 CORE IDEA
+
+Instead of showing tasks as a flat list:
+
+→ represent them as a graph (nodes + edges)
+
+---
+
+# 🧠 STEP 1 — TASK GRAPH STRUCTURE
+
+Extend backend chain/task system to return:
+
+{
+nodes: [
+{ id, name, status, retries }
+],
+edges: [
+{ from, to }  // dependency
+]
+}
+
+---
+
+# 🧠 STEP 2 — GRAPH GENERATION
+
+Use existing planner (runner.create_chain):
+
+* extract dependencies
+* build DAG (Directed Acyclic Graph)
+
+---
+
+# 🧠 STEP 3 — GRAPH UI PANEL
+
+Add new tab:
+
+"🧩 Execution Graph"
+
+---
+
+# 🧠 STEP 4 — VISUAL DESIGN
+
+Graph should show:
+
+* Nodes = tasks
+* Edges = dependencies
+
+Node colors:
+
+* gray → pending
+* blue → running
+* green → completed
+* red → failed
+
+---
+
+# 🧠 STEP 5 — INTERACTION
+
+User can:
+
+* click node → see details
+* hover → show task info
+* zoom / pan graph
+
+---
+
+# 🧠 STEP 6 — REAL-TIME UPDATES
+
+Graph updates every few seconds:
+
+* reflect current execution state
+* highlight active node
+
+---
+
+# 🧠 STEP 7 — PARALLEL EXECUTION VISIBILITY
+
+Show:
+
+* multiple nodes running simultaneously
+* branching structure
+
+---
+
+# 🧠 STEP 8 — BOTTLENECK DETECTION
+
+Highlight:
+
+* blocked tasks
+* long-running tasks
+
+---
+
+# 🧠 STEP 9 — CONTROL FROM GRAPH
+
+Allow:
+
+* retry specific node
+* skip node
+* inspect error
+
+---
+
+# 🧠 STEP 10 — PERFORMANCE
+
+* lightweight rendering (no heavy libraries)
+* handle up to 50–100 nodes
+
+---
+
+# 🧠 STEP 11 — BACKEND API
+
+Create:
+
+GET /api/goal/graph/<chain_id>
+
+Returns graph structure
+
+---
+
+# 🧠 STEP 12 — UI INTEGRATION
+
+* link with Goal Mode
+* clicking chain → opens graph
+
+---
+
+# ⚠️ RULES
+
+* DO NOT break goal system
+* DO NOT duplicate data
+* reuse existing chain structure
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. Graph data builder
+2. Graph API
+3. UI graph renderer
+4. real-time sync
+5. interaction system
+
+---
+
+# 🚀 FINAL GOAL
+
+System should feel like:
+
+"A visual AI execution engine where you can see exactly how the AI is thinking and executing tasks"
+
+---
+
+# 🔍 FINAL VALIDATION (MANDATORY)
+
+* test with complex goals (10+ tasks)
+* verify graph correctness
+* verify no UI lag
+* verify real-time updates
+
+---
+
+Deliver a:
+
+"Fully visual, interactive AI execution graph system"
