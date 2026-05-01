@@ -3183,6 +3183,9 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
             <div class="nx-more-item" data-nxtab="agents" onclick="nxSetTab('agents');nxCloseMore()">🤖 Agents</div>
             <div class="nx-more-item" data-nxtab="timeline" onclick="nxSetTab('timeline');nxCloseMore()">📅 Timeline</div>
             <div class="nx-more-item" data-nxtab="steps" onclick="nxSetTab('steps');nxCloseMore()">🧐 Steps</div>
+            <div style="border-top:1px solid var(--panel-border);margin:3px 0"></div>
+            <div class="nx-more-item" data-nxtab="learning" onclick="nxSetTab('learning');p15LoadDashboard();nxCloseMore()">📊 Learning</div>
+            <div class="nx-more-item" data-nxtab="goals" onclick="nxSetTab('goals');p16InitGoals();nxCloseMore()">🎯 Goal Mode</div>
           </div>
         </div>
 
@@ -3192,6 +3195,8 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
         <button class="nx-tab secondary" data-nxtab="agents" onclick="nxSetTab('agents')">Agents<span class="nx-tab-dot"></span></button>
         <button class="nx-tab secondary" data-nxtab="timeline" onclick="nxSetTab('timeline')">Timeline<span class="nx-tab-dot"></span></button>
         <button class="nx-tab secondary" data-nxtab="steps" onclick="nxSetTab('steps')">Steps<span class="nx-tab-dot"></span></button>
+        <button class="nx-tab secondary" data-nxtab="learning" onclick="nxSetTab('learning');p15LoadDashboard()">📊 Learning<span class="nx-tab-dot"></span></button>
+        <button class="nx-tab secondary" data-nxtab="goals" onclick="nxSetTab('goals');p16InitGoals()">🎯 Goals<span class="nx-tab-dot"></span></button>
 
         <!-- Tab-specific action bar -->
         <div class="nx-tab-actions" id="nxTabActions"></div>
@@ -3235,6 +3240,161 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       <div class="nx-tab-content" id="nxTab-timeline"></div>
       <!-- Steps tab -->
       <div class="nx-tab-content" id="nxTab-steps"></div>
+
+      <!-- Phase 15: Learning Dashboard tab -->
+      <div class="nx-tab-content" id="nxTab-learning" style="overflow-y:auto;padding:0">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface);position:sticky;top:0;z-index:5;">
+          <span style="font-size:1.1rem">📊</span>
+          <strong style="font-size:0.9rem;background:linear-gradient(135deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Phase 15 — AI Learning Dashboard</strong>
+          <div style="flex:1"></div>
+          <button class="btn tiny" onclick="p15LoadDashboard()" id="p15RefreshBtn">⟳ Refresh</button>
+          <a href="/api/learning/export" class="btn tiny" style="text-decoration:none" download>⬇ Export</a>
+        </div>
+        <div style="padding:14px" id="p15DashGrid">
+
+          <!-- Summary metrics row -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="p15MetricsRow">
+            <div class="card" style="text-align:center">
+              <div style="font-size:1.6rem;font-weight:700;color:#4ade80" id="p15SuccessRate">—</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px">Success Rate</div>
+            </div>
+            <div class="card" style="text-align:center">
+              <div style="font-size:1.6rem;font-weight:700;color:#fbbf24" id="p15RetryRate">—</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px">Retry Rate</div>
+            </div>
+            <div class="card" style="text-align:center">
+              <div style="font-size:1.6rem;font-weight:700;color:#60a5fa" id="p15AvgLatency">—</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px">Avg Latency</div>
+            </div>
+            <div class="card" style="text-align:center">
+              <div style="font-size:1.6rem;font-weight:700;color:#a78bfa" id="p15TotalTasks">—</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px">Total Tasks</div>
+            </div>
+          </div>
+
+          <!-- Success trend sparkline -->
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header">📈 Task Success Trend (last 30)</div>
+            <div id="p15Sparkline" style="display:flex;align-items:flex-end;gap:2px;height:48px;padding:6px 0">
+              <div style="color:var(--muted);font-size:11px;line-height:48px">No data yet</div>
+            </div>
+          </div>
+
+          <!-- Strategy performance -->
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header">🏆 Strategy Performance</div>
+            <div id="p15Strategies" style="padding:6px 0">
+              <div style="color:var(--muted);font-size:11px">Loading…</div>
+            </div>
+          </div>
+
+          <!-- Failure analysis -->
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header">⚠️ Failure Analysis</div>
+            <div id="p15Failures" style="padding:6px 0">
+              <div style="color:var(--muted);font-size:11px">Loading…</div>
+            </div>
+          </div>
+
+          <!-- Learning timeline -->
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header">🕐 Learning Timeline</div>
+            <div id="p15Timeline" style="max-height:300px;overflow-y:auto;padding:6px 0">
+              <div style="color:var(--muted);font-size:11px">Loading…</div>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="card">
+            <div class="card-header">⚙️ Learning Controls</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 0">
+              <button class="btn" onclick="p14ToggleInsights();openSettings('intelligence')" style="font-size:11px">🧠 Intelligence Settings</button>
+              <button class="btn" style="font-size:11px;color:#f87171" onclick="p14ResetLearning()">🗑 Reset All Memory</button>
+              <a href="/api/learning/export" class="btn" style="font-size:11px;text-align:center;text-decoration:none" download>⬇ Export JSON</a>
+              <button class="btn" onclick="p15LoadDashboard()" style="font-size:11px">⟳ Refresh Now</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Phase 16: Goal Mode tab -->
+      <div class="nx-tab-content" id="nxTab-goals" style="overflow-y:auto;padding:0">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface);position:sticky;top:0;z-index:5;">
+          <span style="font-size:1.1rem">🎯</span>
+          <strong style="font-size:0.9rem;background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Phase 16 — Autonomous Goal Mode</strong>
+          <div style="flex:1"></div>
+          <span id="p16StatusBadge" style="font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--muted)">Idle</span>
+        </div>
+        <div style="padding:14px">
+
+          <!-- Goal input -->
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header">Enter a High-Level Goal</div>
+            <div style="padding:8px 0">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
+                Describe what you want to build or accomplish. The AI will break it into tasks and execute them step-by-step.
+              </div>
+              <textarea id="p16GoalInput" placeholder="e.g. Build a full REST API with authentication, database, and documentation"
+                style="width:100%;min-height:80px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:12px;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <select id="p16GoalPriority" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 8px;color:var(--text);font-size:11px">
+                  <option value="5">⚡ Normal Priority</option>
+                  <option value="8" selected>🧠 High Priority</option>
+                  <option value="10">🚀 Critical</option>
+                </select>
+                <button class="btn primary" onclick="p16SubmitGoal()" id="p16SubmitBtn" style="flex:1">
+                  🎯 Decompose &amp; Execute
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task breakdown preview -->
+          <div class="card" id="p16BreakdownCard" style="display:none;margin-bottom:12px">
+            <div class="card-header" style="display:flex;align-items:center;gap:8px">
+              🗂 Task Breakdown
+              <span id="p16TaskCount" style="background:var(--accent)22;color:var(--accent);border-radius:10px;padding:1px 7px;font-size:10px"></span>
+              <div style="flex:1"></div>
+              <button class="btn tiny" onclick="p16RunNext()" id="p16RunNextBtn">▶ Run Next Task</button>
+              <button class="btn tiny" style="color:#f87171" onclick="p16CancelGoal()">✕ Cancel</button>
+            </div>
+            <div id="p16GoalLabel" style="font-size:11px;color:var(--muted);padding:6px 0 4px;font-style:italic"></div>
+            <div id="p16TaskList" style="max-height:400px;overflow-y:auto"></div>
+          </div>
+
+          <!-- Progress tracking -->
+          <div class="card" id="p16ProgressCard" style="display:none;margin-bottom:12px">
+            <div class="card-header">📈 Execution Progress</div>
+            <div style="padding:8px 0">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div style="flex:1;height:10px;background:var(--surface);border-radius:5px;border:1px solid var(--border);overflow:hidden">
+                  <div id="p16ProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#60a5fa);border-radius:5px;transition:width .5s ease"></div>
+                </div>
+                <span id="p16ProgressPct" style="font-size:12px;font-weight:600;color:var(--accent);min-width:36px">0%</span>
+              </div>
+              <div style="display:flex;gap:12px;font-size:11px">
+                <span style="color:#4ade80">✅ Done: <b id="p16DoneCount">0</b></span>
+                <span style="color:#fbbf24">⏳ Pending: <b id="p16PendingCount">0</b></span>
+                <span style="color:#f87171">❌ Failed: <b id="p16FailedCount">0</b></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active chains list -->
+          <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;gap:8px">
+              📋 Active Goal Chains
+              <button class="btn tiny" style="margin-left:auto" onclick="p16LoadChains()">⟳</button>
+            </div>
+            <div id="p16ChainList" style="max-height:250px;overflow-y:auto;padding:6px 0">
+              <div style="color:var(--muted);font-size:11px">No active goal chains yet.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       <!-- Phase 12: Chat tab -->
       <div class="nx-tab-content" id="nxTab-chat">
         <div class="p12-chat-wrap">
@@ -14681,6 +14841,388 @@ setInterval(() => {
 }, 60000);
 
 console.log('[Phase 14] Self-Improving AI active — learning engine connected.');
+
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     Phase 15 — AI Learning Dashboard
+     Phase 16 — Autonomous Goal-Driven AI
+     ══════════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════
+   PHASE 15 — Learning Dashboard
+   ═══════════════════════════════════════════════════════════════ */
+
+let _p15Loaded = false;
+let _p15AutoTimer = null;
+
+window.p15LoadDashboard = async function() {
+    _p15Loaded = true;
+    await Promise.all([_p15LoadMetrics(), _p15LoadStrategies(), _p15LoadFailures(), _p15LoadTimeline()]);
+};
+
+async function _p15LoadMetrics() {
+    try {
+        const r = await fetch('/api/dashboard/metrics');
+        const d = await r.json();
+        if (!d.ok) return;
+
+        const sr = document.getElementById('p15SuccessRate');
+        const rr = document.getElementById('p15RetryRate');
+        const al = document.getElementById('p15AvgLatency');
+        const tt = document.getElementById('p15TotalTasks');
+        if (sr) sr.textContent = d.success_rate + '%';
+        if (rr) rr.textContent = d.retry_rate + '%';
+        if (al) al.textContent = d.avg_latency + 's';
+        if (tt) tt.textContent = d.total;
+
+        // Color-code success rate
+        if (sr) sr.style.color = d.success_rate >= 80 ? '#4ade80' : d.success_rate >= 50 ? '#fbbf24' : '#f87171';
+
+        // Render sparkline
+        const spark = document.getElementById('p15Sparkline');
+        if (spark && d.points && d.points.length) {
+            const maxH = 44;
+            spark.innerHTML = d.points.map((p, i) => {
+                const color = p.ok ? '#4ade80' : p.status === 'stopped' ? '#fbbf24' : '#f87171';
+                const h = Math.max(6, maxH - (p.retries * 8));
+                const title = `${p.task || 'Task'} — ${p.status}${p.retries ? ' ('+p.retries+' retries)' : ''}`;
+                return `<div title="${title.replace(/"/g,"'")}" style="flex:1;max-width:16px;height:${h}px;background:${color};border-radius:2px 2px 0 0;opacity:0.85;cursor:default;min-width:4px"></div>`;
+            }).join('');
+        }
+    } catch(e) {}
+}
+
+async function _p15LoadStrategies() {
+    const el = document.getElementById('p15Strategies');
+    if (!el) return;
+    try {
+        const r = await fetch('/api/learning/insights');
+        const d = await r.json();
+        const strats = d.strategies || [];
+        if (!strats.length) {
+            el.innerHTML = '<div style="color:var(--muted);font-size:11px">No strategy data yet. Run tasks to populate.</div>';
+            return;
+        }
+        el.innerHTML = strats.map(s => {
+            const pct = s.win_rate || 0;
+            const barW = Math.max(2, pct);
+            const color = pct >= 70 ? '#4ade80' : pct >= 40 ? '#fbbf24' : '#f87171';
+            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <div style="width:80px;font-size:11px;opacity:.8;flex-shrink:0">${s.strategy}</div>
+                <div style="flex:1;height:8px;background:var(--surface);border-radius:4px;overflow:hidden;border:1px solid var(--border)">
+                    <div style="width:${barW}%;height:100%;background:${color};border-radius:4px;transition:width .6s ease"></div>
+                </div>
+                <div style="font-size:11px;font-weight:600;color:${color};width:52px;text-align:right">${pct}%</div>
+                <div style="font-size:10px;color:var(--muted);width:50px;text-align:right">${s.attempts} runs</div>
+            </div>`;
+        }).join('');
+    } catch(e) { if (el) el.innerHTML = '<div style="color:#f87171;font-size:11px">Error loading strategies.</div>'; }
+}
+
+async function _p15LoadFailures() {
+    const el = document.getElementById('p15Failures');
+    if (!el) return;
+    try {
+        const r = await fetch('/api/dashboard/failure-analysis');
+        const d = await r.json();
+        const pats = d.patterns || [];
+        if (!pats.length) {
+            el.innerHTML = '<div style="color:#4ade80;font-size:11px">✅ No significant failure patterns detected.</div>';
+            return;
+        }
+        const maxCount = Math.max(...pats.map(p => p.count));
+        el.innerHTML = pats.map(p => {
+            const barW = Math.max(4, Math.round(p.count / maxCount * 100));
+            return `<div style="margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+                    <span style="font-size:11px;font-weight:600;width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.category}</span>
+                    <div style="flex:1;height:6px;background:var(--surface);border-radius:3px;overflow:hidden;border:1px solid var(--border)">
+                        <div style="width:${barW}%;height:100%;background:#f87171;border-radius:3px"></div>
+                    </div>
+                    <span style="font-size:11px;color:#f87171;font-weight:600">${p.count}×</span>
+                </div>
+                ${p.examples && p.examples[0] ? `<div style="font-size:9px;color:var(--muted);margin-left:4px;opacity:.7">e.g. ${p.examples[0]}</div>` : ''}
+            </div>`;
+        }).join('');
+    } catch(e) { if (el) el.innerHTML = '<div style="color:#f87171;font-size:11px">Error loading failure analysis.</div>'; }
+}
+
+async function _p15LoadTimeline() {
+    const el = document.getElementById('p15Timeline');
+    if (!el) return;
+    try {
+        const r = await fetch('/api/dashboard/timeline');
+        const d = await r.json();
+        const events = d.events || [];
+        if (!events.length) {
+            el.innerHTML = '<div style="color:var(--muted);font-size:11px">No learning events yet. Complete tasks to build the timeline.</div>';
+            return;
+        }
+        el.innerHTML = events.map(ev => {
+            const dt = ev.ts ? new Date(ev.ts * 1000).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+            const isReflect = ev.type === 'reflection';
+            const icon = isReflect ? (ev.ok ? '🧠' : '⚠️') : (ev.ok ? '✅' : '❌');
+            const borderColor = ev.ok ? '#4ade80' : '#f87171';
+            let detail = '';
+            if (isReflect && ev.insight) detail = `<div style="font-size:9px;color:var(--muted);margin-top:2px;line-height:1.4">${ev.insight.substring(0,120)}</div>`;
+            return `<div style="display:flex;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+                <div style="font-size:14px;flex-shrink:0;margin-top:1px">${icon}</div>
+                <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:center;gap:6px">
+                        <span style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev.task || 'Task'}</span>
+                        <span style="font-size:9px;color:var(--muted);flex-shrink:0">${dt}</span>
+                    </div>
+                    <span style="font-size:9px;background:${borderColor}22;color:${borderColor};border-radius:8px;padding:1px 5px">${isReflect ? 'Learning' : ev.status || 'session'}</span>
+                    ${detail}
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) { if (el) el.innerHTML = '<div style="color:#f87171;font-size:11px">Error loading timeline.</div>'; }
+}
+
+// Auto-refresh every 45s when the learning tab is active
+_p15AutoTimer = setInterval(() => {
+    const tab = document.getElementById('nxTab-learning');
+    if (tab && !tab.classList.contains('hidden') && tab.style.display !== 'none') {
+        p15LoadDashboard();
+    }
+}, 45000);
+
+console.log('[Phase 15] Learning Dashboard active — metrics, timeline, failure analysis ready.');
+
+
+/* ═══════════════════════════════════════════════════════════════
+   PHASE 16 — Autonomous Goal Mode
+   ═══════════════════════════════════════════════════════════════ */
+
+let _p16CurrentChainId = null;
+let _p16PollTimer = null;
+
+window.p16InitGoals = function() {
+    p16LoadChains();
+};
+
+window.p16SubmitGoal = async function() {
+    const input   = document.getElementById('p16GoalInput');
+    const btn     = document.getElementById('p16SubmitBtn');
+    const priEl   = document.getElementById('p16GoalPriority');
+    const goal = (input ? input.value.trim() : '');
+    if (!goal) {
+        if (typeof toast === 'function') toast('Please enter a goal.', 'err');
+        return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Decomposing…'; }
+    const badge = document.getElementById('p16StatusBadge');
+    if (badge) { badge.textContent = 'Decomposing…'; badge.style.color = '#fbbf24'; }
+
+    try {
+        const importance = priEl ? parseInt(priEl.value) : 7;
+        const r = await fetch('/api/goals/decompose', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({goal, importance, auto_run: true})
+        });
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.error || 'Decomposition failed');
+
+        _p16CurrentChainId = d.chain_id;
+        p16RenderBreakdown(d);
+        if (badge) { badge.textContent = 'Running'; badge.style.color = '#4ade80'; }
+        if (typeof toast === 'function') toast(`Goal decomposed into ${d.task_count} tasks`, 'ok');
+
+        // Start polling progress
+        _p16StartPoll(d.chain_id);
+        p16LoadChains();
+    } catch(e) {
+        if (typeof toast === 'function') toast(`Error: ${e.message}`, 'err');
+        if (badge) { badge.textContent = 'Error'; badge.style.color = '#f87171'; }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '🎯 Decompose & Execute'; }
+    }
+};
+
+window.p16RenderBreakdown = function(d) {
+    const card   = document.getElementById('p16BreakdownCard');
+    const list   = document.getElementById('p16TaskList');
+    const label  = document.getElementById('p16GoalLabel');
+    const tc     = document.getElementById('p16TaskCount');
+    const pcard  = document.getElementById('p16ProgressCard');
+    if (!card) return;
+
+    card.style.display = 'block';
+    if (pcard) pcard.style.display = 'block';
+    if (label) label.textContent = `"${(d.goal || '').substring(0, 100)}"`;
+    if (tc) tc.textContent = `${d.task_count} tasks`;
+
+    const tasks = d.tasks || [];
+    if (list) {
+        list.innerHTML = tasks.map((t, i) => {
+            const status = t.status || 'pending';
+            const statusIcon = status === 'completed' ? '✅' : status === 'running' ? '⏳' : status === 'failed' ? '❌' : '⏸';
+            const statusColor = status === 'completed' ? '#4ade80' : status === 'running' ? '#fbbf24' : status === 'failed' ? '#f87171' : 'var(--muted)';
+            return `<div id="p16Task-${t.id || i}" style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+                <span style="font-size:13px;margin-top:1px">${statusIcon}</span>
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(t.goal || t.task || 'Task '+(i+1)).substring(0,80)}</div>
+                    <span style="font-size:9px;color:${statusColor}">${status}</span>
+                    ${t.attempts > 0 ? `<span style="font-size:9px;color:#fbbf24;margin-left:6px">${t.attempts} attempt${t.attempts>1?'s':''}</span>` : ''}
+                </div>
+            </div>`;
+        }).join('') || '<div style="color:var(--muted);font-size:11px;padding:8px 0">No tasks generated.</div>';
+    }
+    p16UpdateProgress({done:0, pending:d.task_count, failed:0, total:d.task_count, pct_complete:0});
+};
+
+window.p16UpdateProgress = function(d) {
+    const bar = document.getElementById('p16ProgressBar');
+    const pct = document.getElementById('p16ProgressPct');
+    const done = document.getElementById('p16DoneCount');
+    const pend = document.getElementById('p16PendingCount');
+    const fail = document.getElementById('p16FailedCount');
+    if (bar) bar.style.width = (d.pct_complete || 0) + '%';
+    if (pct) pct.textContent = (d.pct_complete || 0) + '%';
+    if (done) done.textContent = d.done || 0;
+    if (pend) pend.textContent = d.pending || 0;
+    if (fail) fail.textContent = d.failed || 0;
+};
+
+window.p16RunNext = async function() {
+    if (!_p16CurrentChainId) return;
+    const btn = document.getElementById('p16RunNextBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Running…'; }
+    try {
+        const r = await fetch(`/api/chains/${_p16CurrentChainId}/run-next`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({config:{mode:'managed',priority:'smart'}})
+        });
+        const d = await r.json();
+        if (d.ok === false) throw new Error(d.error);
+        if (typeof toast === 'function') toast('Next task started', 'ok');
+        setTimeout(() => p16PollChain(_p16CurrentChainId), 3000);
+    } catch(e) {
+        if (typeof toast === 'function') toast(`Error: ${e.message}`, 'err');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '▶ Run Next Task'; }
+    }
+};
+
+window.p16CancelGoal = function() {
+    _p16StopPoll();
+    _p16CurrentChainId = null;
+    const card  = document.getElementById('p16BreakdownCard');
+    const pcard = document.getElementById('p16ProgressCard');
+    if (card)  card.style.display  = 'none';
+    if (pcard) pcard.style.display = 'none';
+    const badge = document.getElementById('p16StatusBadge');
+    if (badge) { badge.textContent = 'Idle'; badge.style.color = 'var(--muted)'; }
+};
+
+window.p16PollChain = async function(chainId) {
+    if (!chainId) return;
+    try {
+        const r = await fetch(`/api/goals/chain/${chainId}`);
+        const d = await r.json();
+        if (!d.ok) return;
+        p16UpdateProgress(d);
+
+        // Re-render task list with updated statuses
+        const list = document.getElementById('p16TaskList');
+        if (list && d.tasks) {
+            list.innerHTML = d.tasks.map((t, i) => {
+                const status = t.status || 'pending';
+                const statusIcon = status === 'completed' ? '✅' : status === 'running' ? '⏳' : status === 'failed' ? '❌' : '⏸';
+                const statusColor = status === 'completed' ? '#4ade80' : status === 'running' ? '#fbbf24' : status === 'failed' ? '#f87171' : 'var(--muted)';
+                return `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+                    <span style="font-size:13px;margin-top:1px">${statusIcon}</span>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(t.goal || 'Task '+(i+1)).substring(0,80)}</div>
+                        <span style="font-size:9px;color:${statusColor}">${status}</span>
+                        ${t.attempts > 0 ? `<span style="font-size:9px;color:#fbbf24;margin-left:6px">${t.attempts}× attempted</span>` : ''}
+                        ${t.last_error ? `<div style="font-size:9px;color:#f87171;margin-top:2px">${t.last_error.substring(0,80)}</div>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // Stop polling if goal is complete
+        const badge = document.getElementById('p16StatusBadge');
+        if (d.status === 'completed') {
+            _p16StopPoll();
+            if (badge) { badge.textContent = '✅ Complete'; badge.style.color = '#4ade80'; }
+            if (typeof toast === 'function') toast('Goal completed!', 'ok');
+        } else if (d.status === 'failed') {
+            _p16StopPoll();
+            if (badge) { badge.textContent = '❌ Failed'; badge.style.color = '#f87171'; }
+        } else {
+            if (badge) { badge.textContent = `Running (${d.pct_complete}%)`; badge.style.color = '#fbbf24'; }
+        }
+    } catch(e) {}
+};
+
+window.p16LoadChains = async function() {
+    const el = document.getElementById('p16ChainList');
+    if (!el) return;
+    try {
+        const r = await fetch('/api/chains');
+        const d = await r.json();
+        const chains = Array.isArray(d) ? d : (d.chains || []);
+        if (!chains.length) {
+            el.innerHTML = '<div style="color:var(--muted);font-size:11px">No active goal chains yet.</div>';
+            return;
+        }
+        el.innerHTML = chains.slice(0, 10).map(ch => {
+            const chain = ch.chain || ch;
+            const cid   = chain.id || ch.id;
+            const goal  = (chain.goal || 'Unknown goal').substring(0, 60);
+            const status = chain.status || 'unknown';
+            const statusColor = status === 'completed' ? '#4ade80' : status === 'failed' ? '#f87171' : '#fbbf24';
+            const taskCount = (ch.tasks || []).length;
+            return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="p16LoadChainDetail(${cid})">
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${goal}</div>
+                    <div style="font-size:9px;margin-top:2px">
+                        <span style="color:${statusColor}">${status}</span>
+                        ${taskCount ? `<span style="color:var(--muted);margin-left:6px">${taskCount} tasks</span>` : ''}
+                        <span style="color:var(--muted);margin-left:6px">Chain #${cid}</span>
+                    </div>
+                </div>
+                <button class="nx-tiny-btn" onclick="event.stopPropagation();p16LoadChainDetail(${cid})" title="View detail">→</button>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        el.innerHTML = '<div style="color:#f87171;font-size:11px">Chain runner unavailable.</div>';
+    }
+};
+
+window.p16LoadChainDetail = async function(cid) {
+    _p16CurrentChainId = cid;
+    const r = await fetch(`/api/goals/chain/${cid}`);
+    const d = await r.json();
+    if (!d.ok) return;
+    p16RenderBreakdown({goal: d.goal, task_count: d.total, tasks: d.tasks});
+    p16UpdateProgress(d);
+    const card  = document.getElementById('p16BreakdownCard');
+    const pcard = document.getElementById('p16ProgressCard');
+    if (card)  card.style.display  = 'block';
+    if (pcard) pcard.style.display = 'block';
+    _p16StartPoll(cid);
+};
+
+function _p16StartPoll(chainId) {
+    _p16StopPoll();
+    _p16PollTimer = setInterval(() => p16PollChain(chainId), 5000);
+}
+function _p16StopPoll() {
+    if (_p16PollTimer) { clearInterval(_p16PollTimer); _p16PollTimer = null; }
+}
+
+console.log('[Phase 16] Autonomous Goal-Driven AI active — goal decomposition + execution ready.');
 
 })();
 </script>

@@ -1,0 +1,164 @@
+You have successfully completed Phase 13 (Context Compression) and Phase 14 (Self-Learning System).
+
+Now we will implement the final intelligence visibility layer:
+
+---
+
+# 🚀 PHASE 15 — AI LEARNING DASHBOARD + CONTROL CENTER
+
+---
+
+# 🎯 OBJECTIVE
+
+Expose the internal intelligence of the system in a clear, visual, and controllable way.
+
+The user must be able to SEE:
+
+* how the AI is improving
+* what it has learned
+* where it fails
+* how decisions are made
+
+---
+
+# 🧠 STEP 1 — LEARNING DASHBOARD TAB
+
+Add a new main tab:
+
+"📊 Intelligence Dashboard"
+
+---
+
+# 🧠 STEP 2 — METRICS TO DISPLAY
+
+Create visual sections:
+
+1. Success Rate Trend (last 7–30 tasks)
+2. Retry Rate Trend
+3. Average Latency
+4. Quality Score Distribution
+5. Token Usage Trend
+
+---
+
+# 🧠 STEP 3 — FAILURE ANALYSIS PANEL
+
+Show:
+
+* top 5 failure types
+* frequency of each
+* example errors
+
+---
+
+# 🧠 STEP 4 — STRATEGY PERFORMANCE
+
+Display:
+
+* top performing strategies
+* win rate %
+* usage count
+
+---
+
+# 🧠 STEP 5 — PROMPT EVOLUTION TRACKER
+
+Show:
+
+* original vs optimized prompt
+* improvement notes
+* performance gain
+
+---
+
+# 🧠 STEP 6 — LEARNING TIMELINE
+
+Timeline view:
+
+* what AI learned over time
+* major improvements
+* key failures
+
+---
+
+# 🧠 STEP 7 — CONTROL PANEL
+
+Add controls:
+
+* Reset learning memory
+* Disable learning temporarily
+* Export learning data (JSON)
+* Toggle auto-optimization
+
+---
+
+# 🧠 STEP 8 — VISUALIZATION
+
+Use:
+
+* lightweight charts (no heavy libs)
+* smooth animations
+* minimal UI clutter
+
+---
+
+# 🧠 STEP 9 — REAL-TIME UPDATES
+
+* auto-refresh every 30–60 sec
+* update after each task completion
+
+---
+
+# 🧠 STEP 10 — PERFORMANCE SAFETY
+
+* no heavy computation in UI thread
+* backend aggregation only
+
+---
+
+# ⚠️ RULES
+
+* DO NOT break existing UI
+* DO NOT overload system
+* KEEP UI clean and readable
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. Dashboard UI
+2. Backend aggregation logic
+3. Metrics APIs
+4. Failure analysis system
+5. Strategy tracking
+6. Prompt evolution view
+
+---
+
+# 🚀 FINAL GOAL
+
+System should feel like:
+
+"A transparent AI that shows how it thinks, learns, and improves over time"
+
+---
+
+# 🔍 FINAL VALIDATION (MANDATORY)
+
+After Phase 15:
+
+* Run full UI + backend integration test
+* Check all dashboards load correctly
+* Ensure no console errors
+* Ensure no broken API calls
+* Ensure performance remains stable
+
+---
+
+Deliver a:
+
+"Fully observable, production-grade AI intelligence dashboard"
+
+---
+
+This is the final layer before system maturity.

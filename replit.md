@@ -142,3 +142,33 @@ Optional heavy packages (disk-intensive, loaded lazily at runtime):
 ## Deployment
 - Target: autoscale
 - Run command: `gunicorn --bind=0.0.0.0:5000 --reuse-port -w 4 --threads 8 --timeout 120 web_app:app`
+
+## Phase 13–16 Intelligence Upgrades
+
+### Phase 13 — Intelligent Context Compression
+- **3-tier memory**: Tier 1 = last 5 messages, Tier 2 = compressed summary, Tier 3 = Phase 10 LTM
+- **Auto-summarization**: fires in background thread when session > 10 messages
+- **DB**: `chat_summaries` table (session_id PRIMARY KEY, summary, msg_count, updated_at)
+- **Edit safety**: `_clear_chat_summary(sid)` called on prompt edit + chat clear
+- **Endpoints**: `GET /api/chat/<sid>/summary`
+- **UI**: "⚡ Context optimized" badge in Chat tab footer, expandable "View summary"
+
+### Phase 14 — Self-Improving AI System
+- **Post-session reflection**: async thread triggers `evolution_engine.reflect_on_task()` after every completed task
+- **Settings**: `p14_learning_enabled`, `p14_auto_optimize` keys stored in settings table
+- **Endpoints**: `GET /api/learning/insights`, `POST /api/learning/settings`, `POST /api/learning/reset`, `POST /api/learning/enhance`
+- **Inspector**: "🧠 Learning Insights" collapsible section with strategy win rates + recent reflections
+- **Settings → Intelligence tab**: Enable Learning + Auto Prompt Optimization toggles
+
+### Phase 15 — AI Learning Dashboard
+- **Endpoints**: `GET /api/dashboard/metrics`, `GET /api/dashboard/timeline`, `GET /api/dashboard/failure-analysis`, `GET /api/learning/export`
+- **Tab**: "📊 Learning" in More ▾ dropdown (`nxTab-learning`)
+- **UI**: 4-metric summary row, success trend sparkline (CSS bars), strategy win-rate bar chart, failure pattern analysis, learning timeline, controls panel
+- **Auto-refresh**: every 45s when tab is visible
+
+### Phase 16 — Autonomous Goal-Driven AI
+- **Endpoints**: `POST /api/goals/decompose`, `GET /api/goals/chain/<cid>`
+- **Tab**: "🎯 Goal Mode" in More ▾ dropdown (`nxTab-goals`)
+- **UI**: Goal input textarea + priority selector, task breakdown list, progress bar, active chains panel
+- **Execution**: uses existing chain runner (`runner.create_chain()` + `/api/chains/<cid>/run-next`)
+- **Polling**: 5s interval updates task statuses and progress bar

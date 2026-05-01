@@ -6862,6 +6862,284 @@ def api_learning_enhance():
         return jsonify({"ok": True, "enhanced": original, "changed": False, "error": str(e)})
 
 
+# ── Phase 15: AI Learning Dashboard — Aggregated Metrics ─────────────────────
+
+@app.route("/api/dashboard/metrics")
+def api_dashboard_metrics():
+    """Aggregate session performance for the learning dashboard."""
+    try:
+        with _conn() as c:
+            rows = c.execute("""
+                SELECT id, task, success, status, retry_count, error_category,
+                       created_at, finished_at, usage_json
+                FROM sessions
+                WHERE created_at IS NOT NULL
+                ORDER BY created_at DESC LIMIT 50
+            """).fetchall()
+
+        sessions = [dict(r) for r in rows]
+        total = len(sessions)
+        if total == 0:
+            return jsonify({"ok": True, "total": 0, "success_rate": 0,
+                            "retry_rate": 0, "avg_latency": 0, "points": [],
+                            "token_trend": [], "latency_trend": []})
+
+        successes = sum(1 for s in sessions if s["success"] == 1)
+        retried   = sum(1 for s in sessions if (s["retry_count"] or 0) > 0)
+        latencies, tokens_used = [], []
+        for s in sessions:
+            if s["finished_at"] and s["created_at"]:
+                latencies.append(s["finished_at"] - s["created_at"])
+            try:
+                u = json.loads(s["usage_json"] or "{}")
+                t = u.get("tokens_in_est", 0) + u.get("tokens_out_est", 0)
+                tokens_used.append(t)
+            except Exception:
+                tokens_used.append(0)
+
+        avg_latency = round(sum(latencies) / len(latencies), 1) if latencies else 0
+
+        # Build sparkline-style data (last 30 tasks ordered oldest-first)
+        points_raw = list(reversed(sessions[:30]))
+        points = [{
+            "task": (s["task"] or "")[:40],
+            "ok": s["success"] == 1,
+            "status": s["status"],
+            "retries": s["retry_count"] or 0,
+        } for s in points_raw]
+
+        token_trend = list(reversed(tokens_used[:30]))
+        latency_trend = [round(lat, 1) for lat in list(reversed(latencies[:30]))] if latencies else []
+
+        return jsonify({
+            "ok": True,
+            "total": total,
+            "success_rate": round(successes / total * 100, 1),
+            "retry_rate": round(retried / total * 100, 1),
+            "avg_latency": avg_latency,
+            "points": points,
+            "token_trend": token_trend,
+            "latency_trend": latency_trend,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/dashboard/timeline")
+def api_dashboard_timeline():
+    """Return a combined learning timeline: reflections + session milestones."""
+    events = []
+    try:
+        from evolution_engine import get_evolution_engine
+        import sqlite3 as _sql
+        eng = get_evolution_engine()
+        with _sql.connect(eng.db_path) as c:
+            refs = c.execute("""
+                SELECT task, success, worked, failed, meta_learning, ts
+                FROM reflections ORDER BY ts DESC LIMIT 20
+            """).fetchall()
+        for r in refs:
+            events.append({
+                "ts": r[4], "type": "reflection",
+                "ok": bool(r[1]),
+                "task": (r[0] or "")[:60],
+                "worked": r[2] or "",
+                "failed": r[3] or "",
+                "insight": r[4] or "",
+            })
+    except Exception:
+        pass
+    try:
+        with _conn() as c:
+            rows = c.execute("""
+                SELECT task, success, status, created_at
+                FROM sessions WHERE finished_at IS NOT NULL
+                ORDER BY created_at DESC LIMIT 15
+            """).fetchall()
+        for r in rows:
+            events.append({
+                "ts": r[3], "type": "session",
+                "ok": bool(r[1]),
+                "task": (r[0] or "")[:60],
+                "status": r[2] or "",
+            })
+    except Exception:
+        pass
+
+    events.sort(key=lambda e: e.get("ts", 0), reverse=True)
+    return jsonify({"ok": True, "events": events[:25]})
+
+
+@app.route("/api/dashboard/failure-analysis")
+def api_dashboard_failures():
+    """Group failures by category and return top patterns."""
+    try:
+        with _conn() as c:
+            rows = c.execute("""
+                SELECT COALESCE(error_category, 'unknown') as cat,
+                       COUNT(*) as cnt,
+                       GROUP_CONCAT(SUBSTR(task, 1, 60), '|||') as examples
+                FROM sessions
+                WHERE success = 0 AND status NOT IN ('stopped')
+                GROUP BY cat ORDER BY cnt DESC LIMIT 8
+            """).fetchall()
+        patterns = [{
+            "category": r[0],
+            "count": r[1],
+            "examples": (r[2] or "").split("|||")[:3],
+        } for r in rows]
+
+        total_failures = sum(p["count"] for p in patterns)
+        return jsonify({"ok": True, "patterns": patterns, "total": total_failures})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/learning/export")
+def api_learning_export():
+    """Export all learning data as JSON for download."""
+    try:
+        export = {"exported_at": time.time(), "sessions": [], "reflections": [],
+                  "strategies": [], "summaries": []}
+        with _conn() as c:
+            rows = c.execute(
+                "SELECT id,task,status,success,retry_count,created_at FROM sessions "
+                "ORDER BY created_at DESC LIMIT 200"
+            ).fetchall()
+            export["sessions"] = [dict(r) for r in rows]
+            rows2 = c.execute(
+                "SELECT session_id, summary, msg_count, updated_at FROM chat_summaries"
+            ).fetchall()
+            export["summaries"] = [dict(r) for r in rows2]
+        try:
+            from evolution_engine import get_evolution_engine
+            import sqlite3 as _sql
+            eng = get_evolution_engine()
+            with _sql.connect(eng.db_path) as c:
+                export["reflections"] = [dict(r) for r in c.execute(
+                    "SELECT task,success,worked,failed,meta_learning,ts FROM reflections ORDER BY ts DESC"
+                ).fetchall()]
+                export["strategies"] = [dict(r) for r in c.execute(
+                    "SELECT * FROM strategy_stats"
+                ).fetchall()]
+        except Exception:
+            pass
+        resp = app.response_class(
+            response=json.dumps(export, indent=2),
+            status=200,
+            mimetype="application/json"
+        )
+        resp.headers["Content-Disposition"] = "attachment; filename=antigravity_learning_export.json"
+        return resp
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ── Phase 16: Autonomous Goal-Driven AI ──────────────────────────────────────
+
+@app.route("/api/goals/decompose", methods=["POST"])
+def api_goal_decompose():
+    """Phase 16 — Decompose a high-level goal into a chain of tasks and optionally start execution."""
+    data = request.get_json(silent=True) or {}
+    goal = (data.get("goal") or "").strip()
+    if not goal:
+        return jsonify({"ok": False, "error": "goal required"}), 400
+    auto_run = bool(data.get("auto_run", True))
+    importance = int(data.get("importance", 7))
+
+    runner = _get_chain_runner()
+    if runner is None:
+        return jsonify({"ok": False, "error": "chain_runner_unavailable"}), 503
+    try:
+        result = runner.create_chain(goal, importance=max(1, min(importance, 10)))
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"decompose failed: {e}"}), 500
+
+    chain_id = result.get("chain_id")
+    if chain_id is None:
+        return jsonify({"ok": False, "error": result.get("error", "no chain created")}), 500
+
+    tasks = result.get("tasks", [])
+
+    # Optionally kick off the first task immediately
+    if auto_run and tasks:
+        try:
+            from model_router import get_router
+            cfg = {"mode": "managed", "priority": "smart"}
+            runner._run_next_task(chain_id, cfg)
+        except Exception:
+            pass  # Non-critical — user can manually run
+
+    return jsonify({
+        "ok": True,
+        "chain_id": chain_id,
+        "goal": goal,
+        "task_count": len(tasks),
+        "tasks": tasks[:20],
+        "auto_run": auto_run,
+    })
+
+
+@app.route("/api/goals/chain/<int:cid>")
+def api_goal_chain_status(cid):
+    """Phase 16 — Get detailed status of a goal chain for progress tracking."""
+    runner = _get_chain_runner()
+    if runner is None:
+        return jsonify({"ok": False, "error": "unavailable"}), 503
+    try:
+        chain = runner.memory.get_chain(cid)
+        if not chain:
+            return jsonify({"ok": False, "error": "not found"}), 404
+        chain_data = chain.get("chain", {})
+        tasks_data = chain.get("tasks", [])
+        total = len(tasks_data)
+        done  = sum(1 for t in tasks_data if t.get("status") == "completed")
+        failed = sum(1 for t in tasks_data if t.get("status") == "failed")
+        pending = sum(1 for t in tasks_data if t.get("status") in ("pending", "running", "pending_retry"))
+        pct = round(done / total * 100) if total else 0
+        tasks_out = [{
+            "id": t.get("id"), "goal": (t.get("goal") or "")[:80],
+            "status": t.get("status", "pending"),
+            "attempts": t.get("attempts", 0),
+            "last_error": (t.get("last_error") or "")[:120],
+        } for t in tasks_data[:30]]
+        return jsonify({
+            "ok": True,
+            "chain_id": cid,
+            "status": chain_data.get("status", "unknown"),
+            "goal": (chain_data.get("goal") or "")[:200],
+            "total": total, "done": done, "failed": failed, "pending": pending,
+            "pct_complete": pct,
+            "tasks": tasks_out,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/goals/chain/<int:cid>/run", methods=["POST"])
+def api_goal_chain_run(cid):
+    """Phase 16 — Run the next pending task in a goal chain."""
+    runner = _get_chain_runner()
+    if runner is None:
+        return jsonify({"ok": False, "error": "unavailable"}), 503
+    try:
+        cfg = {"mode": "managed", "priority": "smart"}
+        # Use the existing run-next endpoint logic
+        with app.test_request_context(json={"config": cfg}):
+            pass
+        # Direct call to run next task
+        result = runner._run_next_task(cid, cfg) if hasattr(runner, '_run_next_task') else None
+        if result is None:
+            # Fallback: use the existing API endpoint
+            import requests as _req
+            resp = _req.post(f"http://localhost:{request.host.split(':')[-1]}/api/chains/{cid}/run-next",
+                             json={"config": cfg}, timeout=10)
+            result = resp.json()
+        return jsonify({"ok": True, "result": result})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route("/api/governance/status")
 def api_governance_status():
     try:
