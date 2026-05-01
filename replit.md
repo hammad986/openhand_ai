@@ -23,6 +23,18 @@ The UI was upgraded from the basic "Phase 57" bridge to a full feature-complete 
 - **Keyboard Shortcuts**: Ctrl+Enter (run), Ctrl+K (palette), Ctrl+S (save file), Escape (close)
 - **Resizable panels**: Drag handles between all 3 columns
 
+### Phase 5: BYOK Multi-Provider System (Production-Grade)
+- **Provider Registry**: 19 providers across 4 categories — Core (OpenAI, Gemini, Anthropic, Groq, OpenRouter), High Value (xAI/Grok, AWS Bedrock, Azure OpenAI, Together AI, Fireworks AI, NVIDIA NIM), Open/Fallback (DeepSeek, Mistral, Cohere, HuggingFace), Multimodal (Replicate, ElevenLabs, Deepgram), Local (Ollama).
+- **Intelligent Routing**: `p5_get_best_provider(plan, keys)` picks fastest/best provider for each plan mode. Lite→fastest (Groq/DeepSeek), Pro→balanced (Gemini/OpenAI/Anthropic), Elite→strongest (Anthropic/OpenAI/xAI). Fallback chain auto-computed from `PLAN_PROVIDER_PREFERENCE` in `config.py`.
+- **BYOK API Keys Panel**: Settings modal's BYOK tab now groups providers by category with colored status dots, capability tags, model list, masked key display, and per-key clear buttons.
+- **Provider Selector**: Header badge shows active provider with colored dot (green=platform key, orange=BYOK key, grey=unavailable). Click to open dropdown menu grouped by category with speed/capability indicators.
+- **Routing API**: New `/api/p5/routing?plan=<lite|pro|elite>` endpoint returns `recommended` provider, `fallback_chain`, and full availability matrix.
+- **Failover Bar**: Horizontal bar below header shows `⚡ Failover: OldProvider → NewProvider (reason)`. Auto-dismissed after 12s. Triggered by `[FAILOVER]` or `switching…to` log patterns.
+- **Inspector Routing Info**: `Route: <Provider>` + `Fallback: A → B → C` shown in the right inspector's model section.
+- **Expanded Force Model Dropdown**: All 19 providers listed with optgroup categories in Settings > Advanced.
+- **`config.py` extended**: All new API key env vars, endpoint URLs, model defaults, cost-per-1k, capability map, and `PLAN_PROVIDER_PREFERENCE` dict added.
+- **`web_app.py` extended**: `PROVIDERS` dict with full metadata (category, url, speed, quality, caps, models, plan_pref). `p5_get_best_provider()` routing function. `/api/providers` returns rich catalog. `/api/p5/routing` new endpoint.
+
 ### Phase 4: Intelligence & Personalization Layer
 - **Dark/Light Theme**: Full theme toggle (🌙/☀️ button in header). CSS `light-theme` class on `<body>` with all vars overridden. Theme persisted in `localStorage` (`p4_theme`). Smooth variable-based transitions.
 - **Token/Cost Tracker Pill**: Live `🔢 Ntok · $X.XXXX` pill in header polling `/api/costs/totals` every 5s (and `/api/session/<sid>` when a session is active). Shows only when usage > 0.

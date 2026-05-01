@@ -441,14 +441,200 @@ app.secret_key = os.urandom(24)
 # ────────────────────────────────────────────────────────────────────────────
 
 PROVIDERS = {
-    "gemini":     {"label": "Gemini",     "key_env": "GEMINI_API_KEY"},
-    "openrouter": {"label": "OpenRouter", "key_env": "OPENROUTER_API_KEY"},
-    "groq":       {"label": "Groq",       "key_env": "GROQ_API_KEY"},
-    "nvidia":     {"label": "NVIDIA",     "key_env": "NVIDIA_API_KEY"},
-    "together":   {"label": "Together.ai","key_env": "TOGETHER_API_KEY"},
-    "local":      {"label": "Ollama (local)", "key_env": None},  # no key required
+    # ── Core ──────────────────────────────────────────────────────────────────
+    "openai":      {
+        "label": "OpenAI",          "key_env": "OPENAI_API_KEY",
+        "category": "core",         "url": "https://api.openai.com/v1/chat/completions",
+        "speed": "balanced",        "quality": "high",
+        "caps": ["thinking", "coding", "debugging", "multimodal"],
+        "models": ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"],
+        "plan_pref": ["pro", "elite"],
+    },
+    "gemini":      {
+        "label": "Google Gemini",   "key_env": "GEMINI_API_KEY",
+        "category": "core",         "url": "gemini-native",
+        "speed": "fast",            "quality": "high",
+        "caps": ["thinking", "coding", "debugging", "multimodal"],
+        "models": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"],
+        "plan_pref": ["lite", "pro", "elite"],
+    },
+    "anthropic":   {
+        "label": "Anthropic",       "key_env": "ANTHROPIC_API_KEY",
+        "category": "core",         "url": "https://api.anthropic.com/v1/messages",
+        "speed": "balanced",        "quality": "highest",
+        "caps": ["thinking", "coding", "debugging", "multimodal"],
+        "models": ["claude-3-5-haiku-20241022", "claude-3-5-sonnet-20241022", "claude-3-opus-20240229"],
+        "plan_pref": ["elite"],
+    },
+    "groq":        {
+        "label": "Groq",            "key_env": "GROQ_API_KEY",
+        "category": "core",         "url": "https://api.groq.com/openai/v1/chat/completions",
+        "speed": "fastest",         "quality": "good",
+        "caps": ["coding", "debugging"],
+        "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
+        "plan_pref": ["lite"],
+    },
+    "openrouter":  {
+        "label": "OpenRouter",      "key_env": "OPENROUTER_API_KEY",
+        "category": "core",         "url": "https://openrouter.ai/api/v1/chat/completions",
+        "speed": "balanced",        "quality": "high",
+        "caps": ["thinking", "coding", "debugging", "multimodal"],
+        "models": ["deepseek/deepseek-chat", "anthropic/claude-3.5-sonnet", "openai/gpt-4o"],
+        "plan_pref": ["pro", "elite"],
+    },
+    # ── High Value ─────────────────────────────────────────────────────────────
+    "xai":         {
+        "label": "xAI (Grok)",      "key_env": "XAI_API_KEY",
+        "category": "high_value",   "url": "https://api.x.ai/v1/chat/completions",
+        "speed": "balanced",        "quality": "high",
+        "caps": ["thinking", "coding", "debugging"],
+        "models": ["grok-beta", "grok-2", "grok-2-mini"],
+        "plan_pref": ["elite"],
+    },
+    "bedrock":     {
+        "label": "AWS Bedrock",     "key_env": "AWS_ACCESS_KEY_ID",
+        "category": "high_value",   "url": "bedrock-native",
+        "speed": "balanced",        "quality": "high",
+        "caps": ["thinking", "coding", "debugging"],
+        "models": ["anthropic.claude-3-haiku-20240307-v1:0", "anthropic.claude-3-sonnet-20240229-v1:0"],
+        "plan_pref": ["elite"],
+    },
+    "azure":       {
+        "label": "Azure OpenAI",    "key_env": "AZURE_OPENAI_KEY",
+        "category": "high_value",   "url": "azure-native",
+        "speed": "balanced",        "quality": "high",
+        "caps": ["thinking", "coding", "debugging", "multimodal"],
+        "models": ["gpt-4o", "gpt-4-turbo", "gpt-35-turbo"],
+        "plan_pref": ["pro", "elite"],
+    },
+    "together":    {
+        "label": "Together AI",     "key_env": "TOGETHER_API_KEY",
+        "category": "high_value",   "url": "https://api.together.xyz/v1/chat/completions",
+        "speed": "fast",            "quality": "good",
+        "caps": ["coding", "debugging"],
+        "models": ["Qwen/Qwen2.5-72B-Instruct-Turbo", "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"],
+        "plan_pref": ["lite", "pro"],
+    },
+    "fireworks":   {
+        "label": "Fireworks AI",    "key_env": "FIREWORKS_API_KEY",
+        "category": "high_value",   "url": "https://api.fireworks.ai/inference/v1/chat/completions",
+        "speed": "fast",            "quality": "good",
+        "caps": ["coding", "debugging"],
+        "models": ["accounts/fireworks/models/llama-v3p3-70b-instruct", "accounts/fireworks/models/qwen2p5-coder-32b-instruct"],
+        "plan_pref": ["lite", "pro"],
+    },
+    # ── Open / Fallback ────────────────────────────────────────────────────────
+    "deepseek":    {
+        "label": "DeepSeek",        "key_env": "DEEPSEEK_API_KEY",
+        "category": "open",         "url": "https://api.deepseek.com/v1/chat/completions",
+        "speed": "fast",            "quality": "high",
+        "caps": ["thinking", "coding", "debugging"],
+        "models": ["deepseek-coder", "deepseek-chat", "deepseek-reasoner"],
+        "plan_pref": ["lite", "pro"],
+    },
+    "mistral":     {
+        "label": "Mistral",         "key_env": "MISTRAL_API_KEY",
+        "category": "open",         "url": "https://api.mistral.ai/v1/chat/completions",
+        "speed": "fast",            "quality": "good",
+        "caps": ["coding", "debugging"],
+        "models": ["mistral-small-latest", "mistral-medium-latest", "codestral-latest"],
+        "plan_pref": ["lite"],
+    },
+    "cohere":      {
+        "label": "Cohere",          "key_env": "COHERE_API_KEY",
+        "category": "open",         "url": "https://api.cohere.ai/v2/chat",
+        "speed": "fast",            "quality": "good",
+        "caps": ["coding"],
+        "models": ["command-r", "command-r-plus"],
+        "plan_pref": ["lite"],
+    },
+    "huggingface": {
+        "label": "HuggingFace",     "key_env": "HUGGINGFACE_API_KEY",
+        "category": "open",         "url": "https://api-inference.huggingface.co/models",
+        "speed": "slow",            "quality": "variable",
+        "caps": ["coding"],
+        "models": ["Qwen/Qwen2.5-Coder-32B-Instruct", "bigcode/starcoder2-15b"],
+        "plan_pref": ["lite"],
+    },
+    # ── Multimodal ─────────────────────────────────────────────────────────────
+    "replicate":   {
+        "label": "Replicate",       "key_env": "REPLICATE_API_KEY",
+        "category": "multimodal",   "url": "https://api.replicate.com/v1/predictions",
+        "speed": "slow",            "quality": "high",
+        "caps": ["multimodal"],
+        "models": ["meta/llama-3-70b-instruct", "stability-ai/stable-diffusion-3"],
+        "plan_pref": [],
+    },
+    "elevenlabs":  {
+        "label": "ElevenLabs",      "key_env": "ELEVENLABS_API_KEY",
+        "category": "multimodal",   "url": "https://api.elevenlabs.io/v1/text-to-speech",
+        "speed": "fast",            "quality": "high",
+        "caps": ["multimodal"],
+        "models": ["eleven_flash_v2_5", "eleven_turbo_v2_5"],
+        "plan_pref": [],
+    },
+    "deepgram":    {
+        "label": "Deepgram",        "key_env": "DEEPGRAM_API_KEY",
+        "category": "multimodal",   "url": "https://api.deepgram.com/v1/speak",
+        "speed": "fast",            "quality": "high",
+        "caps": ["multimodal"],
+        "models": ["aura-asteria-en", "aura-luna-en"],
+        "plan_pref": [],
+    },
+    # ── Local ──────────────────────────────────────────────────────────────────
+    "nvidia":      {
+        "label": "NVIDIA NIM",      "key_env": "NVIDIA_API_KEY",
+        "category": "high_value",   "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+        "speed": "fast",            "quality": "good",
+        "caps": ["coding", "debugging"],
+        "models": ["meta/llama-3.3-70b-instruct", "nvidia/llama-3.1-nemotron-70b-instruct"],
+        "plan_pref": ["lite", "pro"],
+    },
+    "local":       {
+        "label": "Ollama (local)",  "key_env": None,
+        "category": "open",         "url": "local",
+        "speed": "variable",        "quality": "variable",
+        "caps": ["coding", "debugging"],
+        "models": ["codellama", "llama3", "deepseek-coder"],
+        "plan_pref": ["lite"],
+    },
 }
 PROVIDER_NAMES = list(PROVIDERS.keys())
+
+# Phase 5 — Routing rules: plan mode → preferred provider category
+P5_ROUTE_RULES = {
+    "lite":  {"speed": "fastest",  "quality_min": "good",    "prefer_caps": ["coding"]},
+    "pro":   {"speed": "balanced", "quality_min": "high",    "prefer_caps": ["thinking", "coding"]},
+    "elite": {"speed": "any",      "quality_min": "highest", "prefer_caps": ["thinking", "debugging"]},
+}
+
+# Speed tier ordering (fastest = lowest index)
+_P5_SPEED_RANK = {"fastest": 0, "fast": 1, "balanced": 2, "slow": 3, "variable": 4, "any": 5}
+_P5_QUALITY_RANK = {"variable": 0, "good": 1, "high": 2, "highest": 3}
+
+
+def p5_get_best_provider(plan_mode: str, available_keys: dict) -> str:
+    """Return the best provider id for a plan mode given the user's available keys.
+    Falls back through preference lists, skipping providers with no key configured.
+    Returns 'auto' if nothing matches.
+    """
+    from config import Config
+    prefs = Config.PLAN_PROVIDER_PREFERENCE.get(plan_mode, [])
+    for pid in prefs:
+        if pid not in PROVIDERS:
+            continue
+        meta = PROVIDERS[pid]
+        key_env = meta.get("key_env")
+        # Local needs no key
+        if key_env is None:
+            return pid
+        # Check user-supplied key
+        if available_keys.get(pid):
+            return pid
+        # Check platform env key
+        if key_env and os.getenv(key_env):
+            return pid
+    return "auto"
 
 # Default platform-managed limits (advisory; enforced in queue endpoint).
 MANAGED_LIMITS = {
@@ -506,7 +692,9 @@ def default_managed_config():
         "mode": "managed",
         "providers": list(PROVIDERS.keys()),
         "api_keys": {},
-        "fallback_order": ["gemini", "openrouter", "groq", "nvidia", "together"],
+        # Phase 5 — expanded fallback order (keeps existing first, adds new providers at end)
+        "fallback_order": ["gemini", "openrouter", "groq", "nvidia", "together",
+                           "openai", "anthropic", "deepseek", "mistral", "fireworks"],
         # Phase 8 — when True (default), tasks go through orchestrator.py
         # (THINK→PLAN→EXECUTE→VERIFY→REFLECT→ADAPT). When False, fall back
         # to the raw single-shot agent via main.py.
@@ -1354,11 +1542,54 @@ def index():
 
 @app.route("/api/providers")
 def api_providers():
-    """Static provider catalogue used to render the BYOK UI."""
-    return jsonify({"providers": [
-        {"id": p, "label": meta["label"], "needs_key": bool(meta["key_env"])}
-        for p, meta in PROVIDERS.items()
-    ]})
+    """Full Phase 5 provider catalogue with capabilities, categories, and key status."""
+    stored_cfg = get_setting("default_config", default_managed_config())
+    stored_keys = stored_cfg.get("api_keys") or {}
+    result = []
+    for p, meta in PROVIDERS.items():
+        key_env = meta.get("key_env")
+        has_platform_key = bool(os.getenv(key_env)) if key_env else False
+        has_byok_key = bool(stored_keys.get(p))
+        result.append({
+            "id":          p,
+            "label":       meta["label"],
+            "category":    meta.get("category", "core"),
+            "needs_key":   bool(key_env),
+            "speed":       meta.get("speed", "balanced"),
+            "quality":     meta.get("quality", "good"),
+            "caps":        meta.get("caps", []),
+            "models":      meta.get("models", []),
+            "plan_pref":   meta.get("plan_pref", []),
+            "has_platform_key": has_platform_key,
+            "has_byok_key":     has_byok_key,
+            "available":   (not bool(key_env)) or has_platform_key or has_byok_key,
+        })
+    return jsonify({"providers": result})
+
+
+@app.route("/api/p5/routing")
+def api_p5_routing():
+    """Phase 5 — Return intelligent routing recommendation based on plan mode and available keys."""
+    plan_mode = request.args.get("plan", "pro").lower()
+    stored_cfg = get_setting("default_config", default_managed_config())
+    stored_keys = stored_cfg.get("api_keys") or {}
+    best = p5_get_best_provider(plan_mode, stored_keys)
+    # Build availability matrix
+    avail = {}
+    for p, meta in PROVIDERS.items():
+        key_env = meta.get("key_env")
+        has_key = (not key_env) or bool(os.getenv(key_env)) or bool(stored_keys.get(p))
+        avail[p] = {"available": has_key, "label": meta["label"], "speed": meta.get("speed"), "caps": meta.get("caps", [])}
+    from config import Config
+    fallback_chain = [p for p in Config.PLAN_PROVIDER_PREFERENCE.get(plan_mode, [])
+                      if avail.get(p, {}).get("available")]
+    return jsonify({
+        "ok": True,
+        "plan": plan_mode,
+        "recommended": best,
+        "fallback_chain": fallback_chain[:5],
+        "availability": avail,
+    })
 
 
 @app.route("/api/get-config")

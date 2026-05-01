@@ -137,6 +137,117 @@
         body.light-theme .p4-suggest-box { background:#fff; border-color:#d0d7de; box-shadow:0 8px 24px rgba(0,0,0,0.1); }
         body.light-theme .p4-suggest-item { color:#1f2328; border-bottom-color:#f0f2f5; }
         body.light-theme .p4-suggest-item:hover { background:#f0f2f5; }
+
+        /* ================================================================
+           PHASE 5 — BYOK Multi-Provider System
+           ================================================================ */
+
+        /* Provider selector in header */
+        .p5-provider-badge {
+            display:flex; align-items:center; gap:5px;
+            background:#161b22; border:1px solid #30363d;
+            border-radius:8px; padding:3px 9px; cursor:pointer;
+            font-size:0.75rem; color:#8b949e; position:relative;
+            white-space:nowrap; transition:none !important;
+        }
+        .p5-provider-badge:hover { background:#21262d; color:#e6edf3; border-color:#58a6ff55; }
+        .p5-provider-badge .p5-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+        .p5-provider-badge .p5-name { font-weight:600; color:#e6edf3; }
+        .p5-provider-badge .p5-arrow { font-size:0.65rem; color:#8b949e; }
+        body.light-theme .p5-provider-badge { background:#f0f2f5; border-color:#d0d7de; }
+        body.light-theme .p5-provider-badge .p5-name { color:#1f2328; }
+
+        /* Provider dropdown menu */
+        .p5-prov-menu {
+            position:absolute; top:calc(100% + 6px); right:0; z-index:500;
+            background:#161b22; border:1px solid #30363d; border-radius:10px;
+            box-shadow:0 12px 36px rgba(0,0,0,0.6); min-width:320px;
+            display:none; overflow:hidden;
+        }
+        .p5-prov-menu.open { display:block; }
+        .p5-prov-menu-head {
+            padding:10px 14px 6px; font-size:0.7rem; text-transform:uppercase;
+            letter-spacing:0.09em; color:#8b949e; font-weight:600;
+            border-bottom:1px solid #21262d;
+        }
+        .p5-prov-cat { padding:6px 14px 3px; font-size:0.65rem; text-transform:uppercase;
+            letter-spacing:0.08em; color:#58a6ff88; font-weight:700; }
+        .p5-prov-row {
+            display:flex; align-items:center; gap:9px; padding:7px 14px;
+            cursor:pointer; transition:none !important;
+        }
+        .p5-prov-row:hover { background:#21262d; }
+        .p5-prov-row.active { background:#1a2a3a; }
+        .p5-prov-row .p5-r-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+        .p5-prov-row .p5-r-label { font-size:0.82rem; color:#e6edf3; font-weight:500; flex:1; }
+        .p5-prov-row .p5-r-speed { font-size:0.65rem; color:#8b949e; }
+        .p5-prov-row .p5-r-caps { display:flex; gap:3px; }
+        .p5-cap-tag {
+            font-size:0.6rem; padding:1px 5px; border-radius:3px;
+            background:#1c2230; color:#8b949e; border:1px solid #30363d;
+        }
+        .p5-cap-tag.thinking { color:#bc8cff; border-color:#bc8cff33; background:#1a1226; }
+        .p5-cap-tag.coding   { color:#58a6ff; border-color:#58a6ff33; background:#0d1f3c; }
+        .p5-cap-tag.fast     { color:#3fb950; border-color:#3fb95033; background:#0d1f14; }
+        .p5-prov-row .p5-r-status { font-size:0.68rem; }
+        body.light-theme .p5-prov-menu { background:#fff; border-color:#d0d7de; box-shadow:0 12px 36px rgba(0,0,0,0.12); }
+        body.light-theme .p5-prov-row:hover { background:#f0f2f5; }
+        body.light-theme .p5-prov-row.active { background:#ddf4ff; }
+        body.light-theme .p5-prov-row .p5-r-label { color:#1f2328; }
+
+        /* Settings: BYOK provider panel enhancements */
+        .p5-byok-cat-header {
+            display:flex; align-items:center; gap:8px;
+            font-size:0.72rem; font-weight:700; text-transform:uppercase;
+            letter-spacing:0.08em; color:#58a6ff; padding:10px 0 5px;
+            border-bottom:1px solid #21262d; margin-bottom:6px;
+        }
+        .p5-byok-row {
+            display:grid; grid-template-columns:1fr auto auto;
+            align-items:center; gap:8px; margin-bottom:6px;
+        }
+        .p5-byok-row .p5-byok-label {
+            display:flex; align-items:center; gap:6px;
+            font-size:0.8rem; font-weight:500; color:#e6edf3;
+        }
+        .p5-byok-row .p5-byok-label small {
+            color:#8b949e; font-size:0.68rem; font-weight:400;
+        }
+        .p5-byok-input {
+            width:100%; padding:5px 9px; background:#0d1117;
+            color:#e6edf3; border:1px solid #30363d; border-radius:5px;
+            font-size:0.77rem; font-family:monospace;
+            margin-bottom:2px;
+        }
+        .p5-byok-input:focus { outline:none; border-color:#58a6ff; }
+        .p5-byok-input.has-key { border-color:#3fb95055; }
+        .p5-byok-caps { display:flex; gap:3px; flex-wrap:wrap; margin-top:2px; }
+        .p5-status-dot { width:8px; height:8px; border-radius:50%; }
+        .p5-status-dot.green  { background:#3fb950; }
+        .p5-status-dot.yellow { background:#d29922; }
+        .p5-status-dot.grey   { background:#30363d; }
+
+        /* Failover status bar */
+        .p5-failover-bar {
+            display:none; align-items:center; gap:8px;
+            background:#1a2010; border:1px solid #3fb95033;
+            border-radius:6px; padding:6px 12px; margin:4px 0;
+            font-size:0.75rem; color:#8b949e;
+        }
+        .p5-failover-bar.visible { display:flex; }
+        .p5-failover-bar .p5-fb-from { color:#f85149; text-decoration:line-through; }
+        .p5-failover-bar .p5-fb-to { color:#3fb950; font-weight:600; }
+        body.light-theme .p5-failover-bar { background:#f0fff4; border-color:#1a7f3733; }
+
+        /* Routing status panel in inspector */
+        .p5-route-info {
+            background:#0d1117; border:1px solid #21262d; border-radius:6px;
+            padding:8px 10px; font-size:0.74rem; color:#8b949e;
+            margin:4px 0;
+        }
+        .p5-route-info .p5-ri-prov { color:#58a6ff; font-weight:600; }
+        .p5-route-info .p5-ri-chain { color:#8b949e; font-size:0.68rem; margin-top:3px; }
+        body.light-theme .p5-route-info { background:#f6f8fa; border-color:#d0d7de; }
         * { box-sizing:border-box; margin:0; padding:0; }
         html, body { height:100%; overflow:hidden; }
         body {
@@ -2142,6 +2253,16 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       <span style="color:var(--text-dim)">▾</span>
     </div>
     <span class="nx-status-badge" id="nxGlobalStatus">Idle</span>
+    <!-- Phase 5: Active provider badge + selector -->
+    <div class="p5-provider-badge" id="p5ProvBadge" onclick="p5ToggleProvMenu(event)" title="Active AI provider — click to switch">
+      <span class="p5-dot" id="p5ProvDot" style="background:#3fb950"></span>
+      <span class="p5-name" id="p5ProvName">AUTO</span>
+      <span class="p5-arrow">▾</span>
+      <div class="p5-prov-menu" id="p5ProvMenu">
+        <div class="p5-prov-menu-head">🤖 Select AI Provider</div>
+        <div id="p5ProvMenuList"></div>
+      </div>
+    </div>
     <!-- Phase 4: Live token + cost tracker -->
     <div class="p4-token-pill" id="p4TokenPill" title="Tokens used · Estimated cost (session total)" style="display:none">
       <span>🔢</span>
@@ -2156,6 +2277,17 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <button class="nx-icon-btn" title="Settings" onclick="openSettings()">⚙</button>
   </div>
 </header>
+
+<!-- Phase 5: Failover status bar (shows when provider switches) -->
+<div class="p5-failover-bar" id="p5FailoverBar">
+  <span>⚡ Failover:</span>
+  <span class="p5-fb-from" id="p5FbFrom">—</span>
+  <span>→</span>
+  <span class="p5-fb-to" id="p5FbTo">—</span>
+  <span id="p5FbReason" style="color:#8b949e"></span>
+  <button onclick="document.getElementById('p5FailoverBar').classList.remove('visible')"
+    style="margin-left:auto;background:none;border:none;color:#8b949e;cursor:pointer;font-size:12px">✕</button>
+</div>
 
 <!-- Phase 3: Context bar (shows active attachments/repo) -->
 <div class="nx-context-bar" id="nxContextBar">
@@ -2416,6 +2548,11 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
               <span class="nx-model-tag" id="nxInspProvider">—</span>
             </div>
             <div style="font-size:10px;color:var(--text-dim);margin-top:2px" id="nxInspMode">Managed mode</div>
+          </div>
+          <!-- Phase 5: Routing info -->
+          <div class="p5-route-info" id="p5RouteInfo" style="display:none">
+            <div>Route: <span class="p5-ri-prov" id="p5RiProv">—</span></div>
+            <div class="p5-ri-chain" id="p5RiChain"></div>
           </div>
         </div>
 
@@ -4523,12 +4660,41 @@ window.addEventListener('load', nxInit);
                 </div>
 
                 <div id="byokPanel" style="display:none">
+                    <!-- Phase 5: Routing recommendation -->
+                    <div class="section" id="p5RoutingRec" style="display:none">
+                        <h3>Intelligent Routing</h3>
+                        <div class="p5-route-info" style="display:block">
+                            <div>For current plan: <span class="p5-ri-prov" id="p5RecProv">—</span></div>
+                            <div class="p5-ri-chain" id="p5RecChain" style="margin-top:3px"></div>
+                        </div>
+                    </div>
                     <div class="section">
-                        <h3>Your Providers (order = fallback priority)</h3>
-                        <div id="providerList"></div>
+                        <h3>Your API Keys
+                          <span style="font-size:0.72rem;font-weight:400;color:var(--muted);margin-left:8px">order = fallback priority</span>
+                        </h3>
+                        <!-- Phase 5: Category-grouped provider list -->
+                        <div id="providerList">
+                            <div class="p5-byok-cat-header">
+                                <span>🔵</span> Core Providers
+                            </div>
+                            <div id="p5ByokCore"></div>
+                            <div class="p5-byok-cat-header" style="margin-top:8px">
+                                <span>⚡</span> High Value
+                            </div>
+                            <div id="p5ByokHighValue"></div>
+                            <div class="p5-byok-cat-header" style="margin-top:8px">
+                                <span>🌐</span> Open / Fallback
+                            </div>
+                            <div id="p5ByokOpen"></div>
+                            <div class="p5-byok-cat-header" style="margin-top:8px">
+                                <span>🎨</span> Multimodal
+                            </div>
+                            <div id="p5ByokMultimodal"></div>
+                        </div>
                     </div>
                     <div class="section">
                         <button class="btn primary" style="width:100%" onclick="saveConfig(false, true)">Save BYOK Configuration</button>
+                        <button class="btn" style="width:100%;margin-top:6px" onclick="p5TestAllKeys()">🔍 Test All Keys</button>
                     </div>
                     <div class="section">
                         <div class="info-box">
@@ -4623,13 +4789,36 @@ window.addEventListener('load', nxInit);
                 <div class="section">
                     <h3>Force Model (optional)</h3>
                     <select id="modelSelect" class="model-select">
-                        <option value="">Auto (use API config order)</option>
-                        <option value="gemini">Gemini</option>
-                        <option value="openrouter">OpenRouter</option>
-                        <option value="groq">Groq</option>
-                        <option value="nvidia">NVIDIA</option>
-                        <option value="together">Together.ai</option>
-                        <option value="local">Local (Ollama)</option>
+                        <option value="">Auto (intelligent routing)</option>
+                        <optgroup label="── Core ──">
+                          <option value="openai">OpenAI (GPT-4o)</option>
+                          <option value="gemini">Google Gemini</option>
+                          <option value="anthropic">Anthropic (Claude)</option>
+                          <option value="groq">Groq (fastest)</option>
+                          <option value="openrouter">OpenRouter</option>
+                        </optgroup>
+                        <optgroup label="── High Value ──">
+                          <option value="xai">xAI (Grok)</option>
+                          <option value="azure">Azure OpenAI</option>
+                          <option value="bedrock">AWS Bedrock</option>
+                          <option value="together">Together AI</option>
+                          <option value="fireworks">Fireworks AI</option>
+                          <option value="nvidia">NVIDIA NIM</option>
+                        </optgroup>
+                        <optgroup label="── Open / Fallback ──">
+                          <option value="deepseek">DeepSeek</option>
+                          <option value="mistral">Mistral</option>
+                          <option value="cohere">Cohere</option>
+                          <option value="huggingface">HuggingFace</option>
+                        </optgroup>
+                        <optgroup label="── Multimodal ──">
+                          <option value="replicate">Replicate</option>
+                          <option value="elevenlabs">ElevenLabs (TTS)</option>
+                          <option value="deepgram">Deepgram (ASR)</option>
+                        </optgroup>
+                        <optgroup label="── Local ──">
+                          <option value="local">Ollama (local)</option>
+                        </optgroup>
                     </select>
                     <div class="info-box" style="margin-top:8px">
                         Overrides routing for the next run. Leave on Auto for normal multi-model use.
@@ -11121,5 +11310,354 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 console.log('[Phase 4] Intelligence & Personalization Layer active.');
+})();
+
+/* ================================================================
+   PHASE 5 — BYOK MULTI-PROVIDER SYSTEM (Production-Grade)
+   ================================================================ */
+(function() {
+'use strict';
+
+/* -- Provider catalog cache ---------------------------------------- */
+let p5Providers = [];          // full list from /api/providers
+let p5ActiveProvider = 'auto'; // currently selected provider id
+let p5ProviderMap = {};        // id -> provider object
+
+const P5_CAT_ORDER = ['core', 'high_value', 'open', 'multimodal'];
+const P5_CAT_IDS   = { core: 'p5ByokCore', high_value: 'p5ByokHighValue', open: 'p5ByokOpen', multimodal: 'p5ByokMultimodal' };
+const P5_SPEED_COLORS = { fastest: '#3fb950', fast: '#58a6ff', balanced: '#d29922', slow: '#8b949e', variable: '#8b949e' };
+const P5_DOT_COLORS   = { available: '#3fb950', byok: '#f0883e', unavailable: '#30363d' };
+
+
+/* -- Load providers ------------------------------------------------- */
+async function p5LoadProviders() {
+    try {
+        const r = await fetch('/api/providers');
+        if (!r.ok) return;
+        const d = await r.json();
+        p5Providers = d.providers || [];
+        p5ProviderMap = {};
+        p5Providers.forEach(p => { p5ProviderMap[p.id] = p; });
+        p5RenderProvMenu();
+        p5SyncBadge();
+    } catch(e) {}
+}
+
+/* -- Provider dot color -------------------------------------------- */
+function p5DotColor(prov) {
+    if (!prov) return '#30363d';
+    if (prov.has_platform_key) return '#3fb950';
+    if (prov.has_byok_key)     return '#f0883e';
+    if (!prov.needs_key)       return '#3fb950';
+    return '#30363d';
+}
+
+/* -- Render the header provider dropdown menu ----------------------- */
+function p5RenderProvMenu() {
+    const list = document.getElementById('p5ProvMenuList');
+    if (!list) return;
+
+    // AUTO option first
+    let html = `<div class="p5-prov-row${p5ActiveProvider==='auto'?' active':''}" onclick="p5SelectProvider('auto',event)">
+        <span class="p5-r-dot" style="background:#58a6ff"></span>
+        <span class="p5-r-label">AUTO — intelligent routing</span>
+        <span class="p5-r-speed" style="color:#58a6ff">smart</span>
+    </div>`;
+
+    // Group by category
+    const groups = {};
+    p5Providers.forEach(p => {
+        if (!groups[p.category]) groups[p.category] = [];
+        groups[p.category].push(p);
+    });
+
+    const catLabels = { core: '🔵 Core', high_value: '⚡ High Value', open: '🌐 Open', multimodal: '🎨 Multimodal' };
+    for (const cat of P5_CAT_ORDER) {
+        const items = groups[cat] || [];
+        if (!items.length) continue;
+        html += `<div class="p5-prov-cat">${catLabels[cat] || cat}</div>`;
+        items.forEach(p => {
+            const dot   = p5DotColor(p);
+            const caps  = (p.caps || []).slice(0,2).map(c =>
+                `<span class="p5-cap-tag ${c}">${c}</span>`).join('');
+            const avail = p.available ? '' : ' style="opacity:0.45"';
+            html += `<div class="p5-prov-row${p5ActiveProvider===p.id?' active':''}" onclick="p5SelectProvider('${p.id}',event)"${avail}>
+                <span class="p5-r-dot" style="background:${dot}"></span>
+                <span class="p5-r-label">${p.label}</span>
+                <span class="p5-r-caps">${caps}</span>
+                <span class="p5-r-speed" style="color:${P5_SPEED_COLORS[p.speed]||'#8b949e'}">${p.speed||''}</span>
+            </div>`;
+        });
+    }
+    list.innerHTML = html;
+}
+
+/* -- Toggle provider dropdown --------------------------------------- */
+window.p5ToggleProvMenu = function(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('p5ProvMenu');
+    if (!menu) return;
+    const isOpen = menu.classList.contains('open');
+    // close all open menus first
+    document.querySelectorAll('.p5-prov-menu.open').forEach(m => m.classList.remove('open'));
+    if (!isOpen) menu.classList.add('open');
+};
+document.addEventListener('click', () => {
+    document.querySelectorAll('.p5-prov-menu.open').forEach(m => m.classList.remove('open'));
+});
+
+/* -- Select a provider --------------------------------------------- */
+window.p5SelectProvider = function(pid, e) {
+    if (e) e.stopPropagation();
+    p5ActiveProvider = pid;
+    // Sync the Force Model dropdown in settings
+    const ms = document.getElementById('modelSelect');
+    if (ms) ms.value = pid === 'auto' ? '' : pid;
+    // Save to localStorage for session persistence
+    localStorage.setItem('p5_active_provider', pid);
+    p5SyncBadge();
+    p5RenderProvMenu();
+    document.querySelectorAll('.p5-prov-menu.open').forEach(m => m.classList.remove('open'));
+    // Update routing display
+    p5UpdateRoutingInfo();
+    if (typeof toast === 'function') toast(`Provider: ${pid === 'auto' ? 'AUTO' : (p5ProviderMap[pid]?.label || pid)}`, 'ok');
+};
+
+/* -- Sync the header badge ------------------------------------------ */
+function p5SyncBadge() {
+    const nameEl = document.getElementById('p5ProvName');
+    const dotEl  = document.getElementById('p5ProvDot');
+    if (!nameEl || !dotEl) return;
+    if (p5ActiveProvider === 'auto') {
+        nameEl.textContent = 'AUTO';
+        dotEl.style.background = '#58a6ff';
+    } else {
+        const prov = p5ProviderMap[p5ActiveProvider];
+        nameEl.textContent = prov ? prov.label.split(' ')[0] : p5ActiveProvider.toUpperCase();
+        dotEl.style.background = prov ? p5DotColor(prov) : '#30363d';
+    }
+}
+
+/* -- Restore saved provider on load --------------------------------- */
+document.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('p5_active_provider') || 'auto';
+    p5ActiveProvider = saved;
+    const ms = document.getElementById('modelSelect');
+    if (ms) ms.value = saved === 'auto' ? '' : saved;
+    p5LoadProviders();
+    setTimeout(p5UpdateRoutingInfo, 2000);
+});
+
+/* -- Live routing info in inspector --------------------------------- */
+async function p5UpdateRoutingInfo() {
+    try {
+        // Get current plan mode from the badge
+        const planBadge = document.querySelector('.nx-plan-badge, .nx-plan-name');
+        const plan = planBadge ? planBadge.textContent.toLowerCase().trim() : 'pro';
+        const r = await fetch(`/api/p5/routing?plan=${encodeURIComponent(plan)}`);
+        if (!r.ok) return;
+        const d = await r.json();
+
+        // Inspector routing block
+        const ri = document.getElementById('p5RouteInfo');
+        const riProv = document.getElementById('p5RiProv');
+        const riChain = document.getElementById('p5RiChain');
+        if (ri && d.ok) {
+            ri.style.display = 'block';
+            if (riProv) {
+                const label = p5ProviderMap[d.recommended]?.label || d.recommended;
+                riProv.textContent = p5ActiveProvider === 'auto' ? label : (p5ProviderMap[p5ActiveProvider]?.label || p5ActiveProvider);
+            }
+            if (riChain && d.fallback_chain?.length) {
+                const labels = d.fallback_chain.slice(0,4).map(p => p5ProviderMap[p]?.label?.split(' ')[0] || p);
+                riChain.textContent = 'Fallback: ' + labels.join(' → ');
+            }
+        }
+
+        // Settings: routing recommendation
+        const recProv = document.getElementById('p5RecProv');
+        const recChain = document.getElementById('p5RecChain');
+        const recBox = document.getElementById('p5RoutingRec');
+        if (recBox && d.ok) {
+            recBox.style.display = 'block';
+            if (recProv) recProv.textContent = p5ProviderMap[d.recommended]?.label || d.recommended;
+            if (recChain && d.fallback_chain?.length) {
+                const labels = d.fallback_chain.slice(0,4).map(p => p5ProviderMap[p]?.label?.split(' ')[0] || p);
+                recChain.textContent = 'Chain: ' + labels.join(' → ');
+            }
+        }
+    } catch(e) {}
+}
+
+/* -- BYOK Settings panel: render by category ----------------------- */
+window.p5RenderByokPanel = function(cfg) {
+    // cfg = {api_keys: {}, api_keys_masked: {}, api_keys_set: {}}
+    const keysSet    = cfg.api_keys_set    || {};
+    const keysMasked = cfg.api_keys_masked || {};
+
+    const groups = {};
+    p5Providers.forEach(p => {
+        if (!p.needs_key) return; // skip ollama (no key needed)
+        if (!groups[p.category]) groups[p.category] = [];
+        groups[p.category].push(p);
+    });
+
+    for (const cat of P5_CAT_ORDER) {
+        const el = document.getElementById(P5_CAT_IDS[cat]);
+        if (!el) continue;
+        const items = groups[cat] || [];
+        if (!items.length) { el.style.display = 'none'; continue; }
+        el.style.display = '';
+        el.innerHTML = items.map(p => {
+            const isSet   = keysSet[p.id] || false;
+            const masked  = keysMasked[p.id] || '';
+            const capHtml = (p.caps || []).slice(0,3).map(c =>
+                `<span class="p5-cap-tag ${c}">${c}</span>`).join('');
+            const dotClass = isSet ? 'green' : 'grey';
+            return `<div style="margin-bottom:10px">
+                <div class="p5-byok-row" style="grid-template-columns:auto 1fr">
+                  <div class="p5-byok-label">
+                    <span class="p5-status-dot ${dotClass}"></span>
+                    <span>${p.label}</span>
+                    <small style="color:#8b949e;margin-left:2px">${p.speed||''}</small>
+                  </div>
+                  <div class="p5-byok-caps">${capHtml}</div>
+                </div>
+                <div style="display:flex;gap:5px;align-items:center">
+                  <input class="p5-byok-input${isSet?' has-key':''}"
+                         id="key_${p.id}"
+                         type="password"
+                         placeholder="${isSet ? masked : ('Enter ' + p.label + ' API key…')}"
+                         autocomplete="off" spellcheck="false">
+                  ${isSet ? `<button class="btn tiny" onclick="p5ClearKey('${p.id}')" title="Remove key" style="white-space:nowrap">✕ Clear</button>` : ''}
+                </div>
+                <div style="font-size:0.68rem;color:#8b949e;margin-top:2px">
+                  ${p.models && p.models.length ? 'Models: ' + p.models.slice(0,2).join(', ') : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+    // Show/hide category headers based on content
+    document.querySelectorAll('.p5-byok-cat-header').forEach(h => {
+        const next = h.nextElementSibling;
+        if (next && next.innerHTML.trim() === '') h.style.display = 'none';
+    });
+};
+
+/* -- Hook into existing renderByokProviders to also run Phase 5 ---- */
+const _p5OrigRenderByok = window.renderByokProviders;
+window.renderByokProviders = function(cfg) {
+    if (_p5OrigRenderByok) _p5OrigRenderByok.call(this, cfg);
+    if (p5Providers.length) p5RenderByokPanel(cfg);
+    setTimeout(() => { if (p5Providers.length) p5RenderByokPanel(cfg); }, 500);
+    // show routing rec
+    document.getElementById('p5RoutingRec') && setTimeout(p5UpdateRoutingInfo, 300);
+};
+
+/* -- Clear a single key --------------------------------------------- */
+window.p5ClearKey = async function(pid) {
+    try {
+        const r = await fetch(`/api/key/${pid}`, {method:'DELETE'});
+        if (!r.ok) return;
+        if (typeof toast === 'function') toast(`${p5ProviderMap[pid]?.label || pid} key removed`, 'ok');
+        if (typeof refreshConfig === 'function') refreshConfig(true);
+        await p5LoadProviders();
+    } catch(e) {}
+};
+
+/* -- Collect BYOK keys from Phase 5 inputs -------------------------- */
+const _p5OrigGetByokKeys = window.getByokApiKeys;
+window.getByokApiKeys = function() {
+    const keys = _p5OrigGetByokKeys ? _p5OrigGetByokKeys.call(this) : {};
+    // Phase 5: also collect from p5-byok-input fields
+    document.querySelectorAll('.p5-byok-input[id^="key_"]').forEach(inp => {
+        const pid = inp.id.replace('key_', '');
+        if (inp.value && inp.value !== '•'.repeat(8)) {
+            keys[pid] = inp.value;
+        }
+    });
+    return keys;
+};
+
+/* -- Test all configured keys --------------------------------------- */
+window.p5TestAllKeys = async function() {
+    const btn = document.querySelector('.p5-test-btn');
+    if (btn) btn.disabled = true;
+    if (typeof toast === 'function') toast('Testing keys…', 'ok');
+    try {
+        const r = await fetch('/api/providers');
+        if (!r.ok) throw new Error('fetch failed');
+        const d = await r.json();
+        const results = (d.providers || []).filter(p => p.has_byok_key || p.has_platform_key);
+        const msg = results.length
+            ? `${results.length} provider(s) configured: ${results.map(p=>p.label).join(', ')}`
+            : 'No keys configured yet.';
+        if (typeof toast === 'function') toast(msg, 'ok');
+        await p5LoadProviders();
+    } catch(e) {
+        if (typeof toast === 'function') toast('Error checking keys', 'err');
+    }
+};
+
+/* -- Monitor session logs for failover events ----------------------- */
+function p5MonitorFailover() {
+    // Hook into the existing log ingestion to detect failover messages
+    const origIngest = window.ingestLogRow;
+    if (!origIngest) return;
+    window.ingestLogRow = function(e, area) {
+        origIngest.call(this, e, area);
+        if (!e || !e.text) return;
+        const text = e.text;
+        // Detect failover pattern from router.py logs
+        const m = text.match(/\[FAILOVER\]\s+(\w+)\s+→\s+(\w+)|switching.*from\s+(\w+).*to\s+(\w+)/i);
+        if (m) {
+            const from = m[1] || m[3];
+            const to   = m[2] || m[4];
+            p5ShowFailover(from, to, 'provider unavailable');
+        }
+        // Track current model from log lines
+        const pm = text.match(/\[MODEL\]\s+Using\s+(.+?)(?:\s+\(|$)/i);
+        if (pm) {
+            const provName = pm[1].toLowerCase().trim();
+            // Try to match to known provider
+            const matched = p5Providers.find(p =>
+                p.label.toLowerCase().includes(provName) || p.id === provName
+            );
+            if (matched && matched.id !== p5ActiveProvider) {
+                p5ActiveProvider = matched.id;
+                p5SyncBadge();
+                p5RenderProvMenu();
+            }
+        }
+    };
+}
+document.addEventListener('DOMContentLoaded', p5MonitorFailover);
+
+/* -- Show failover status bar --------------------------------------- */
+window.p5ShowFailover = function(from, to, reason) {
+    const bar   = document.getElementById('p5FailoverBar');
+    const fromEl = document.getElementById('p5FbFrom');
+    const toEl   = document.getElementById('p5FbTo');
+    const rsEl   = document.getElementById('p5FbReason');
+    if (!bar) return;
+    if (fromEl) fromEl.textContent = p5ProviderMap[from]?.label || from;
+    if (toEl)   toEl.textContent   = p5ProviderMap[to]?.label || to;
+    if (rsEl)   rsEl.textContent   = reason ? `(${reason})` : '';
+    bar.classList.add('visible');
+    setTimeout(() => bar.classList.remove('visible'), 12000);
+};
+
+/* -- Refresh providers every 60s ------------------------------------ */
+setInterval(p5LoadProviders, 60000);
+
+/* -- Also load after settings open (to populate BYOK categories) --- */
+const _p5OrigOpen = window.openSettings;
+window.openSettings = function(tab) {
+    if (_p5OrigOpen) _p5OrigOpen.call(this, tab);
+    if (p5Providers.length === 0) p5LoadProviders();
+    setTimeout(p5UpdateRoutingInfo, 400);
+};
+
+console.log('[Phase 5] BYOK Multi-Provider System active. Providers:', Object.keys({}).length || 'loading…');
 })();
 </div></body></html>
