@@ -10,3 +10,19 @@ chromadb>=0.5.5
 sentence-transformers>=2.7.0
 tiktoken>=0.7.0
 pywinpty>=2.0.0 ; sys_platform == "win32"
+bcrypt
+Flask
+gunicorn
+psutil
+PyJWT
+python-dotenv
+requests
+tiktoken
+bcrypt
+Flask
+gunicorn
+psutil
+PyJWT
+python-dotenv
+requests
+tiktoken
