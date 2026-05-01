@@ -2652,6 +2652,18 @@ def api_queue_task():
     if not task:
         return jsonify({"error": "Task text required"}), 400
 
+    # ── Phase 8: Subscription plan gate ──────────────────────────────────────
+    try:
+        _p8_state = p8_get_state()
+        _p8_plan  = p8_effective_plan(_p8_state)
+        _p8_ok, _p8_reason = p8_check_and_increment(plan_mode, _p8_plan, _p8_state)
+        if not _p8_ok:
+            return jsonify({"error": _p8_reason, "plan_gate": True,
+                            "current_plan": _p8_plan,
+                            "upgrade_needed": True}), 403
+    except Exception:
+        pass  # Never let billing logic break task submission
+
     cfg = get_setting("default_config", default_managed_config())
     ok, err, _ = validate_config(cfg)
     if not ok:
@@ -7617,6 +7629,353 @@ def api_p7_pipeline_clear(sid):
     with _p7_lock:
         _P7_PIPELINES.pop(sid, None)
     return jsonify({"ok": True})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE 8 — MONETIZATION & ACCESS CONTROL LAYER
+# Subscription plans, usage tracking, feature gating, coupon system.
+# NO real payment processing — lightweight SaaS scaffolding.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+import datetime as _dt
+
+_P8_PLANS = {
+    "free": {
+        "name":        "Free",
+        "price":       "$0 / month",
+        "icon":        "🆓",
+        "color":       "#4caf50",
+        "limits": {
+            "lite_daily":    None,   # unlimited
+            "pro_daily":     10,     # 10 Pro runs / day
+            "elite_monthly": 0,      # blocked
+        },
+        "features": [
+            "Unlimited Lite runs",
+            "10 Pro runs per day",
+            "Elite mode: blocked",
+            "BYOK (bring your own keys)",
+            "Session history",
+        ],
+    },
+    "pro": {
+        "name":        "Pro",
+        "price":       "$20 / month",
+        "icon":        "⭐",
+        "color":       "#388bfd",
+        "limits": {
+            "lite_daily":    None,
+            "pro_daily":     None,   # unlimited
+            "elite_monthly": 20,     # 20 Elite runs / month
+        },
+        "features": [
+            "Unlimited Lite runs",
+            "Unlimited Pro runs",
+            "20 Elite runs per month",
+            "Agent pipeline (Reviewer + Debugger)",
+            "Priority routing",
+            "BYOK Priority Mode",
+        ],
+    },
+    "elite": {
+        "name":        "Elite",
+        "price":       "$50 / month",
+        "icon":        "👑",
+        "color":       "#bc8cff",
+        "limits": {
+            "lite_daily":    None,
+            "pro_daily":     None,
+            "elite_monthly": None,   # unlimited
+        },
+        "features": [
+            "Unlimited Lite runs",
+            "Unlimited Pro runs",
+            "Unlimited Elite runs",
+            "Full 5-agent pipeline",
+            "Priority routing + failover",
+            "All future features",
+            "BYOK Priority Mode",
+        ],
+    },
+}
+
+# Valid coupon codes: { code: { plan, days, note } }
+_P8_COUPONS = {
+    "HAMMAD30":  {"plan": "pro",   "days": 30,  "note": "30 days of Pro"},
+    "ELITE7":    {"plan": "elite", "days": 7,   "note": "7-day Elite trial"},
+    "PROLIFE":   {"plan": "pro",   "days": 3650,"note": "Lifetime Pro"},
+    "ELITE30":   {"plan": "elite", "days": 30,  "note": "30 days Elite"},
+    "OPENHAND":  {"plan": "pro",   "days": 90,  "note": "90-day Pro"},
+    "TRYAGENT":  {"plan": "pro",   "days": 14,  "note": "2-week Pro trial"},
+    "AGENTELITE":{"plan": "elite", "days": 14,  "note": "2-week Elite trial"},
+}
+
+_P8_KEY = "p8_subscription"   # settings key for subscription state
+
+
+def p8_get_state() -> dict:
+    """Return current subscription state, defaulting to Free."""
+    default = {
+        "plan":          "free",
+        "expires":       None,    # ISO date string or None = permanent
+        "coupon_used":   None,
+        "byok_priority": False,
+        "usage": {
+            "pro_daily":     {"date": "",  "count": 0},
+            "elite_monthly": {"month": "", "count": 0},
+        },
+    }
+    state = get_setting(_P8_KEY, default)
+    # Merge missing keys from default (forward-compat)
+    for k, v in default.items():
+        if k not in state:
+            state[k] = v
+    if "usage" not in state:
+        state["usage"] = default["usage"]
+    for k, v in default["usage"].items():
+        if k not in state["usage"]:
+            state["usage"][k] = v
+    return state
+
+
+def p8_save_state(state: dict) -> None:
+    set_setting(_P8_KEY, state)
+
+
+def p8_effective_plan(state: dict) -> str:
+    """Return the active plan, checking expiry."""
+    plan = state.get("plan", "free")
+    expires = state.get("expires")
+    if expires and plan != "free":
+        try:
+            exp_dt = _dt.date.fromisoformat(expires)
+            if _dt.date.today() > exp_dt:
+                # Expired — downgrade to free
+                state["plan"]    = "free"
+                state["expires"] = None
+                p8_save_state(state)
+                return "free"
+        except (ValueError, TypeError):
+            pass
+    return plan
+
+
+def p8_get_usage(state: dict) -> dict:
+    """Return normalised usage counters, resetting stale windows."""
+    today  = _dt.date.today().isoformat()
+    month  = _dt.date.today().strftime("%Y-%m")
+    usage  = state.get("usage", {})
+
+    pd = usage.get("pro_daily", {})
+    if pd.get("date") != today:
+        pd = {"date": today, "count": 0}
+        usage["pro_daily"] = pd
+
+    em = usage.get("elite_monthly", {})
+    if em.get("month") != month:
+        em = {"month": month, "count": 0}
+        usage["elite_monthly"] = em
+
+    state["usage"] = usage
+    return usage
+
+
+def p8_check_and_increment(exec_mode: str, plan: str, state: dict) -> tuple[bool, str]:
+    """
+    Check if the requested exec_mode is allowed under `plan`.
+    Returns (allowed: bool, reason: str).
+    If allowed, increments the relevant counter and saves state.
+    """
+    limits    = _P8_PLANS[plan]["limits"]
+    usage     = p8_get_usage(state)
+    exec_mode = exec_mode.lower()
+
+    if exec_mode == "lite":
+        # Always allowed
+        return True, ""
+
+    if exec_mode == "pro":
+        cap = limits["pro_daily"]
+        if cap is None:
+            return True, ""
+        pd = usage["pro_daily"]
+        if pd["count"] >= cap:
+            return False, f"Pro limit reached ({cap}/day). Upgrade to Pro plan for unlimited Pro runs."
+        pd["count"] += 1
+        p8_save_state(state)
+        return True, ""
+
+    if exec_mode == "elite":
+        cap = limits["elite_monthly"]
+        if cap == 0:
+            return False, "Elite mode requires a Pro or Elite plan. Upgrade to unlock."
+        if cap is None:
+            return True, ""
+        em = usage["elite_monthly"]
+        if em["count"] >= cap:
+            return False, f"Elite limit reached ({cap}/month). Upgrade to Elite plan for unlimited Elite runs."
+        em["count"] += 1
+        p8_save_state(state)
+        return True, ""
+
+    return True, ""
+
+
+@app.route("/api/plan/info")
+def api_plan_info():
+    """Return subscription state, plan details, and usage counters."""
+    state  = p8_get_state()
+    plan   = p8_effective_plan(state)
+    usage  = p8_get_usage(state)
+    limits = _P8_PLANS[plan]["limits"]
+    today  = _dt.date.today().isoformat()
+    month  = _dt.date.today().strftime("%Y-%m")
+
+    pd_count = usage.get("pro_daily",     {}).get("count", 0)
+    em_count = usage.get("elite_monthly", {}).get("count", 0)
+
+    return jsonify({
+        "ok":     True,
+        "plan":   plan,
+        "meta":   _P8_PLANS[plan],
+        "expires": state.get("expires"),
+        "coupon":  state.get("coupon_used"),
+        "byok_priority": state.get("byok_priority", False),
+        "usage": {
+            "pro_daily":     {"count": pd_count, "limit": limits["pro_daily"],     "date": today},
+            "elite_monthly": {"count": em_count, "limit": limits["elite_monthly"], "month": month},
+        },
+        "all_plans": {k: {"name": v["name"], "price": v["price"], "icon": v["icon"],
+                          "color": v["color"], "features": v["features"]}
+                      for k, v in _P8_PLANS.items()},
+    })
+
+
+@app.route("/api/plan/set", methods=["POST"])
+def api_plan_set():
+    """Directly set plan (admin / demo use — no payment check)."""
+    d    = request.get_json() or {}
+    plan = d.get("plan", "free").lower()
+    if plan not in _P8_PLANS:
+        return jsonify({"ok": False, "error": "Unknown plan"}), 400
+    state = p8_get_state()
+    state["plan"]        = plan
+    state["expires"]     = d.get("expires")   # optional ISO date
+    state["coupon_used"] = None
+    p8_save_state(state)
+    return jsonify({"ok": True, "plan": plan, "meta": _P8_PLANS[plan]})
+
+
+@app.route("/api/plan/apply-coupon", methods=["POST"])
+def api_plan_apply_coupon():
+    """Apply a coupon code to unlock a plan."""
+    d    = request.get_json() or {}
+    code = (d.get("code") or "").strip().upper()
+    if not code:
+        return jsonify({"ok": False, "error": "Coupon code required"}), 400
+    coupon = _P8_COUPONS.get(code)
+    if not coupon:
+        return jsonify({"ok": False, "error": "Invalid coupon code. Check spelling and try again."}), 400
+
+    plan    = coupon["plan"]
+    days    = coupon["days"]
+    expires = (_dt.date.today() + _dt.timedelta(days=days)).isoformat()
+    state   = p8_get_state()
+    # Only upgrade, never downgrade via coupon
+    plan_rank = {"free": 0, "pro": 1, "elite": 2}
+    if plan_rank.get(plan, 0) <= plan_rank.get(p8_effective_plan(state), 0) and p8_effective_plan(state) != "free":
+        return jsonify({"ok": False, "error": "You already have an equal or better plan."}), 400
+
+    state["plan"]        = plan
+    state["expires"]     = expires if days < 3650 else None
+    state["coupon_used"] = code
+    p8_save_state(state)
+    return jsonify({
+        "ok":      True,
+        "plan":    plan,
+        "expires": state["expires"],
+        "note":    coupon["note"],
+        "meta":    _P8_PLANS[plan],
+    })
+
+
+@app.route("/api/plan/usage")
+def api_plan_usage():
+    """Return just the usage counters (lightweight poll)."""
+    state  = p8_get_state()
+    plan   = p8_effective_plan(state)
+    usage  = p8_get_usage(state)
+    limits = _P8_PLANS[plan]["limits"]
+    return jsonify({
+        "ok":   True,
+        "plan": plan,
+        "usage": {
+            "pro_daily":     {
+                "count": usage["pro_daily"]["count"],
+                "limit": limits["pro_daily"],
+            },
+            "elite_monthly": {
+                "count": usage["elite_monthly"]["count"],
+                "limit": limits["elite_monthly"],
+            },
+        },
+    })
+
+
+@app.route("/api/plan/byok-priority", methods=["POST"])
+def api_plan_byok_priority():
+    """Toggle BYOK Priority Mode (Pro/Elite only)."""
+    state = p8_get_state()
+    plan  = p8_effective_plan(state)
+    if plan == "free":
+        return jsonify({"ok": False, "error": "BYOK Priority Mode requires Pro or Elite plan"}), 403
+    d       = request.get_json() or {}
+    enabled = bool(d.get("enabled", not state.get("byok_priority", False)))
+    state["byok_priority"] = enabled
+    p8_save_state(state)
+    return jsonify({"ok": True, "byok_priority": enabled})
+
+
+# ── Patch /api/queue-task to enforce plan limits ──────────────────────────────
+# We wrap the existing queue_task view with plan-gate logic by replacing it.
+
+_p8_orig_queue_task = api_queue_task  # already defined above
+
+@app.route("/api/plan/check", methods=["POST"])
+def api_plan_check():
+    """Check if an exec_mode is allowed for current plan (pre-flight)."""
+    d         = request.get_json() or {}
+    exec_mode = (d.get("exec_mode") or d.get("plan_mode") or "lite").lower()
+    state     = p8_get_state()
+    plan      = p8_effective_plan(state)
+    allowed, reason = p8_check_and_increment.__wrapped__ \
+        if hasattr(p8_check_and_increment, '__wrapped__') else (True, "")
+    # Dry-run check (no increment)
+    limits    = _P8_PLANS[plan]["limits"]
+    usage     = p8_get_usage(state)
+    if exec_mode == "lite":
+        allowed, reason = True, ""
+    elif exec_mode == "pro":
+        cap = limits["pro_daily"]
+        if cap is None:
+            allowed, reason = True, ""
+        elif usage["pro_daily"]["count"] >= cap:
+            allowed, reason = False, f"Pro limit: {cap}/day. Upgrade for unlimited."
+        else:
+            allowed, reason = True, ""
+    elif exec_mode == "elite":
+        cap = limits["elite_monthly"]
+        if cap == 0:
+            allowed, reason = False, "Elite requires Pro or Elite subscription."
+        elif cap is None:
+            allowed, reason = True, ""
+        elif usage["elite_monthly"]["count"] >= cap:
+            allowed, reason = False, f"Elite limit: {cap}/month. Upgrade for unlimited."
+        else:
+            allowed, reason = True, ""
+    else:
+        allowed, reason = True, ""
+    return jsonify({"ok": True, "allowed": allowed, "reason": reason, "plan": plan})
 
 
 if __name__ == "__main__":

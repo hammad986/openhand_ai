@@ -2333,6 +2333,131 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
 
 /* Smooth transitions for panels */
 .nx-panel { transition: none; }
+
+/* ═══════════════════════════════════════════════════════
+   PHASE 8 — MONETIZATION UI STYLES
+   ═══════════════════════════════════════════════════════ */
+
+/* Subscription badge in header */
+.p8-sub-badge {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  border: 1px solid; transition: filter 150ms, transform 100ms;
+  white-space: nowrap; user-select: none;
+}
+.p8-sub-badge:hover { filter: brightness(1.15); transform: scale(1.02); }
+.p8-sub-badge.p8-free  { background:rgba(76,175,80,.12);  color:#4caf50; border-color:rgba(76,175,80,.3); }
+.p8-sub-badge.p8-pro   { background:rgba(56,139,253,.12); color:#388bfd; border-color:rgba(56,139,253,.3); }
+.p8-sub-badge.p8-elite { background:rgba(188,140,255,.12);color:#bc8cff; border-color:rgba(188,140,255,.3); }
+
+/* Upgrade modal */
+.p8-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.65);
+  z-index: 10000; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px); display: none;
+}
+.p8-modal-backdrop.open { display: flex; }
+.p8-modal {
+  background: var(--bg); border: 1px solid var(--panel-border);
+  border-radius: 16px; padding: 28px 28px 24px;
+  width: min(780px, 94vw); max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+.p8-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.p8-modal-title { font-size: 20px; font-weight: 800; color: var(--text); }
+.p8-modal-sub   { font-size: 12px; color: var(--text-dim); margin-bottom: 20px; }
+.p8-close-btn   {
+  background: none; border: none; color: var(--text-dim); cursor: pointer;
+  font-size: 18px; padding: 2px 6px; border-radius: 5px;
+}
+.p8-close-btn:hover { background: var(--surface); }
+
+.p8-plans-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  margin-bottom: 20px;
+}
+@media (max-width: 600px) { .p8-plans-grid { grid-template-columns: 1fr; } }
+
+.p8-plan-card {
+  background: var(--surface); border: 1.5px solid var(--panel-border);
+  border-radius: 12px; padding: 18px; position: relative; overflow: hidden;
+  transition: border-color 200ms, transform 150ms;
+}
+.p8-plan-card:hover { transform: translateY(-2px); }
+.p8-plan-card.p8-active { border-width: 2px; }
+.p8-plan-card.p8-active::before {
+  content: "✓ Current Plan"; position: absolute; top: 0; right: 0;
+  background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
+  padding: 3px 8px; border-radius: 0 12px 0 8px;
+}
+.p8-plan-icon  { font-size: 24px; margin-bottom: 6px; }
+.p8-plan-name  { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+.p8-plan-price { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+.p8-plan-features { list-style: none; padding: 0; margin: 0 0 14px 0; }
+.p8-plan-features li {
+  font-size: 11px; color: var(--text-muted); padding: 3px 0;
+  display: flex; gap: 6px; align-items: baseline;
+}
+.p8-plan-features li::before { content:"✓"; font-weight:700; }
+.p8-plan-btn {
+  width: 100%; padding: 9px; border: 1.5px solid; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all 150ms;
+  background: transparent; font-family: inherit;
+}
+.p8-plan-btn:hover { opacity: .85; }
+.p8-plan-btn.p8-current { opacity: .5; cursor: default; }
+
+/* Usage indicators in Inspector */
+.p8-usage-bar-wrap {
+  background: var(--panel-border); border-radius: 4px;
+  height: 4px; margin-top: 3px; overflow: hidden;
+}
+.p8-usage-bar-fill {
+  height: 100%; border-radius: 4px; transition: width 400ms;
+}
+.p8-usage-ok   { background: #4caf50; }
+.p8-usage-warn { background: #d6a94a; }
+.p8-usage-full { background: #bf4c4c; }
+
+/* Coupon section */
+.p8-coupon-wrap {
+  display: flex; gap: 8px; margin-top: 6px;
+}
+.p8-coupon-input {
+  flex: 1; background: var(--surface); border: 1px solid var(--panel-border);
+  border-radius: 7px; padding: 8px 10px; color: var(--text);
+  font-size: 12px; font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  outline: none; transition: border-color 150ms;
+}
+.p8-coupon-input:focus { border-color: var(--accent); }
+.p8-coupon-btn {
+  padding: 8px 14px; background: var(--accent); color: #fff; border: none;
+  border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: opacity 150ms;
+}
+.p8-coupon-btn:hover { opacity: .85; }
+.p8-coupon-msg { font-size: 11px; margin-top: 5px; min-height: 16px; }
+.p8-coupon-ok  { color: #4caf50; }
+.p8-coupon-err { color: #bf4c4c; }
+
+/* Usage section in Plan settings tab */
+.p8-usage-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.p8-usage-label { font-size: 11px; color: var(--text-muted); }
+.p8-usage-val   { font-size: 11px; font-weight: 600; color: var(--text); }
+
+/* Inspector usage mini-block */
+.p8-insp-usage {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--panel-border);
+}
 </style>
 </head>
 <body>
@@ -2467,6 +2592,11 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <button class="p4-theme-btn" id="p4ThemeBtn" onclick="p4ToggleTheme()" title="Toggle light/dark theme">🌙</button>
     <button class="nx-icon-btn" title="Sessions (S)" onclick="nxOpenPanel('sessions')">📁 <span id="nxSessCount" style="font-size:11px;color:var(--text-muted)">0</span></button>
     <button class="nx-icon-btn" title="Command palette (Ctrl+K)" onclick="nxOpenPalette()">⌘K</button>
+    <!-- Phase 8: Subscription badge + upgrade button -->
+    <div class="p8-sub-badge p8-free" id="p8SubBadge" onclick="p8OpenUpgradeModal()" title="Your subscription plan — click to upgrade">
+      <span id="p8SubIcon">🆓</span>
+      <span id="p8SubName">Free</span>
+    </div>
     <button class="nx-icon-btn" title="Settings" onclick="openSettings()">⚙</button>
   </div>
 </header>
@@ -2507,6 +2637,39 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <div class="nx-gh-actions">
       <button class="nx-gh-btn secondary" onclick="nxCloseGithubModal()">Cancel</button>
       <button class="nx-gh-btn primary" onclick="nxImportGithub()">Import Repo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Phase 8: Upgrade / Plan modal -->
+<div class="p8-modal-backdrop" id="p8UpgradeModal" onclick="p8CloseUpgradeModal(event)">
+  <div class="p8-modal" onclick="event.stopPropagation()">
+    <div class="p8-modal-head">
+      <div class="p8-modal-title">🚀 Choose Your Plan</div>
+      <button class="p8-close-btn" onclick="p8CloseUpgradeModal()">×</button>
+    </div>
+    <div class="p8-modal-sub" id="p8ModalSub">Unlock the full power of Antigravity AI</div>
+
+    <!-- Plan cards -->
+    <div class="p8-plans-grid" id="p8PlansGrid">
+      <!-- Rendered by JS -->
+    </div>
+
+    <!-- Coupon section -->
+    <div style="border-top:1px solid var(--panel-border);padding-top:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">🎟 Have a Coupon?</div>
+      <div class="p8-coupon-wrap">
+        <input class="p8-coupon-input" id="p8CouponInput" placeholder="ENTER CODE"
+          onkeydown="if(event.key==='Enter') p8ApplyCoupon()" autocomplete="off">
+        <button class="p8-coupon-btn" onclick="p8ApplyCoupon()">Apply</button>
+      </div>
+      <div class="p8-coupon-msg" id="p8CouponMsg"></div>
+    </div>
+
+    <!-- Usage summary -->
+    <div style="margin-top:14px;padding:12px;background:var(--surface);border-radius:8px;border:1px solid var(--panel-border)">
+      <div style="font-size:11px;font-weight:700;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Current Usage</div>
+      <div id="p8ModalUsage">Loading…</div>
     </div>
   </div>
 </div>
@@ -2755,6 +2918,10 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           <div class="p5-route-info" id="p5RouteInfo" style="display:none">
             <div>Route: <span class="p5-ri-prov" id="p5RiProv">—</span></div>
             <div class="p5-ri-chain" id="p5RiChain"></div>
+          </div>
+          <!-- Phase 8: Usage mini-block -->
+          <div class="p8-insp-usage" id="p8InspUsage" style="display:none">
+            <div id="p8InspUsageContent"></div>
           </div>
         </div>
 
@@ -4848,6 +5015,7 @@ window.addEventListener('load', nxInit);
             <div class="settings-tabs">
                 <button class="settings-tab active" data-stab="api"          onclick="switchSettingsTab('api')">Providers &amp; API</button>
                 <button class="settings-tab"        data-stab="intelligence" onclick="switchSettingsTab('intelligence')">🧠 Intelligence</button>
+                <button class="settings-tab"        data-stab="plan"         onclick="switchSettingsTab('plan')">💳 Plan</button>
                 <button class="settings-tab"        data-stab="sessions"     onclick="switchSettingsTab('sessions')">Sessions</button>
                 <button class="settings-tab"        data-stab="memory"       onclick="switchSettingsTab('memory')">Memory</button>
                 <button class="settings-tab"        data-stab="advanced"     onclick="switchSettingsTab('advanced')">Advanced</button>
@@ -4984,6 +5152,53 @@ window.addEventListener('load', nxInit);
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Plan tab -->
+            <div class="settings-pane" id="spane-plan">
+                <div class="section">
+                    <h3>Subscription Plan</h3>
+                    <div id="p8CurrentPlanBlock" style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                        <div id="p8SettingsPlanBadge" style="font-size:13px;font-weight:700;color:var(--accent)">—</div>
+                        <div id="p8SettingsPlanExpiry" style="font-size:11px;color:var(--text-dim)"></div>
+                    </div>
+                    <button class="btn" onclick="p8OpenUpgradeModal()" style="margin-bottom:12px">
+                      🚀 View / Upgrade Plans
+                    </button>
+                </div>
+
+                <div class="section">
+                    <h3>Usage This Period</h3>
+                    <div id="p8SettingsUsage">Loading…</div>
+                </div>
+
+                <div class="section">
+                    <h3>🎟 Coupon Code</h3>
+                    <div class="p8-coupon-wrap">
+                        <input class="p8-coupon-input" id="p8SettingsCouponInput"
+                               placeholder="ENTER CODE"
+                               onkeydown="if(event.key==='Enter') p8ApplyCouponSettings()"
+                               autocomplete="off">
+                        <button class="p8-coupon-btn" onclick="p8ApplyCouponSettings()">Apply</button>
+                    </div>
+                    <div class="p8-coupon-msg" id="p8SettingsCouponMsg"></div>
+                    <div style="font-size:10px;color:var(--text-dim);margin-top:6px">
+                        Try: <code>HAMMAD30</code> · <code>ELITE7</code> · <code>TRYAGENT</code>
+                    </div>
+                </div>
+
+                <div class="section" id="p8ByokPrioritySection">
+                    <h3>BYOK Priority Mode <span style="font-size:10px;font-weight:400;color:var(--text-dim)">(Pro/Elite)</span></h3>
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                        <input type="checkbox" id="p8ByokPriorityToggle" onchange="p8ToggleByokPriority(this.checked)">
+                        <span><b>Priority routing when using BYOK keys</b>
+                            <small style="display:block;color:var(--muted)">
+                                Forces fastest provider selection and skips queue limits when
+                                using your own API keys. Simulates premium routing tier.
+                            </small>
+                        </span>
+                    </label>
+                </div>
             </div>
 
             <!-- Sessions tab -->
@@ -12658,6 +12873,378 @@ document.addEventListener('DOMContentLoaded', async function() {
     p7WatchPlanMode();
     p7WatchSessionSelect();
     console.log('[Phase 7] Structured Agent System active. Agents:', p7Agents.map(a=>a.id));
+});
+
+})();
+
+/* ================================================================
+   PHASE 8 — MONETIZATION & ACCESS CONTROL UI
+   Subscription badge · Upgrade modal · Usage indicators · Coupons
+   ================================================================ */
+(function() {
+'use strict';
+
+/* ── State ──────────────────────────────────────────────────────── */
+let p8State       = null;   // from /api/plan/info
+let p8PollTimer   = null;
+
+const P8_COLORS = { free:'#4caf50', pro:'#388bfd', elite:'#bc8cff' };
+const P8_ICONS  = { free:'🆓', pro:'⭐', elite:'👑' };
+
+/* ── Utility ────────────────────────────────────────────────────── */
+function p8El(id) { return document.getElementById(id); }
+function p8Esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── Load plan info ─────────────────────────────────────────────── */
+async function p8Load() {
+    try {
+        const r = await fetch('/api/plan/info');
+        const d = await r.json();
+        if (!d.ok) return;
+        p8State = d;
+        p8UpdateBadge(d);
+        p8UpdateInspectorUsage(d);
+        p8UpdateSettingsPanel(d);
+    } catch(e) {}
+}
+
+/* ── Update header badge ─────────────────────────────────────────── */
+function p8UpdateBadge(d) {
+    const badge = p8El('p8SubBadge');
+    const icon  = p8El('p8SubIcon');
+    const name  = p8El('p8SubName');
+    if (!badge) return;
+    const plan = d.plan;
+    badge.className = `p8-sub-badge p8-${plan}`;
+    if (icon) icon.textContent = P8_ICONS[plan] || '';
+    if (name) name.textContent = d.meta?.name || plan.charAt(0).toUpperCase()+plan.slice(1);
+    // Add expiry tooltip
+    if (d.expires) {
+        badge.title = `${d.meta?.name} plan — expires ${d.expires}. Click to manage.`;
+    } else {
+        badge.title = `${d.meta?.name} plan. Click to upgrade.`;
+    }
+}
+
+/* ── Inspector usage mini-block ─────────────────────────────────── */
+function p8UpdateInspectorUsage(d) {
+    const wrap    = p8El('p8InspUsage');
+    const content = p8El('p8InspUsageContent');
+    if (!wrap || !content) return;
+
+    const plan  = d.plan;
+    const usage = d.usage || {};
+    const pd    = usage.pro_daily     || {};
+    const em    = usage.elite_monthly || {};
+    const pdLim = pd.limit;
+    const emLim = em.limit;
+
+    // Only show if there are finite limits
+    if (pdLim === null && emLim === null && plan !== 'free') {
+        wrap.style.display = 'none';
+        return;
+    }
+    wrap.style.display = '';
+
+    let html = '';
+
+    if (pdLim !== null && pdLim !== undefined) {
+        const pct  = Math.min(100, Math.round((pd.count||0) / pdLim * 100));
+        const cls  = pct >= 100 ? 'p8-usage-full' : pct >= 80 ? 'p8-usage-warn' : 'p8-usage-ok';
+        html += `<div class="p8-usage-row">
+            <span class="p8-usage-label">Pro runs today</span>
+            <span class="p8-usage-val">${pd.count||0}/${pdLim}</span>
+        </div>
+        <div class="p8-usage-bar-wrap"><div class="p8-usage-bar-fill ${cls}" style="width:${pct}%"></div></div>`;
+    } else if (plan !== 'free' && pdLim === null) {
+        html += `<div class="p8-usage-row">
+            <span class="p8-usage-label">Pro runs</span>
+            <span class="p8-usage-val" style="color:#4caf50">∞ Unlimited</span>
+        </div>`;
+    }
+
+    if (emLim === 0) {
+        html += `<div class="p8-usage-row" style="margin-top:4px">
+            <span class="p8-usage-label">Elite runs</span>
+            <span class="p8-usage-val" style="color:#bf4c4c">🔒 Locked</span>
+        </div>`;
+    } else if (emLim !== null && emLim !== undefined) {
+        const pct  = Math.min(100, Math.round((em.count||0) / emLim * 100));
+        const cls  = pct >= 100 ? 'p8-usage-full' : pct >= 80 ? 'p8-usage-warn' : 'p8-usage-ok';
+        html += `<div class="p8-usage-row" style="margin-top:4px">
+            <span class="p8-usage-label">Elite / month</span>
+            <span class="p8-usage-val">${em.count||0}/${emLim}</span>
+        </div>
+        <div class="p8-usage-bar-wrap"><div class="p8-usage-bar-fill ${cls}" style="width:${pct}%"></div></div>`;
+    } else if (plan === 'elite' && emLim === null) {
+        html += `<div class="p8-usage-row" style="margin-top:4px">
+            <span class="p8-usage-label">Elite runs</span>
+            <span class="p8-usage-val" style="color:#4caf50">∞ Unlimited</span>
+        </div>`;
+    }
+
+    content.innerHTML = html;
+}
+
+/* ── Settings Plan tab ──────────────────────────────────────────── */
+function p8UpdateSettingsPanel(d) {
+    const badge   = p8El('p8SettingsPlanBadge');
+    const expiry  = p8El('p8SettingsPlanExpiry');
+    const usage   = p8El('p8SettingsUsage');
+    const bpTog   = p8El('p8ByokPriorityToggle');
+
+    if (badge) {
+        badge.textContent = `${P8_ICONS[d.plan]||''} ${d.meta?.name||d.plan} — ${d.meta?.price||''}`;
+        badge.style.color  = P8_COLORS[d.plan] || 'var(--accent)';
+    }
+    if (expiry) {
+        expiry.textContent = d.expires ? `Expires: ${d.expires}` :
+                             d.coupon  ? `Active coupon: ${d.coupon}` : '';
+    }
+    if (bpTog) {
+        bpTog.checked = !!d.byok_priority;
+        // Disable BYOK Priority toggle for free plan
+        bpTog.disabled = d.plan === 'free';
+        bpTog.parentElement.style.opacity = d.plan === 'free' ? '0.5' : '1';
+    }
+    if (usage) {
+        const pd  = d.usage?.pro_daily     || {};
+        const em  = d.usage?.elite_monthly || {};
+        const pdL = pd.limit;
+        const emL = em.limit;
+        let html = '';
+        html += `<div class="p8-usage-row"><span class="p8-usage-label">Pro runs today</span>
+            <span class="p8-usage-val">${pdL===null ? '∞ Unlimited' : `${pd.count||0} / ${pdL}`}</span></div>`;
+        if (pdL !== null && pdL !== undefined) {
+            const pct = Math.min(100, Math.round((pd.count||0)/pdL*100));
+            const cls = pct>=100?'p8-usage-full':pct>=80?'p8-usage-warn':'p8-usage-ok';
+            html += `<div class="p8-usage-bar-wrap"><div class="p8-usage-bar-fill ${cls}" style="width:${pct}%"></div></div>`;
+        }
+        html += `<div class="p8-usage-row" style="margin-top:8px"><span class="p8-usage-label">Elite runs this month</span>
+            <span class="p8-usage-val">${emL===0?'🔒 Locked':emL===null?'∞ Unlimited':`${em.count||0} / ${emL}`}</span></div>`;
+        if (emL && emL !== null) {
+            const pct = Math.min(100, Math.round((em.count||0)/emL*100));
+            const cls = pct>=100?'p8-usage-full':pct>=80?'p8-usage-warn':'p8-usage-ok';
+            html += `<div class="p8-usage-bar-wrap"><div class="p8-usage-bar-fill ${cls}" style="width:${pct}%"></div></div>`;
+        }
+        usage.innerHTML = html;
+    }
+}
+
+/* ── Open upgrade modal ─────────────────────────────────────────── */
+window.p8OpenUpgradeModal = async function() {
+    const modal = p8El('p8UpgradeModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    p8El('p8CouponMsg') && (p8El('p8CouponMsg').textContent = '');
+    p8El('p8CouponInput') && (p8El('p8CouponInput').value = '');
+    await p8Load();
+    p8RenderPlanCards();
+    p8RenderModalUsage();
+};
+
+window.p8CloseUpgradeModal = function(e) {
+    if (e && e.target !== p8El('p8UpgradeModal')) return;
+    const modal = p8El('p8UpgradeModal');
+    if (modal) modal.classList.remove('open');
+};
+
+/* ── Render plan cards in modal ──────────────────────────────────── */
+function p8RenderPlanCards() {
+    if (!p8State) return;
+    const grid    = p8El('p8PlansGrid');
+    if (!grid) return;
+    const current = p8State.plan;
+    const plans   = p8State.all_plans || {};
+    const order   = ['free', 'pro', 'elite'];
+
+    grid.innerHTML = order.map(pid => {
+        const p        = plans[pid] || {};
+        const isActive = pid === current;
+        const color    = P8_COLORS[pid] || '#888';
+        const features = (p.features || []).map(f =>
+            `<li>${p8Esc(f)}</li>`).join('');
+        const btnLabel = isActive ? 'Current Plan' :
+                         pid === 'free' ? 'Downgrade' : '🚀 Activate';
+        const btnClass = `p8-plan-btn ${isActive ? 'p8-current' : ''}`;
+        const btnStyle = `color:${color};border-color:${color};${!isActive?`background:${color}1a`:''}`
+        const activeCls = isActive ? 'p8-active' : '';
+
+        return `<div class="p8-plan-card ${activeCls}" style="border-color:${isActive?color:''};${isActive?`box-shadow:0 0 0 1px ${color}33`:''}" >
+            <div class="p8-plan-icon">${p.icon||''}</div>
+            <div class="p8-plan-name" style="color:${color}">${p8Esc(p.name||pid)}</div>
+            <div class="p8-plan-price" style="color:${color}">${p8Esc(p.price||'')}</div>
+            <ul class="p8-plan-features">${features}</ul>
+            <button class="${btnClass}" style="${btnStyle}"
+                onclick="${isActive ? '' : `p8SelectPlan('${pid}')`}"
+                ${isActive ? 'disabled' : ''}>${btnLabel}</button>
+        </div>`;
+    }).join('');
+}
+
+function p8RenderModalUsage() {
+    if (!p8State) return;
+    const el   = p8El('p8ModalUsage');
+    if (!el) return;
+    const d    = p8State;
+    const pd   = d.usage?.pro_daily     || {};
+    const em   = d.usage?.elite_monthly || {};
+    const pdL  = pd.limit;
+    const emL  = em.limit;
+    el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:var(--panel);border-radius:8px;padding:10px;border:1px solid var(--panel-border)">
+            <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">PRO RUNS TODAY</div>
+            <div style="font-size:18px;font-weight:800;color:#388bfd">
+                ${pdL===null ? '∞' : `${pd.count||0}<span style="font-size:12px;color:var(--text-dim)">/${pdL}</span>`}
+            </div>
+            ${pdL!==null && pdL!==undefined ? `<div class="p8-usage-bar-wrap" style="margin-top:4px"><div class="p8-usage-bar-fill p8-usage-ok" style="width:${Math.min(100,Math.round((pd.count||0)/pdL*100))}%"></div></div>` : ''}
+        </div>
+        <div style="background:var(--panel);border-radius:8px;padding:10px;border:1px solid var(--panel-border)">
+            <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">ELITE RUNS THIS MONTH</div>
+            <div style="font-size:18px;font-weight:800;color:#bc8cff">
+                ${emL===0 ? '🔒' : emL===null ? '∞' : `${em.count||0}<span style="font-size:12px;color:var(--text-dim)">/${emL}</span>`}
+            </div>
+            ${emL && emL!==null ? `<div class="p8-usage-bar-wrap" style="margin-top:4px"><div class="p8-usage-bar-fill p8-usage-ok" style="width:${Math.min(100,Math.round((em.count||0)/emL*100))}%"></div></div>` : ''}
+        </div>
+    </div>`;
+}
+
+/* ── Select plan (demo — no payment) ─────────────────────────────── */
+window.p8SelectPlan = async function(plan) {
+    try {
+        const r = await fetch('/api/plan/set', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({plan}),
+        });
+        const d = await r.json();
+        if (d.ok) {
+            await p8Load();
+            p8RenderPlanCards();
+            p8RenderModalUsage();
+            p8ShowCouponMsg(p8El('p8CouponMsg'),
+                `✓ Switched to ${d.meta?.name} plan`, true);
+            setTimeout(() => {
+                const modal = p8El('p8UpgradeModal');
+                if (modal) modal.classList.remove('open');
+            }, 1200);
+        }
+    } catch(e) {}
+};
+
+/* ── Apply coupon (modal) ─────────────────────────────────────────── */
+window.p8ApplyCoupon = async function() {
+    const input = p8El('p8CouponInput');
+    const msgEl = p8El('p8CouponMsg');
+    if (!input) return;
+    const code = input.value.trim().toUpperCase();
+    if (!code) { p8ShowCouponMsg(msgEl, 'Enter a coupon code first', false); return; }
+    await p8SendCoupon(code, msgEl, input);
+};
+
+/* ── Apply coupon (settings tab) ─────────────────────────────────── */
+window.p8ApplyCouponSettings = async function() {
+    const input = p8El('p8SettingsCouponInput');
+    const msgEl = p8El('p8SettingsCouponMsg');
+    if (!input) return;
+    const code = input.value.trim().toUpperCase();
+    if (!code) { p8ShowCouponMsg(msgEl, 'Enter a coupon code first', false); return; }
+    await p8SendCoupon(code, msgEl, input);
+};
+
+async function p8SendCoupon(code, msgEl, inputEl) {
+    p8ShowCouponMsg(msgEl, 'Checking…', null);
+    try {
+        const r = await fetch('/api/plan/apply-coupon', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({code}),
+        });
+        const d = await r.json();
+        if (d.ok) {
+            p8ShowCouponMsg(msgEl,
+                `✓ ${d.note} unlocked! ${d.expires ? `Expires ${d.expires}` : 'Lifetime access'}`, true);
+            if (inputEl) inputEl.value = '';
+            await p8Load();
+            p8RenderPlanCards();
+            p8RenderModalUsage();
+        } else {
+            p8ShowCouponMsg(msgEl, `✗ ${d.error}`, false);
+        }
+    } catch(e) {
+        p8ShowCouponMsg(msgEl, 'Error applying coupon — try again', false);
+    }
+}
+
+function p8ShowCouponMsg(el, msg, ok) {
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `p8-coupon-msg ${ok === true ? 'p8-coupon-ok' : ok === false ? 'p8-coupon-err' : ''}`;
+}
+
+/* ── BYOK Priority toggle ─────────────────────────────────────────── */
+window.p8ToggleByokPriority = async function(enabled) {
+    try {
+        const r = await fetch('/api/plan/byok-priority', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({enabled}),
+        });
+        const d = await r.json();
+        if (!d.ok) {
+            const tog = p8El('p8ByokPriorityToggle');
+            if (tog) tog.checked = !enabled; // revert
+        } else {
+            if (p8State) p8State.byok_priority = d.byok_priority;
+        }
+    } catch(e) {}
+};
+
+/* ── Hook into task submission to show gate errors ──────────────── */
+// Intercept the response from /api/queue-task and show upgrade prompt
+const _p8OrigQueueTask = window.queueTask || window.nxRunOrStop;
+document.addEventListener('p8PlanGate', function(e) {
+    const reason = e.detail?.reason || 'Upgrade required';
+    // Show a nice gate notification
+    const errBanner = document.getElementById('p57-error-banner');
+    const errMsg    = document.getElementById('p57-error-msg');
+    if (errBanner && errMsg) {
+        errMsg.textContent = reason;
+        errBanner.style.display = 'flex';
+        // Replace "Fix with AI" with "Upgrade Plan"
+        const fixBtn = errBanner.querySelector('button');
+        if (fixBtn) {
+            const orig = fixBtn.textContent;
+            fixBtn.textContent = '🚀 Upgrade Plan';
+            fixBtn.onclick = () => { p8OpenUpgradeModal(); errBanner.style.display='none'; };
+            setTimeout(() => {
+                fixBtn.textContent = orig;
+                fixBtn.onclick = () => p57FixError?.();
+            }, 8000);
+        }
+    }
+});
+
+/* ── Hook settings tab open ──────────────────────────────────────── */
+const _p8OrigSwitch = window.switchSettingsTab;
+window.switchSettingsTab = function(tab) {
+    if (_p8OrigSwitch) _p8OrigSwitch.call(this, tab);
+    if (tab === 'plan') {
+        p8Load(); // Refresh when opening plan tab
+    }
+};
+
+/* ── Poll usage every 60s ────────────────────────────────────────── */
+function p8StartPoll() {
+    if (p8PollTimer) clearInterval(p8PollTimer);
+    p8PollTimer = setInterval(p8Load, 60000);
+}
+
+/* ── Initialise ──────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+    p8Load();
+    p8StartPoll();
+    console.log('[Phase 8] Monetization & Access Control Layer active.');
 });
 
 })();

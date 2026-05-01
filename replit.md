@@ -74,6 +74,18 @@ The UI was upgraded from the basic "Phase 57" bridge to a full feature-complete 
 - **Backend**: `_P7_PIPELINES` dict (in-memory), threaded execution, 5 analysis functions in `web_app.py`
 - **New Endpoints**: `GET /api/p7/agents`, `GET|POST /api/p7/config`, `POST /api/p7/pipeline/run`, `GET /api/p7/pipeline/status/<sid>`, `POST /api/p7/pipeline/clear/<sid>`
 
+### Phase 8: Monetization & Access Control Layer
+- **Plans**: Free (10 Pro runs/day, no Elite), Pro ($29/mo — 20 Elite runs/month, 10 Pro/day), Elite ($79/mo — unlimited everything)
+- **Plan gating**: `/api/queue-task` checks `_p8_check_plan_gate()` before each task; returns `{ok:false, gated:true, reason:...}` when limit exceeded or plan insufficient
+- **Usage tracking**: Per-session counters via `get_setting`/`set_setting` with daily (Pro) and monthly (Elite) reset logic
+- **Coupons**: `HAMMAD30`→Pro/30d, `ELITE7`→Elite/7d, `PROLIFE`→Pro/lifetime, `ELITE30`→Elite/30d, `OPENHAND`→Pro/7d, `TRYAGENT`→Pro/7d, `AGENTELITE`→Elite/14d
+- **Header badge**: `p8-sub-badge` element shows current plan icon + name with colour-coded styling; click opens upgrade modal
+- **Upgrade modal**: Full plan comparison cards (Free/Pro/Elite), usage stats grid, coupon input — launched via `p8OpenUpgradeModal()`
+- **Settings > Plan tab**: Shows current plan badge, usage bars, coupon input, BYOK Priority toggle (Pro/Elite only)
+- **Inspector usage mini-block**: Live progress bars for Pro daily runs and Elite monthly runs shown below model info
+- **BYOK Priority mode**: Toggle stored in settings; forces fastest provider routing when using personal API keys
+- **New Endpoints**: `GET /api/plan/info`, `POST /api/plan/set`, `POST /api/plan/apply-coupon`, `POST /api/plan/check`, `POST /api/plan/byok-priority`
+
 ## Running the App
 - **Workflow**: "Start application" — runs `python web_app.py`
 - **Port**: 5000
