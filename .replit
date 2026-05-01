@@ -38,3 +38,8 @@ externalPort = 80
 [deployment]
 deploymentTarget = "autoscale"
 run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "-w", "4", "--threads", "8", "--timeout", "120", "web_app:app"]
+
+[userenv]
+
+[userenv.shared]
+JWT_SECRET = "ac241fb488a6e2988a85f0c6a8a6b56d25c18a9b532131eb2f6abd40feab105c"

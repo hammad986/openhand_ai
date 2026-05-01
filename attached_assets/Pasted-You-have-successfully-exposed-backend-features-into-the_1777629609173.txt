@@ -1,0 +1,148 @@
+You have successfully exposed backend features into the UI.
+
+Now move to PHASE 2: UX Intelligence & Flow Optimization.
+
+This is NOT about adding more features.
+
+This is about making the system feel like a real AI product.
+
+---
+
+# 🎯 OBJECTIVE
+
+Transform the UI from:
+
+"Feature-rich dashboard"
+
+→ into →
+
+"Intelligent, guided, frictionless AI experience"
+
+---
+
+# 🧠 STEP 1: USER FLOW OPTIMIZATION
+
+Fix the full journey:
+
+1. First open experience
+2. Task execution flow
+3. Success feedback
+4. Error recovery
+
+Implement:
+
+* Clear empty states
+* Guided hints
+* Smart defaults
+* Progressive disclosure (hide complexity)
+
+---
+
+# 🧩 STEP 2: REMOVE CLUTTER
+
+Right now too many panels/tabs create confusion.
+
+Do:
+
+* Show ONLY essential UI by default
+* Move advanced tools into drawer / secondary layer
+* Reduce visible tabs to max 3–4 at a time
+
+---
+
+# ⚡ STEP 3: SMART PANEL BEHAVIOR
+
+Panels should NOT be static.
+
+Make them reactive:
+
+* Run → open thinking + terminal
+* Thinking → auto-scroll + highlight current step
+* Success → collapse thinking panel after delay
+* Error → focus terminal + show fix CTA
+
+---
+
+# 🧠 STEP 4: AI-FIRST EXPERIENCE
+
+Make AI the center:
+
+* Command bar = primary focus
+* Add placeholder intelligence:
+
+  * “Build a login system”
+  * “Fix error in line 42”
+* Add suggestion chips
+
+---
+
+# 📊 STEP 5: CONTEXTUAL UI
+
+Instead of always showing everything:
+
+* Show metrics ONLY when needed
+* Show logs ONLY when relevant
+* Show errors ONLY when present
+
+---
+
+# 🎮 STEP 6: INTERACTION IMPROVEMENTS
+
+* Auto-scroll logs/terminal
+* Highlight active processes
+* Smooth transitions (200–250ms)
+* No layout jumps
+
+---
+
+# 💎 STEP 7: VISUAL HIERARCHY FIX
+
+Improve clarity:
+
+* Clear focus zones
+* Reduce noise
+* Improve spacing
+* Make primary actions obvious
+
+---
+
+# 🔥 STEP 8: “FEELS LIKE PRODUCT” TEST
+
+Your UI should pass this test:
+
+* A new user understands it in 5 seconds
+* User knows exactly where to click
+* User doesn’t feel overwhelmed
+
+---
+
+# 🚫 DO NOT
+
+* Add more random features
+* Add more tabs
+* Overcomplicate UI
+* Break existing logic
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. UX issues found
+2. Changes made
+3. Before vs After improvements
+4. Final UI behavior explanation
+
+---
+
+# ⚡ FINAL GOAL
+
+A UI that feels like:
+
+* ChatGPT (simplicity)
+
+- Replit (power)
+- IDE (control)
+
+---
+
+This phase is about EXPERIENCE, not FEATURES.

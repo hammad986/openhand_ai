@@ -26,3 +26,11 @@ PyJWT
 python-dotenv
 requests
 tiktoken
+bcrypt
+Flask
+gunicorn
+psutil
+PyJWT
+python-dotenv
+requests
+tiktoken
