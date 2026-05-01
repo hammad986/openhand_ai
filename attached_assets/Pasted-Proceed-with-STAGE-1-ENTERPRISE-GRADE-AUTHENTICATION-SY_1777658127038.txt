@@ -1,0 +1,180 @@
+Proceed with STAGE 1 — ENTERPRISE-GRADE AUTHENTICATION SYSTEM.
+
+This is the foundation layer. No shortcuts. Production-grade implementation required.
+
+---
+
+# 🎯 OBJECTIVE
+
+Build a COMPLETE authentication and user management system that supports:
+
+* Secure login/signup
+* OAuth providers (Google, GitHub)
+* JWT-based session system
+* Multi-device session tracking
+* Full integration with billing and AI usage
+
+---
+
+# 🧱 PART 1 — DATABASE DESIGN
+
+Create users table:
+
+fields:
+
+* id (UUID)
+* email (unique, indexed)
+* password_hash
+* name
+* provider (local/google/github)
+* created_at
+* updated_at
+
+Create sessions table:
+
+* id
+* user_id
+* refresh_token
+* device_info
+* ip_address
+* created_at
+* expires_at
+
+---
+
+# 🔐 PART 2 — AUTH CORE
+
+Implement:
+
+POST /api/auth/signup
+POST /api/auth/login
+POST /api/auth/logout
+POST /api/auth/refresh
+
+Features:
+
+* bcrypt password hashing
+* JWT access token (short expiry: 15 min)
+* refresh token (long expiry: 7–30 days)
+* token rotation on refresh
+
+---
+
+# 🔑 PART 3 — OAUTH LOGIN
+
+Integrate:
+
+1. Google OAuth (mandatory)
+2. GitHub OAuth (mandatory)
+
+Flow:
+
+* redirect → callback → create/login user
+* store provider info
+* link existing account if email matches
+
+---
+
+# 🛡️ PART 4 — SECURITY HARDENING
+
+Implement:
+
+* rate limiting on login (5 attempts/min)
+* brute force protection
+* JWT secret via ENV
+* refresh token stored in DB (not localStorage only)
+* CSRF-safe cookie handling (if cookies used)
+
+---
+
+# 🧠 PART 5 — SESSION MANAGEMENT
+
+Features:
+
+* "Logout from all devices"
+* session list endpoint:
+  GET /api/auth/sessions
+* revoke individual session
+
+---
+
+# 💳 PART 6 — BILLING INTEGRATION
+
+Link auth with billing:
+
+* every payment tied to user_id
+* webhook must update correct user
+* prevent anonymous payments
+
+---
+
+# 🤖 PART 7 — AI USAGE LINK
+
+Each task must include:
+
+* user_id
+* plan
+* usage tracking
+
+---
+
+# 🎨 PART 8 — UI IMPLEMENTATION
+
+Create:
+
+1. Login Page
+2. Signup Page
+
+Include:
+
+* email/password login
+* Google login button
+* GitHub login button
+* validation + error states
+
+---
+
+# ⚙️ PART 9 — ENV VARIABLES
+
+Add:
+
+JWT_SECRET
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+GITHUB_CLIENT_ID
+GITHUB_CLIENT_SECRET
+
+---
+
+# 🧪 PART 10 — TESTING
+
+Test all flows:
+
+* signup → login → refresh → logout
+* OAuth login
+* invalid login attempts
+* token expiry + refresh
+* multi-device sessions
+
+---
+
+# 🚨 RULES
+
+* No plaintext passwords
+* No token leaks
+* No session bypass
+* No breaking existing system
+
+---
+
+# 🚀 FINAL RESULT
+
+System must confirm:
+
+"AUTHENTICATION SYSTEM FULLY IMPLEMENTED AND SECURE"
+
+---
+
+# 🔥 NOTE
+
+This is the most critical phase. Do not rush. Ensure full correctness before moving forward.

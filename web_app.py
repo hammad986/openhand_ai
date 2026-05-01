@@ -7932,32 +7932,323 @@ def api_stress_test():
 import time
 import queue
 
-from auth_system import token_required, auth_signup, auth_login, get_dashboard, init_db
-from flask import g
+from auth_system import (
+    token_required, auth_signup, auth_login, get_dashboard, init_db,
+    create_session, refresh_access_token, revoke_session, revoke_session_by_id,
+    revoke_all_sessions, list_sessions, get_or_create_oauth_user,
+)
+from flask import g, redirect, session as flask_session
 
 workflow_queues = {}
 RATE_LIMIT_STORE = {"requests": [], "active_workflows": 0}
 CHAOS_FLAGS = {"tool_failure": False, "timeout": False, "model_failure": False}
 
+# Temporary OAuth state store (CSRF protection) — { state_token: provider }
+_oauth_states: dict = {}
+_oauth_states_lock = __import__("threading").Lock()
+
+
+def _get_oauth_redirect_base() -> str:
+    domain = os.environ.get("REPLIT_DEV_DOMAIN", "")
+    if domain:
+        return f"https://{domain}"
+    return request.host_url.rstrip("/")
+
+
+# ─── Signup ───────────────────────────────────────────────────────────────────
+
 @app.route("/api/auth/signup", methods=["POST"])
 def api_auth_signup():
+    from security import check_rate_limit, _auth_limiter, get_client_ip
+    ok, wait = check_rate_limit(_auth_limiter, request)
+    if not ok:
+        return jsonify({"ok": False, "error": f"Rate limited. Retry in {wait}s"}), 429
+
     data = request.json or {}
-    success, msg = auth_signup(data.get("username"), data.get("password"))
-    return jsonify({"ok": success, "message": msg}), 200 if success else 400
+    identifier = (data.get("email") or data.get("username") or "").strip()
+    password   = data.get("password", "")
+    name       = data.get("name", "").strip()
+
+    success, result = auth_signup(identifier, password, name=name)
+    if not success:
+        return jsonify({"ok": False, "error": result}), 400
+
+    user_id = result
+    ip = get_client_ip(request)
+    device_info = request.headers.get("User-Agent", "")[:255]
+    tokens = create_session(user_id, device_info=device_info, ip_address=ip)
+    return jsonify({"ok": True, "message": "Account created", **tokens})
+
+
+# ─── Login ────────────────────────────────────────────────────────────────────
 
 @app.route("/api/auth/login", methods=["POST"])
 def api_auth_login():
+    from security import check_rate_limit, _auth_limiter, get_client_ip
+    ok, wait = check_rate_limit(_auth_limiter, request)
+    if not ok:
+        return jsonify({"ok": False, "error": f"Rate limited. Retry in {wait}s"}), 429
+
     data = request.json or {}
-    success, token_or_msg = auth_login(data.get("username"), data.get("password"))
-    if success:
-        return jsonify({"ok": True, "token": token_or_msg})
-    return jsonify({"ok": False, "error": token_or_msg}), 401
+    identifier = (data.get("email") or data.get("username") or "").strip()
+    password   = data.get("password", "")
+    ip = get_client_ip(request)
+
+    success, result = auth_login(identifier, password, ip=ip)
+    if not success:
+        return jsonify({"ok": False, "error": result}), 401
+
+    user_id = result
+    device_info = request.headers.get("User-Agent", "")[:255]
+    tokens = create_session(user_id, device_info=device_info, ip_address=ip)
+    return jsonify({"ok": True, **tokens})
+
+
+# ─── Refresh ──────────────────────────────────────────────────────────────────
+
+@app.route("/api/auth/refresh", methods=["POST"])
+def api_auth_refresh():
+    data = request.json or {}
+    refresh_token = data.get("refresh_token", "").strip()
+    if not refresh_token:
+        return jsonify({"ok": False, "error": "refresh_token required"}), 400
+
+    from security import get_client_ip
+    ip = get_client_ip(request)
+    success, result = refresh_access_token(refresh_token, ip_address=ip)
+    if not success:
+        return jsonify({"ok": False, "error": result}), 401
+    return jsonify({"ok": True, **result})
+
+
+# ─── Logout ───────────────────────────────────────────────────────────────────
+
+@app.route("/api/auth/logout", methods=["POST"])
+def api_auth_logout():
+    data = request.json or {}
+    refresh_token = data.get("refresh_token", "").strip()
+    if refresh_token:
+        revoke_session(refresh_token)
+    return jsonify({"ok": True, "message": "Logged out"})
+
+
+@app.route("/api/auth/logout-all", methods=["POST"])
+@token_required
+def api_auth_logout_all():
+    revoke_all_sessions(g.user_id)
+    return jsonify({"ok": True, "message": "All sessions revoked"})
+
+
+# ─── Session management ───────────────────────────────────────────────────────
+
+@app.route("/api/auth/sessions", methods=["GET"])
+@token_required
+def api_auth_sessions():
+    sessions = list_sessions(g.user_id)
+    return jsonify({"ok": True, "sessions": sessions})
+
+
+@app.route("/api/auth/sessions/<session_id>", methods=["DELETE"])
+@token_required
+def api_auth_revoke_session(session_id):
+    revoke_session_by_id(session_id, g.user_id)
+    return jsonify({"ok": True, "message": "Session revoked"})
+
+
+# ─── Current user ─────────────────────────────────────────────────────────────
+
+@app.route("/api/auth/me", methods=["GET"])
+@token_required
+def api_auth_me():
+    from auth_system import get_dashboard
+    data = get_dashboard(g.user_id)
+    return jsonify({"ok": True, "user": data})
+
 
 @app.route("/api/user/dashboard", methods=["GET"])
 @token_required
 def api_user_dashboard():
     data = get_dashboard(g.user_id)
     return jsonify({"ok": True, "data": data})
+
+
+# ─── Google OAuth ─────────────────────────────────────────────────────────────
+
+@app.route("/api/auth/google")
+def api_auth_google():
+    import secrets as _sec
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+    if not client_id:
+        return jsonify({"ok": False, "error": "Google OAuth not configured (GOOGLE_CLIENT_ID missing)"}), 503
+
+    state = _sec.token_hex(16)
+    with _oauth_states_lock:
+        _oauth_states[state] = "google"
+
+    base = _get_oauth_redirect_base()
+    redirect_uri = f"{base}/api/auth/google/callback"
+
+    from urllib.parse import urlencode
+    params = urlencode({
+        "client_id":     client_id,
+        "redirect_uri":  redirect_uri,
+        "response_type": "code",
+        "scope":         "openid email profile",
+        "state":         state,
+        "access_type":   "online",
+    })
+    return redirect(f"https://accounts.google.com/o/oauth2/v2/auth?{params}")
+
+
+@app.route("/api/auth/google/callback")
+def api_auth_google_callback():
+    import requests as _req
+    code  = request.args.get("code", "")
+    state = request.args.get("state", "")
+
+    with _oauth_states_lock:
+        if state not in _oauth_states:
+            return "<script>window.location='/?auth_error=invalid_state'</script>", 400
+        _oauth_states.pop(state, None)
+
+    client_id     = os.environ.get("GOOGLE_CLIENT_ID", "")
+    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    base          = _get_oauth_redirect_base()
+    redirect_uri  = f"{base}/api/auth/google/callback"
+
+    try:
+        token_resp = _req.post("https://oauth2.googleapis.com/token", data={
+            "code":          code,
+            "client_id":     client_id,
+            "client_secret": client_secret,
+            "redirect_uri":  redirect_uri,
+            "grant_type":    "authorization_code",
+        }, timeout=10)
+        token_data = token_resp.json()
+        id_token_str = token_data.get("id_token", "")
+
+        user_resp = _req.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {token_data.get('access_token', '')}"},
+            timeout=10,
+        )
+        user_info = user_resp.json()
+        email = user_info.get("email", "")
+        name  = user_info.get("name", email)
+
+        if not email:
+            return redirect("/?auth_error=no_email")
+
+        user_id = get_or_create_oauth_user(email, name, "google")
+        from security import get_client_ip
+        ip = get_client_ip(request)
+        device_info = request.headers.get("User-Agent", "")[:255]
+        tokens = create_session(user_id, device_info=device_info, ip_address=ip)
+
+        return redirect(
+            f"/?nx_token={tokens['access_token']}"
+            f"&nx_refresh={tokens['refresh_token']}"
+            f"&nx_name={__import__('urllib.parse', fromlist=['quote']).quote(name)}"
+        )
+    except Exception as e:
+        logger.error("[OAuth/Google] callback error: %s", e)
+        return redirect("/?auth_error=google_failed")
+
+
+# ─── GitHub OAuth ─────────────────────────────────────────────────────────────
+
+@app.route("/api/auth/github")
+def api_auth_github():
+    import secrets as _sec
+    client_id = os.environ.get("GITHUB_CLIENT_ID", "")
+    if not client_id:
+        return jsonify({"ok": False, "error": "GitHub OAuth not configured (GITHUB_CLIENT_ID missing)"}), 503
+
+    state = _sec.token_hex(16)
+    with _oauth_states_lock:
+        _oauth_states[state] = "github"
+
+    base = _get_oauth_redirect_base()
+    redirect_uri = f"{base}/api/auth/github/callback"
+
+    from urllib.parse import urlencode
+    params = urlencode({
+        "client_id":    client_id,
+        "redirect_uri": redirect_uri,
+        "scope":        "read:user user:email",
+        "state":        state,
+    })
+    return redirect(f"https://github.com/login/oauth/authorize?{params}")
+
+
+@app.route("/api/auth/github/callback")
+def api_auth_github_callback():
+    import requests as _req
+    code  = request.args.get("code", "")
+    state = request.args.get("state", "")
+
+    with _oauth_states_lock:
+        if state not in _oauth_states:
+            return "<script>window.location='/?auth_error=invalid_state'</script>", 400
+        _oauth_states.pop(state, None)
+
+    client_id     = os.environ.get("GITHUB_CLIENT_ID", "")
+    client_secret = os.environ.get("GITHUB_CLIENT_SECRET", "")
+    base          = _get_oauth_redirect_base()
+    redirect_uri  = f"{base}/api/auth/github/callback"
+
+    try:
+        token_resp = _req.post(
+            "https://github.com/login/oauth/access_token",
+            data={
+                "client_id":     client_id,
+                "client_secret": client_secret,
+                "code":          code,
+                "redirect_uri":  redirect_uri,
+            },
+            headers={"Accept": "application/json"},
+            timeout=10,
+        )
+        gh_access_token = token_resp.json().get("access_token", "")
+
+        user_resp = _req.get(
+            "https://api.github.com/user",
+            headers={"Authorization": f"Bearer {gh_access_token}"},
+            timeout=10,
+        )
+        user_info = user_resp.json()
+
+        email = user_info.get("email", "")
+        if not email:
+            emails_resp = _req.get(
+                "https://api.github.com/user/emails",
+                headers={"Authorization": f"Bearer {gh_access_token}"},
+                timeout=10,
+            )
+            for e in emails_resp.json():
+                if isinstance(e, dict) and e.get("primary") and e.get("email"):
+                    email = e["email"]
+                    break
+
+        if not email:
+            return redirect("/?auth_error=no_email")
+
+        name = user_info.get("name") or user_info.get("login") or email
+        user_id = get_or_create_oauth_user(email, name, "github")
+
+        from security import get_client_ip
+        ip = get_client_ip(request)
+        device_info = request.headers.get("User-Agent", "")[:255]
+        tokens = create_session(user_id, device_info=device_info, ip_address=ip)
+
+        return redirect(
+            f"/?nx_token={tokens['access_token']}"
+            f"&nx_refresh={tokens['refresh_token']}"
+            f"&nx_name={__import__('urllib.parse', fromlist=['quote']).quote(name)}"
+        )
+    except Exception as e:
+        logger.error("[OAuth/GitHub] callback error: %s", e)
+        return redirect("/?auth_error=github_failed")
 
 @app.route("/api/run_workflow", methods=["POST"])
 @token_required

@@ -2862,9 +2862,218 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
 }
 .p12-edit-cancel { background: var(--panel2); color: var(--muted); }
 .p12-edit-submit { background: var(--accent); color: #fff; }
+
+/* ── Enterprise Auth Gate ─────────────────────────────────────────────────── */
+#nx-auth-gate {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(13,17,23,0.97);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Inter', sans-serif;
+}
+#nx-auth-gate.nx-auth-hidden { display: none !important; }
+
+.nx-auth-card {
+  background: var(--panel, #161b22);
+  border: 1px solid var(--border, #30363d);
+  border-radius: 16px;
+  width: 100%; max-width: 420px;
+  padding: 36px 36px 28px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  animation: nx-auth-slide-in 0.3s ease;
+}
+@keyframes nx-auth-slide-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.nx-auth-logo {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 24px; justify-content: center;
+}
+.nx-auth-logo-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: #0d1117;
+  display: flex; align-items: center; justify-content: center;
+}
+.nx-auth-logo-text { font-size: 1.2rem; font-weight: 800; color: var(--text, #e6edf3); letter-spacing: -0.5px; }
+.nx-auth-logo-text span { color: var(--purple, #bc8cff); }
+
+.nx-auth-headline { font-size: 1.35rem; font-weight: 700; color: var(--text,#e6edf3); text-align:center; margin-bottom: 4px; }
+.nx-auth-sub { font-size: 0.82rem; color: var(--muted,#8b949e); text-align:center; margin-bottom: 24px; }
+
+.nx-auth-tabs { display: flex; gap: 0; background: var(--panel2,#1c2230); border-radius: 8px; padding: 3px; margin-bottom: 22px; }
+.nx-auth-tab {
+  flex: 1; text-align: center; padding: 7px 0; border-radius: 6px;
+  font-size: 0.83rem; font-weight: 600; cursor: pointer;
+  color: var(--muted,#8b949e); transition: all 0.15s; border: none; background: none;
+}
+.nx-auth-tab.active { background: var(--accent,#58a6ff); color: #fff; }
+
+.nx-auth-field { margin-bottom: 14px; }
+.nx-auth-field label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--muted,#8b949e); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+.nx-auth-field input {
+  width: 100%; box-sizing: border-box;
+  background: var(--panel2,#1c2230); border: 1px solid var(--border,#30363d);
+  border-radius: 8px; padding: 10px 12px;
+  font-size: 0.9rem; color: var(--text,#e6edf3); outline: none;
+  transition: border-color 0.15s;
+}
+.nx-auth-field input:focus { border-color: var(--accent,#58a6ff); }
+.nx-auth-field input.error { border-color: var(--red,#f85149); }
+
+.nx-auth-btn-primary {
+  width: 100%; padding: 11px; border-radius: 8px; border: none; cursor: pointer;
+  background: var(--accent,#58a6ff); color: #fff; font-size: 0.9rem; font-weight: 700;
+  margin-top: 4px; transition: opacity 0.15s;
+}
+.nx-auth-btn-primary:hover { opacity: 0.88; }
+.nx-auth-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.nx-auth-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 18px 0; color: var(--muted,#8b949e); font-size: 0.78rem;
+}
+.nx-auth-divider::before, .nx-auth-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border,#30363d);
+}
+
+.nx-auth-oauth { display: flex; gap: 10px; }
+.nx-auth-oauth-btn {
+  flex: 1; padding: 10px 8px; border-radius: 8px; border: 1px solid var(--border,#30363d);
+  background: var(--panel2,#1c2230); color: var(--text,#e6edf3);
+  font-size: 0.83rem; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: border-color 0.15s, background 0.15s;
+  text-decoration: none;
+}
+.nx-auth-oauth-btn:hover { border-color: var(--accent,#58a6ff); background: var(--panel,#161b22); }
+
+.nx-auth-err {
+  background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.3);
+  border-radius: 7px; padding: 9px 12px; font-size: 0.82rem; color: var(--red,#f85149);
+  margin-bottom: 14px; display: none;
+}
+.nx-auth-err.show { display: block; }
+
+.nx-auth-footer {
+  margin-top: 18px; text-align: center;
+  font-size: 0.75rem; color: var(--muted,#8b949e);
+}
+.nx-auth-footer a { color: var(--accent,#58a6ff); text-decoration: none; }
+
+.nx-auth-user-badge {
+  position: fixed; top: 8px; right: 56px; z-index: 9999;
+  background: var(--panel,#161b22); border: 1px solid var(--border,#30363d);
+  border-radius: 20px; padding: 4px 12px 4px 8px;
+  display: flex; align-items: center; gap: 7px; cursor: pointer;
+  font-size: 0.78rem; color: var(--muted,#8b949e);
+  transition: border-color 0.15s;
+}
+.nx-auth-user-badge:hover { border-color: var(--accent,#58a6ff); }
+.nx-auth-user-badge .nx-auth-avatar {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--purple,#bc8cff); color: #fff;
+  font-size: 0.65rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Sessions panel */
+.nx-sessions-panel {
+  background: var(--panel2,#1c2230); border-radius: 10px; padding: 14px;
+  margin-top: 12px; max-height: 240px; overflow-y: auto;
+}
+.nx-session-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid var(--border,#30363d); gap: 8px;
+}
+.nx-session-row:last-child { border-bottom: none; }
+.nx-session-info { flex: 1; min-width: 0; }
+.nx-session-device { font-size: 0.78rem; color: var(--text,#e6edf3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nx-session-meta { font-size: 0.7rem; color: var(--muted,#8b949e); margin-top: 2px; }
+.nx-session-revoke { background: var(--red,#f85149); color: #fff; border: none; border-radius: 5px; padding: 3px 8px; font-size: 0.72rem; cursor: pointer; white-space: nowrap; }
 </style>
 </head>
 <body>
+
+<!-- ── Enterprise Auth Gate ─────────────────────────────────────────────── -->
+<div id="nx-auth-gate" class="nx-auth-hidden">
+  <div class="nx-auth-card">
+    <div class="nx-auth-logo">
+      <div class="nx-auth-logo-icon">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+          <polygon points="16,3 20.5,11.5 30,13 23,20 24.7,29.5 16,25 7.3,29.5 9,20 2,13 11.5,11.5" fill="#bc8cff" stroke="#6b3fa0" stroke-width="0.5"/>
+        </svg>
+      </div>
+      <div class="nx-auth-logo-text">Nexora <span>AI</span></div>
+    </div>
+
+    <div id="nx-auth-err" class="nx-auth-err"></div>
+
+    <!-- Tabs -->
+    <div class="nx-auth-tabs">
+      <button class="nx-auth-tab active" id="nx-tab-login" onclick="nxAuthTab('login')">Sign In</button>
+      <button class="nx-auth-tab"        id="nx-tab-signup" onclick="nxAuthTab('signup')">Create Account</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="nx-form-login">
+      <div class="nx-auth-field">
+        <label>Email or Username</label>
+        <input type="text" id="nx-login-id" placeholder="you@example.com" autocomplete="username">
+      </div>
+      <div class="nx-auth-field">
+        <label>Password</label>
+        <input type="password" id="nx-login-pw" placeholder="••••••••" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') nxDoLogin()">
+      </div>
+      <button class="nx-auth-btn-primary" id="nx-btn-login" onclick="nxDoLogin()">Sign In</button>
+    </div>
+
+    <!-- Signup form -->
+    <div id="nx-form-signup" style="display:none">
+      <div class="nx-auth-field">
+        <label>Full Name</label>
+        <input type="text" id="nx-signup-name" placeholder="Your Name" autocomplete="name">
+      </div>
+      <div class="nx-auth-field">
+        <label>Email</label>
+        <input type="email" id="nx-signup-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="nx-auth-field">
+        <label>Password <span style="color:var(--muted);font-weight:400;">(min 8 chars)</span></label>
+        <input type="password" id="nx-signup-pw" placeholder="••••••••" autocomplete="new-password"
+               onkeydown="if(event.key==='Enter') nxDoSignup()">
+      </div>
+      <button class="nx-auth-btn-primary" id="nx-btn-signup" onclick="nxDoSignup()">Create Account</button>
+    </div>
+
+    <!-- OAuth -->
+    <div class="nx-auth-divider">or continue with</div>
+    <div class="nx-auth-oauth">
+      <a href="/api/auth/google" class="nx-auth-oauth-btn" id="nx-btn-google">
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Google
+      </a>
+      <a href="/api/auth/github" class="nx-auth-oauth-btn" id="nx-btn-github">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
+
+    <div class="nx-auth-footer">
+      By signing in you agree to our
+      <a href="/docs#billing" target="_blank">Terms of Service</a>
+    </div>
+  </div>
+</div>
 
 <!-- ── Error Banner ── -->
 <div id="p57-error-banner">
@@ -16660,3 +16869,401 @@ console.log('[Phase 18] Background Autonomous Agents + Task Scheduler active.');
 })();
 </script>
 </div></body></html>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   NEXORA — Enterprise Authentication Engine
+   Handles: token storage, auto-refresh, login/signup, OAuth callback,
+            session management, user badge
+   ═══════════════════════════════════════════════════════════════════ */
+(function() {
+'use strict';
+
+const NX_TOKEN_KEY   = 'nx_access_token';
+const NX_REFRESH_KEY = 'nx_refresh_token';
+const NX_USER_KEY    = 'nx_user_info';
+
+// ── Token storage helpers ──────────────────────────────────────────
+function nxGetToken()   { return localStorage.getItem(NX_TOKEN_KEY)   || ''; }
+function nxGetRefresh() { return localStorage.getItem(NX_REFRESH_KEY) || ''; }
+function nxGetUser()    { try { return JSON.parse(localStorage.getItem(NX_USER_KEY) || '{}'); } catch { return {}; } }
+
+function nxStoreTokens(data, userName) {
+    if (data.access_token)  localStorage.setItem(NX_TOKEN_KEY,   data.access_token);
+    if (data.refresh_token) localStorage.setItem(NX_REFRESH_KEY, data.refresh_token);
+    if (userName)           localStorage.setItem(NX_USER_KEY, JSON.stringify({ name: userName }));
+}
+
+function nxClearTokens() {
+    localStorage.removeItem(NX_TOKEN_KEY);
+    localStorage.removeItem(NX_REFRESH_KEY);
+    localStorage.removeItem(NX_USER_KEY);
+}
+
+// ── JWT decode (client-side, no verify — server validates) ─────────
+function nxDecodeJWT(token) {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+        return payload;
+    } catch { return null; }
+}
+
+function nxIsTokenExpired(token) {
+    const p = nxDecodeJWT(token);
+    if (!p || !p.exp) return true;
+    return Date.now() / 1000 > p.exp - 30; // 30s buffer
+}
+
+// ── Auto-refresh loop ──────────────────────────────────────────────
+let _nxRefreshTimer = null;
+
+function nxScheduleRefresh(expiresIn) {
+    clearTimeout(_nxRefreshTimer);
+    const ms = Math.max(((expiresIn || 900) - 60) * 1000, 30000);
+    _nxRefreshTimer = setTimeout(nxRefreshNow, ms);
+}
+
+async function nxRefreshNow() {
+    const refresh = nxGetRefresh();
+    if (!refresh) { nxShowAuthGate(); return; }
+    try {
+        const r = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refresh }),
+        });
+        const d = await r.json();
+        if (d.ok) {
+            nxStoreTokens(d);
+            nxScheduleRefresh(d.expires_in || 900);
+        } else {
+            nxClearTokens();
+            nxShowAuthGate();
+        }
+    } catch {
+        nxScheduleRefresh(60); // retry in 1 min on network error
+    }
+}
+
+// ── Fetch wrapper that auto-refreshes on 401 ───────────────────────
+const _origFetch = window.fetch.bind(window);
+window.fetch = async function(url, opts = {}) {
+    const token = nxGetToken();
+    if (token && typeof url === 'string' && url.startsWith('/api/')) {
+        opts = { ...opts, headers: { ...(opts.headers || {}), Authorization: `Bearer ${token}` } };
+    }
+    let resp = await _origFetch(url, opts);
+    if (resp.status === 401 && typeof url === 'string' && url.startsWith('/api/')) {
+        const body = await resp.clone().json().catch(() => ({}));
+        if (body.code === 'TOKEN_EXPIRED') {
+            const ok = await nxRefreshNow();
+            const newToken = nxGetToken();
+            if (newToken) {
+                opts.headers = { ...(opts.headers || {}), Authorization: `Bearer ${newToken}` };
+                return _origFetch(url, opts);
+            }
+        }
+    }
+    return resp;
+};
+
+// ── Auth gate UI ───────────────────────────────────────────────────
+function nxShowAuthGate() {
+    const gate = document.getElementById('nx-auth-gate');
+    if (gate) gate.classList.remove('nx-auth-hidden');
+}
+
+function nxHideAuthGate() {
+    const gate = document.getElementById('nx-auth-gate');
+    if (gate) gate.classList.add('nx-auth-hidden');
+}
+
+function nxAuthErr(msg) {
+    const el = document.getElementById('nx-auth-err');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+window.nxAuthTab = function(tab) {
+    document.getElementById('nx-form-login').style.display  = tab === 'login'  ? '' : 'none';
+    document.getElementById('nx-form-signup').style.display = tab === 'signup' ? '' : 'none';
+    document.getElementById('nx-tab-login').classList.toggle('active',  tab === 'login');
+    document.getElementById('nx-tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('nx-auth-err').classList.remove('show');
+};
+
+// ── Login ──────────────────────────────────────────────────────────
+window.nxDoLogin = async function() {
+    const identifier = (document.getElementById('nx-login-id')?.value || '').trim();
+    const password   = document.getElementById('nx-login-pw')?.value  || '';
+    const btn        = document.getElementById('nx-btn-login');
+
+    if (!identifier || !password) { nxAuthErr('Please fill in all fields'); return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+    try {
+        const r = await _origFetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: identifier, username: identifier, password }),
+        });
+        const d = await r.json();
+        if (d.ok) {
+            const p = nxDecodeJWT(d.access_token);
+            nxStoreTokens(d, p?.name || p?.email || identifier);
+            nxScheduleRefresh(d.expires_in || 900);
+            nxHideAuthGate();
+            nxRenderUserBadge();
+            console.log('[Auth] Signed in successfully');
+        } else {
+            nxAuthErr(d.error || 'Login failed');
+        }
+    } catch (e) {
+        nxAuthErr('Network error. Please try again.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
+    }
+};
+
+// ── Signup ─────────────────────────────────────────────────────────
+window.nxDoSignup = async function() {
+    const name     = (document.getElementById('nx-signup-name')?.value  || '').trim();
+    const email    = (document.getElementById('nx-signup-email')?.value || '').trim();
+    const password = document.getElementById('nx-signup-pw')?.value || '';
+    const btn      = document.getElementById('nx-btn-signup');
+
+    if (!email || !password) { nxAuthErr('Email and password are required'); return; }
+    if (password.length < 8) { nxAuthErr('Password must be at least 8 characters'); return; }
+    if (!email.includes('@')) { nxAuthErr('Enter a valid email address'); return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
+    try {
+        const r = await _origFetch('/api/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, name, password }),
+        });
+        const d = await r.json();
+        if (d.ok) {
+            const p = nxDecodeJWT(d.access_token);
+            nxStoreTokens(d, name || p?.email || email);
+            nxScheduleRefresh(d.expires_in || 900);
+            nxHideAuthGate();
+            nxRenderUserBadge();
+            console.log('[Auth] Account created and signed in');
+        } else {
+            nxAuthErr(d.error || 'Signup failed');
+        }
+    } catch (e) {
+        nxAuthErr('Network error. Please try again.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
+    }
+};
+
+// ── Logout ─────────────────────────────────────────────────────────
+window.nxLogout = async function() {
+    const refresh = nxGetRefresh();
+    try {
+        await _origFetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refresh }),
+        });
+    } catch {}
+    nxClearTokens();
+    clearTimeout(_nxRefreshTimer);
+    nxRemoveUserBadge();
+    nxShowAuthGate();
+};
+
+window.nxLogoutAll = async function() {
+    try {
+        await fetch('/api/auth/logout-all', { method: 'POST' });
+    } catch {}
+    nxClearTokens();
+    clearTimeout(_nxRefreshTimer);
+    nxRemoveUserBadge();
+    nxShowAuthGate();
+};
+
+// ── User badge ─────────────────────────────────────────────────────
+function nxRenderUserBadge() {
+    nxRemoveUserBadge();
+    const user  = nxGetUser();
+    const token = nxDecodeJWT(nxGetToken());
+    const name  = user.name || token?.name || token?.email || 'You';
+    const initials = name.slice(0, 2).toUpperCase();
+
+    const badge = document.createElement('div');
+    badge.id = 'nx-user-badge';
+    badge.className = 'nx-auth-user-badge';
+    badge.title = 'Account & Sessions';
+    badge.innerHTML = `
+        <div class="nx-auth-avatar">${initials}</div>
+        <span>${name.split(' ')[0].substring(0, 14)}</span>
+        <span style="color:var(--muted);font-size:10px;">▾</span>
+    `;
+    badge.onclick = nxShowAccountPanel;
+    document.body.appendChild(badge);
+}
+
+function nxRemoveUserBadge() {
+    const el = document.getElementById('nx-user-badge');
+    if (el) el.remove();
+}
+
+// ── Account panel (sessions) ───────────────────────────────────────
+function nxShowAccountPanel() {
+    const existing = document.getElementById('nx-account-panel');
+    if (existing) { existing.remove(); return; }
+
+    const panel = document.createElement('div');
+    panel.id = 'nx-account-panel';
+    Object.assign(panel.style, {
+        position: 'fixed', top: '42px', right: '56px', zIndex: '99998',
+        background: 'var(--panel,#161b22)', border: '1px solid var(--border,#30363d)',
+        borderRadius: '12px', padding: '16px', width: '320px',
+        boxShadow: '0 16px 48px rgba(0,0,0,0.5)', fontFamily: "'Inter', sans-serif",
+    });
+
+    const user  = nxGetUser();
+    const token = nxDecodeJWT(nxGetToken());
+    const name  = user.name || token?.name || 'User';
+    const email = token?.email || '';
+
+    panel.innerHTML = `
+        <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:4px">${name}</div>
+        ${email ? `<div style="font-size:0.75rem;color:var(--muted);margin-bottom:12px">${email}</div>` : ''}
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button onclick="nxLoadSessions()" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:0.78rem;cursor:pointer">📱 Sessions</button>
+            <button onclick="nxLogout()" style="flex:1;padding:6px;border-radius:6px;border:none;background:var(--red,#f85149);color:#fff;font-size:0.78rem;cursor:pointer">Sign Out</button>
+        </div>
+        <button onclick="nxLogoutAll()" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);font-size:0.75rem;cursor:pointer">⚠ Sign out from all devices</button>
+        <div id="nx-sessions-list" style="margin-top:12px"></div>
+    `;
+
+    document.body.appendChild(panel);
+    document.addEventListener('click', function _dismiss(e) {
+        if (!panel.contains(e.target) && e.target.id !== 'nx-user-badge') {
+            panel.remove();
+            document.removeEventListener('click', _dismiss);
+        }
+    }, true);
+}
+
+window.nxLoadSessions = async function() {
+    const el = document.getElementById('nx-sessions-list');
+    if (!el) return;
+    el.innerHTML = '<div style="color:var(--muted);font-size:0.75rem">Loading sessions…</div>';
+    try {
+        const r = await fetch('/api/auth/sessions');
+        const d = await r.json();
+        if (!d.ok) { el.innerHTML = '<div style="color:var(--red);font-size:0.75rem">Failed to load sessions</div>'; return; }
+        const rows = (d.sessions || []).map(s => {
+            const da = s.created_at ? new Date(s.created_at).toLocaleDateString() : '';
+            const dev = (s.device_info || 'Unknown').substring(0, 40);
+            return `<div class="nx-session-row">
+                <div class="nx-session-info">
+                    <div class="nx-session-device" title="${s.device_info || ''}">${dev}</div>
+                    <div class="nx-session-meta">${s.ip_address || ''} · ${da}</div>
+                </div>
+                <button class="nx-session-revoke" onclick="nxRevokeSession('${s.id}', this)">Revoke</button>
+            </div>`;
+        }).join('');
+        el.innerHTML = `<div class="nx-sessions-panel">${rows || '<div style="color:var(--muted);font-size:0.75rem">No active sessions</div>'}</div>`;
+    } catch {
+        el.innerHTML = '<div style="color:var(--red);font-size:0.75rem">Error loading sessions</div>';
+    }
+};
+
+window.nxRevokeSession = async function(sessionId, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    try {
+        const r = await fetch(`/api/auth/sessions/${sessionId}`, { method: 'DELETE' });
+        const d = await r.json();
+        if (d.ok) {
+            const row = btn?.closest('.nx-session-row');
+            if (row) row.remove();
+        }
+    } catch {}
+};
+
+// ── Handle OAuth callback tokens in URL ────────────────────────────
+function nxHandleOAuthCallback() {
+    const params = new URLSearchParams(window.location.search);
+    const token   = params.get('nx_token');
+    const refresh = params.get('nx_refresh');
+    const name    = params.get('nx_name');
+    const error   = params.get('auth_error');
+
+    if (error) {
+        const msgs = {
+            invalid_state:  'OAuth security check failed. Please try again.',
+            no_email:       'Could not retrieve email from OAuth provider.',
+            google_failed:  'Google sign-in failed. Please try again.',
+            github_failed:  'GitHub sign-in failed. Please try again.',
+        };
+        nxShowAuthGate();
+        setTimeout(() => nxAuthErr(msgs[error] || 'Sign-in failed'), 200);
+        history.replaceState({}, '', window.location.pathname);
+        return;
+    }
+
+    if (token && refresh) {
+        nxStoreTokens({ access_token: token, refresh_token: refresh }, decodeURIComponent(name || ''));
+        history.replaceState({}, '', window.location.pathname);
+        nxScheduleRefresh(900);
+        nxHideAuthGate();
+        nxRenderUserBadge();
+        console.log('[Auth] OAuth sign-in successful');
+    }
+}
+
+// ── Init: check auth state on page load ────────────────────────────
+function nxAuthInit() {
+    nxHandleOAuthCallback();
+
+    const token   = nxGetToken();
+    const refresh = nxGetRefresh();
+
+    if (!token && !refresh) {
+        nxShowAuthGate();
+        return;
+    }
+
+    if (token && !nxIsTokenExpired(token)) {
+        nxHideAuthGate();
+        nxRenderUserBadge();
+        nxScheduleRefresh(900);
+        return;
+    }
+
+    if (refresh) {
+        nxRefreshNow().then(() => {
+            if (nxGetToken()) {
+                nxHideAuthGate();
+                nxRenderUserBadge();
+            } else {
+                nxShowAuthGate();
+            }
+        });
+        return;
+    }
+
+    nxShowAuthGate();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', nxAuthInit);
+} else {
+    nxAuthInit();
+}
+
+console.log('[Auth] Enterprise authentication engine active.');
+})();
+</script>

@@ -29,6 +29,48 @@ A real SaaS billing system (Phase 36) is integrated via Razorpay. It includes:
 - **Secrets required to activate**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` (from Razorpay dashboard), `RAZORPAY_WEBHOOK_SECRET` (for webhook validation), and optionally `EMAIL_API_KEY` (Resend for invoice emails), `EMAIL_FROM`.
 - **Billing Setup Guide**: Settings → 💳 Billing Setup — shows webhook URL, connection status (Connected/Partial/Not Configured), and step-by-step Razorpay setup instructions.
 
+## Authentication System (Enterprise, Phase 50 v2)
+Complete multi-tenant auth rebuilt from scratch. Key files: `auth_system.py`, `web_app.py`.
+
+**Database** (`saas_platform.db`):
+- `users` table: `id`, `username`, `email` (unique indexed), `name`, `password`, `provider` (local/google/github), `created_at`, `updated_at`, `total_tasks`, `total_tokens`
+- `auth_sessions` table: `id`, `user_id`, `refresh_token` (unique), `device_info`, `ip_address`, `created_at`, `expires_at`
+
+**API Endpoints**:
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/auth/signup` | — | Email/password registration → returns access+refresh tokens |
+| POST | `/api/auth/login` | — | Email or username login → returns access+refresh tokens |
+| POST | `/api/auth/refresh` | — | Refresh token rotation → new access+refresh tokens |
+| POST | `/api/auth/logout` | — | Revoke current session |
+| POST | `/api/auth/logout-all` | ✓ | Revoke all sessions (all devices) |
+| GET | `/api/auth/me` | ✓ | Current user info |
+| GET | `/api/auth/sessions` | ✓ | List all active sessions |
+| DELETE | `/api/auth/sessions/<id>` | ✓ | Revoke a specific session |
+| GET | `/api/auth/google` | — | Start Google OAuth flow |
+| GET | `/api/auth/google/callback` | — | Google OAuth callback |
+| GET | `/api/auth/github` | — | Start GitHub OAuth flow |
+| GET | `/api/auth/github/callback` | — | GitHub OAuth callback |
+
+**Token Design**:
+- Access token: JWT, 15 min (configurable via `ACCESS_TOKEN_MINUTES`)
+- Refresh token: 128-char hex, 30 days (configurable via `REFRESH_TOKEN_DAYS`), rotated on every refresh
+- Brute force: 5 failed attempts per IP per 60s triggers lockout
+
+**UI** (`templates/index.html`):
+- Full-screen auth gate overlay (shown when no valid token)
+- Sign In / Create Account tabs
+- Google + GitHub OAuth buttons
+- User badge (top-right) with name/initials after login
+- Account panel: session list, per-session revoke, logout-all
+- Auto-refresh: token refreshed 60s before expiry; 401 triggers immediate refresh
+- OAuth callback: tokens extracted from URL params, URL cleaned
+
+**Secrets needed for OAuth** (add via Replit Secrets):
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` → from Google Cloud Console → Credentials
+- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` → from GitHub → Settings → Developer Settings → OAuth Apps
+- Callback URLs to register: `https://<your-domain>/api/auth/google/callback` and `.../github/callback`
+
 ## Security (Updated)
 - Rate limiting on all API endpoints (tight limits on auth/task-queuing routes)
 - Security headers on every response: `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `X-XSS-Protection`, `Referrer-Policy`
