@@ -7,3 +7,13 @@ PyJWT>=2.8.0
 python-dotenv>=1.0.0
 tiktoken>=0.7.0
 razorpay>=2.0.1
+bcrypt
+docx
+flask
+gunicorn
+psutil
+PyJWT
+python-dotenv
+razorpay
+requests
+tiktoken
