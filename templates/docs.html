@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Documentation — Nexora AI Platform</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#e6edf3;
+  --text-muted:#8b949e;--accent:#bc8cff;--accent2:#58a6ff;
+  --green:#3fb950;--sidebar-w:260px;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+code{background:#21262d;padding:2px 6px;border-radius:4px;font-family:'SF Mono',Consolas,monospace;font-size:.875em;color:#e6edf3}
+pre{background:#161b22;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:12px 0}
+pre code{background:none;padding:0;font-size:13px}
+
+/* ── Layout ── */
+.docs-shell{display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+.docs-sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--panel);
+  border-right:1px solid var(--border);position:sticky;top:0;height:100vh;
+  overflow-y:auto;display:flex;flex-direction:column
+}
+.docs-sidebar-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.docs-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.docs-logo-icon{width:32px;height:32px;background:rgba(188,140,255,.15);border-radius:8px;
+                display:flex;align-items:center;justify-content:center;border:1px solid rgba(188,140,255,.25)}
+.docs-logo-name{font-size:16px;font-weight:800;color:var(--accent)}
+.docs-logo-badge{background:rgba(188,140,255,.15);color:var(--accent);border:1px solid rgba(188,140,255,.3);
+                  border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700}
+.docs-nav{padding:12px 0;flex:1}
+.docs-nav-section{padding:10px 20px 4px;font-size:10px;font-weight:700;color:var(--text-muted);
+                   text-transform:uppercase;letter-spacing:.08em}
+.docs-nav a{display:block;padding:6px 20px;font-size:13px;color:var(--text-muted);
+             border-left:2px solid transparent;transition:all .15s}
+.docs-nav a:hover,.docs-nav a.active{color:var(--text);border-left-color:var(--accent);
+                                      background:rgba(188,140,255,.06);text-decoration:none}
+.docs-sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)}
+.docs-sidebar-footer a{color:var(--accent)}
+
+/* ── Content ── */
+.docs-content{flex:1;padding:48px;max-width:900px;min-width:0}
+.docs-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px;
+              padding-bottom:20px;border-bottom:1px solid var(--border)}
+.docs-topbar-title{font-size:13px;color:var(--text-muted)}
+.docs-back-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(188,140,255,.1);
+               color:var(--accent);border:1px solid rgba(188,140,255,.2);border-radius:6px;
+               padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none}
+.docs-back-btn:hover{background:rgba(188,140,255,.2);text-decoration:none}
+
+/* ── Sections ── */
+.docs-section{margin-bottom:64px;scroll-margin-top:24px}
+.docs-section h1{font-size:30px;font-weight:800;margin-bottom:8px;color:var(--text)}
+.docs-section h2{font-size:22px;font-weight:700;margin:32px 0 12px;color:var(--text);
+                  padding-bottom:8px;border-bottom:1px solid var(--border)}
+.docs-section h3{font-size:16px;font-weight:700;margin:24px 0 8px;color:var(--accent)}
+.docs-section p{color:var(--text-muted);margin-bottom:12px;font-size:14px}
+.docs-section ul,.docs-section ol{padding-left:20px;margin-bottom:12px}
+.docs-section li{color:var(--text-muted);font-size:14px;margin-bottom:4px}
+.docs-section li strong{color:var(--text)}
+.docs-hero-desc{font-size:16px;color:var(--text-muted);margin-bottom:24px}
+
+/* ── Cards ── */
+.docs-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:16px 0}
+.docs-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;
+            transition:border-color .15s}
+.docs-card:hover{border-color:var(--accent)}
+.docs-card-icon{font-size:20px;margin-bottom:8px}
+.docs-card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.docs-card-desc{font-size:12px;color:var(--text-muted)}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;margin-right:4px}
+.badge-purple{background:rgba(188,140,255,.15);color:var(--accent);border:1px solid rgba(188,140,255,.2)}
+.badge-blue{background:rgba(88,166,255,.12);color:var(--accent2);border:1px solid rgba(88,166,255,.2)}
+.badge-green{background:rgba(63,185,80,.12);color:var(--green);border:1px solid rgba(63,185,80,.2)}
+
+/* ── Tables ── */
+.docs-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.docs-table th{background:#21262d;color:var(--text-muted);font-weight:600;padding:8px 12px;
+                text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.docs-table td{padding:8px 12px;border-top:1px solid var(--border);color:var(--text-muted)}
+.docs-table td:first-child{font-family:monospace;font-size:12px;color:var(--text)}
+.docs-table tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ── Callout ── */
+.callout{border-radius:8px;padding:14px 16px;margin:16px 0;font-size:13px}
+.callout-info{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);color:var(--accent2)}
+.callout-warn{background:rgba(255,166,0,.08);border:1px solid rgba(255,166,0,.2);color:#ffa500}
+.callout-success{background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.2);color:var(--green)}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .docs-sidebar{display:none}
+  .docs-content{padding:24px 16px}
+  .docs-cards{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="docs-shell">
+
+<!-- ── Sidebar ── -->
+<aside class="docs-sidebar">
+  <div class="docs-sidebar-header">
+    <a href="/" class="docs-logo">
+      <div class="docs-logo-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#bc8cff"/></svg>
+      </div>
+      <div>
+        <div class="docs-logo-name">Nexora</div>
+      </div>
+      <span class="docs-logo-badge">DOCS</span>
+    </a>
+  </div>
+  <nav class="docs-nav">
+    <div class="docs-nav-section">Getting Started</div>
+    <a href="#overview" onclick="activate(this)">Overview</a>
+    <a href="#quickstart" onclick="activate(this)">Quick Start</a>
+    <a href="#installation" onclick="activate(this)">Installation</a>
+
+    <div class="docs-nav-section">Platform</div>
+    <a href="#features" onclick="activate(this)">Features</a>
+    <a href="#architecture" onclick="activate(this)">Architecture</a>
+    <a href="#ai-capabilities" onclick="activate(this)">AI Capabilities</a>
+    <a href="#model-routing" onclick="activate(this)">Model Routing</a>
+
+    <div class="docs-nav-section">Advanced</div>
+    <a href="#memory-system" onclick="activate(this)">Memory System</a>
+    <a href="#multi-agent" onclick="activate(this)">Multi-Agent System</a>
+    <a href="#scheduler" onclick="activate(this)">Scheduler</a>
+    <a href="#byok" onclick="activate(this)">BYOK System</a>
+
+    <div class="docs-nav-section">Billing & Auth</div>
+    <a href="#monetization" onclick="activate(this)">Monetization</a>
+    <a href="#billing-setup" onclick="activate(this)">Billing Setup</a>
+
+    <div class="docs-nav-section">Production</div>
+    <a href="#security" onclick="activate(this)">Security</a>
+    <a href="#api-reference" onclick="activate(this)">API Reference</a>
+    <a href="#deployment" onclick="activate(this)">Deployment</a>
+    <a href="#env-vars" onclick="activate(this)">Environment Vars</a>
+  </nav>
+  <div class="docs-sidebar-footer">
+    <div>⚡ Nexora AI Platform v2.0</div>
+    <div style="margin-top:4px"><a href="/">← Back to App</a></div>
+  </div>
+</aside>
+
+<!-- ── Main Content ── -->
+<main class="docs-content">
+  <div class="docs-topbar">
+    <div class="docs-topbar-title">Nexora AI Platform Documentation</div>
+    <a href="/" class="docs-back-btn">← Back to Platform</a>
+  </div>
+
+  <!-- ── OVERVIEW ── -->
+  <section class="docs-section" id="overview">
+    <h1>Nexora AI Platform</h1>
+    <p class="docs-hero-desc">A production-grade, multi-agent AI development platform with intelligent model routing, autonomous goal execution, and a full SaaS billing system.</p>
+    <div class="docs-cards">
+      <div class="docs-card"><div class="docs-card-icon">🤖</div><div class="docs-card-title">Multi-Agent AI</div><div class="docs-card-desc">5 specialist agents: Reviewer, Debugger, Tester, Security, Optimizer</div></div>
+      <div class="docs-card"><div class="docs-card-icon">🧠</div><div class="docs-card-title">Intelligent Routing</div><div class="docs-card-desc">Auto-selects the best model for each task across 15+ AI providers</div></div>
+      <div class="docs-card"><div class="docs-card-icon">🎯</div><div class="docs-card-title">Autonomous Goals</div><div class="docs-card-desc">Decompose complex goals into executable sub-tasks automatically</div></div>
+      <div class="docs-card"><div class="docs-card-icon">💰</div><div class="docs-card-title">SaaS Billing</div><div class="docs-card-desc">Razorpay-integrated subscription system with invoices and webhooks</div></div>
+      <div class="docs-card"><div class="docs-card-icon">🔑</div><div class="docs-card-title">BYOK Support</div><div class="docs-card-desc">Bring your own API keys for any supported AI provider</div></div>
+      <div class="docs-card"><div class="docs-card-icon">🛡️</div><div class="docs-card-title">Security Hardened</div><div class="docs-card-desc">Rate limiting, JWT auth, input sanitization, structured logging</div></div>
+    </div>
+  </section>
+
+  <!-- ── QUICK START ── -->
+  <section class="docs-section" id="quickstart">
+    <h1>Quick Start</h1>
+    <p>Get Nexora running in under 2 minutes.</p>
+    <h2>1. Clone &amp; Install</h2>
+    <pre><code>git clone https://github.com/your-org/nexora-ai
+cd nexora-ai
+pip install -r requirements.txt</code></pre>
+    <h2>2. Configure Secrets</h2>
+    <p>Add these in Replit Secrets or as environment variables:</p>
+    <pre><code>SECRET_KEY=your-flask-secret
+JWT_SECRET=your-jwt-secret
+# Optional — for AI models
+OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=...
+# Optional — for billing
+RAZORPAY_KEY_ID=rzp_live_...
+RAZORPAY_KEY_SECRET=...
+EMAIL_API_KEY=re_...   # Resend</code></pre>
+    <h2>3. Run</h2>
+    <pre><code>python web_app.py</code></pre>
+    <p>Open <code>http://localhost:5000</code> in your browser. The platform initialises all databases automatically on first run.</p>
+    <div class="callout callout-success">✓ The platform uses SQLite by default — no external database setup required.</div>
+  </section>
+
+  <!-- ── INSTALLATION ── -->
+  <section class="docs-section" id="installation">
+    <h1>Installation</h1>
+    <h2>Requirements</h2>
+    <ul>
+      <li><strong>Python 3.10+</strong> (3.12 recommended)</li>
+      <li><strong>Flask 3.x</strong></li>
+      <li>SQLite (built into Python)</li>
+    </ul>
+    <h2>Core Dependencies</h2>
+    <pre><code>Flask>=3.0
+gunicorn
+requests
+psutil
+bcrypt
+PyJWT
+tiktoken
+razorpay>=2.0.1</code></pre>
+    <h2>Optional / Lazy-loaded</h2>
+    <ul>
+      <li><code>chromadb</code> — semantic long-term memory</li>
+      <li><code>sentence-transformers</code> — local embeddings</li>
+      <li><code>playwright</code> — browser automation tool</li>
+    </ul>
+  </section>
+
+  <!-- ── FEATURES ── -->
+  <section class="docs-section" id="features">
+    <h1>Features</h1>
+    <p>Nexora is built in 36 phases, each adding a production-grade capability layer.</p>
+    <h2>Core Features</h2>
+    <table class="docs-table">
+      <tr><th>Phase</th><th>Feature</th><th>Description</th></tr>
+      <tr><td>1–3</td><td>Core Agent Loop</td><td>Plan → Execute → Observe → Fix autonomous development loop</td></tr>
+      <tr><td>4</td><td>Intelligence &amp; Personalization</td><td>Adaptive responses, session learning, preference tracking</td></tr>
+      <tr><td>5</td><td>BYOK Multi-Provider</td><td>15+ AI providers with intelligent cost-aware routing</td></tr>
+      <tr><td>6</td><td>Decision Intelligence</td><td>Priority lock, fast/smart/cheap routing modes</td></tr>
+      <tr><td>7</td><td>Structured Agents</td><td>5 specialist agents triggered by task context</td></tr>
+      <tr><td>8</td><td>Monetization Layer</td><td>Plan gating (Free / Pro / Elite) with usage quotas</td></tr>
+      <tr><td>9</td><td>Model Intelligence Routing</td><td>Per-role model assignment (planning, coding, debug)</td></tr>
+      <tr><td>10</td><td>Agent Intelligence</td><td>Short/long-term memory, self-correction from past errors</td></tr>
+      <tr><td>11</td><td>Multi-Agent Collaboration</td><td>4-agent pipeline: Manager, Research, Coding, Debug</td></tr>
+      <tr><td>12</td><td>Editable Prompt System</td><td>Inline prompt editing, conversation branching</td></tr>
+      <tr><td>13</td><td>3-tier Context Compression</td><td>Intelligent summarization to maximise context window</td></tr>
+      <tr><td>14</td><td>Self-Improving AI</td><td>Post-session reflection and capability improvement</td></tr>
+      <tr><td>15</td><td>Learning Dashboard</td><td>Success metrics, failure analysis, timeline</td></tr>
+      <tr><td>16</td><td>Autonomous Goal AI</td><td>Goal decomposition and execution orchestration</td></tr>
+      <tr><td>17</td><td>Task Graph Visualizer</td><td>DAG visualization of task execution graphs</td></tr>
+      <tr><td>18</td><td>Background Scheduler</td><td>Cron-like autonomous agent scheduling</td></tr>
+      <tr><td>19</td><td>Security Hardening</td><td>Rate limiting, JWT auth, kill switch, admin controls</td></tr>
+      <tr><td>33–35</td><td>Enterprise Dashboards</td><td>Terminal intelligence, semi-AGI, enterprise analytics</td></tr>
+      <tr><td>36</td><td>SaaS Billing (Razorpay)</td><td>Full payment gateway, subscriptions, invoices, webhooks</td></tr>
+    </table>
+  </section>
+
+  <!-- ── ARCHITECTURE ── -->
+  <section class="docs-section" id="architecture">
+    <h1>Architecture</h1>
+    <h2>Backend</h2>
+    <ul>
+      <li><strong>web_app.py</strong> — Flask application (~10,000 lines), all API routes, business logic</li>
+      <li><strong>agent.py</strong> — Core agent loop and task execution engine</li>
+      <li><strong>orchestrator.py</strong> — Multi-agent orchestration and pipeline management</li>
+      <li><strong>router.py / model_router.py</strong> — Intelligent LLM routing</li>
+      <li><strong>memory.py</strong> — 3-tier memory system (short, long, semantic)</li>
+      <li><strong>payments.py</strong> — Razorpay billing integration</li>
+      <li><strong>auth_system.py</strong> — JWT authentication</li>
+      <li><strong>tools.py + tools/</strong> — Extensible tool registry</li>
+    </ul>
+    <h2>Frontend</h2>
+    <ul>
+      <li><strong>templates/index.html</strong> — Single-page application (~16,000 lines) with all UI phases</li>
+      <li>Three-panel layout: AI Thinking (left), Logs/Code/Terminal (centre), Inspector (right)</li>
+      <li>Real-time WebSocket-like polling for agent status and queue updates</li>
+    </ul>
+    <h2>Databases</h2>
+    <ul>
+      <li><strong>sessions.db</strong> — Sessions, settings, scheduler tasks, chat history</li>
+      <li><strong>billing.db</strong> — Subscriptions, invoices, payment events</li>
+    </ul>
+    <h2>Request Flow</h2>
+    <pre><code>Browser → Flask (web_app.py) → Agent Loop → Model Router
+                                         ↓
+                               Tool Execution (tools/)
+                                         ↓
+                               Memory System (memory.py)
+                                         ↓
+                               Response → Browser</code></pre>
+  </section>
+
+  <!-- ── AI CAPABILITIES ── -->
+  <section class="docs-section" id="ai-capabilities">
+    <h1>AI Capabilities</h1>
+    <h2>Supported Providers</h2>
+    <div class="docs-cards">
+      <div class="docs-card"><div class="docs-card-icon">🟢</div><div class="docs-card-title">OpenAI</div><div class="docs-card-desc">GPT-4o, GPT-4-turbo, GPT-3.5-turbo</div></div>
+      <div class="docs-card"><div class="docs-card-icon">🔵</div><div class="docs-card-title">Google Gemini</div><div class="docs-card-desc">Gemini 1.5 Pro, Flash, Ultra</div></div>
+      <div class="docs-card"><div class="docs-card-icon">🟠</div><div class="docs-card-title">Anthropic</div><div class="docs-card-desc">Claude 3.5 Sonnet, Haiku, Opus</div></div>
+      <div class="docs-card"><div class="docs-card-icon">⚡</div><div class="docs-card-title">Groq</div><div class="docs-card-desc">Llama 3, Mixtral (ultra-fast)</div></div>
+      <div class="docs-card"><div class="docs-card-icon">🌐</div><div class="docs-card-title">OpenRouter</div><div class="docs-card-desc">100+ models via unified API</div></div>
+      <div class="docs-card"><div class="docs-card-icon">🦙</div><div class="docs-card-title">Ollama</div><div class="docs-card-desc">Local models (Llama, Mistral, etc.)</div></div>
+    </div>
+    <h2>Specialist Agents (Phase 7)</h2>
+    <ul>
+      <li><strong>Code Reviewer</strong> — Static analysis, best practices, code quality</li>
+      <li><strong>Debugger</strong> — Root cause analysis, error tracing, fix suggestions</li>
+      <li><strong>Test Generator</strong> — Unit tests, integration tests, coverage analysis</li>
+      <li><strong>Security Auditor</strong> — Vulnerability detection, OWASP checks</li>
+      <li><strong>Performance Optimizer</strong> — Bottleneck identification, optimization suggestions</li>
+    </ul>
+  </section>
+
+  <!-- ── MODEL ROUTING ── -->
+  <section class="docs-section" id="model-routing">
+    <h1>Model Routing System</h1>
+    <p>Phase 9 assigns specific models for each task role based on plan tier and user preference.</p>
+    <h2>Routing Modes</h2>
+    <table class="docs-table">
+      <tr><th>Mode</th><th>Description</th><th>Use Case</th></tr>
+      <tr><td>Lite</td><td>Cost-optimised, fast models</td><td>Quick tasks, prototyping</td></tr>
+      <tr><td>Pro</td><td>Balanced cost/quality</td><td>General development</td></tr>
+      <tr><td>Elite</td><td>Best models, highest quality</td><td>Complex architecture, critical code</td></tr>
+    </table>
+    <h2>Priority Settings</h2>
+    <ul>
+      <li><strong>Cheapest</strong> — Minimise cost, use free tiers</li>
+      <li><strong>Fastest</strong> — Minimise latency, prefer Groq / Flash models</li>
+      <li><strong>Smartest</strong> — Maximise quality, prefer GPT-4o / Claude 3.5 / Gemini Ultra</li>
+    </ul>
+    <h2>Auto-Failover</h2>
+    <p>If the primary provider fails or rate-limits, the router automatically falls back to the next best available provider with no user intervention required.</p>
+  </section>
+
+  <!-- ── MEMORY SYSTEM ── -->
+  <section class="docs-section" id="memory-system">
+    <h1>Memory System</h1>
+    <h2>Three-Tier Architecture</h2>
+    <ul>
+      <li><strong>Tier 1 — Short-term</strong>: In-session messages and context (full detail)</li>
+      <li><strong>Tier 2 — Mid-term</strong>: Compressed summaries of older context (intelligently summarised)</li>
+      <li><strong>Tier 3 — Long-term</strong>: Semantic vector store via ChromaDB (cross-session recall)</li>
+    </ul>
+    <h2>Self-Correction</h2>
+    <p>The system tracks errors and successful patterns. On each new task, relevant past failures are surfaced to the agent to prevent repeating mistakes (Phase 14).</p>
+    <h2>Intelligence Score</h2>
+    <p>A per-session grade (A–F) based on success rate, error rate, and task complexity — visible in the Inspector panel.</p>
+  </section>
+
+  <!-- ── MULTI-AGENT ── -->
+  <section class="docs-section" id="multi-agent">
+    <h1>Multi-Agent System</h1>
+    <h2>Collaboration Pipeline (Phase 11)</h2>
+    <p>Complex tasks are automatically decomposed across 4 specialised agents:</p>
+    <ol>
+      <li><strong>Manager Agent</strong> — Decomposes the goal, assigns sub-tasks, tracks progress</li>
+      <li><strong>Research Agent</strong> — Gathers context, documentation, best practices</li>
+      <li><strong>Coding Agent</strong> — Implements the solution, writes code</li>
+      <li><strong>Debug Agent</strong> — Tests, finds bugs, ensures correctness</li>
+    </ol>
+    <h2>Autonomous Goals (Phase 16)</h2>
+    <p>Users can define high-level goals. The system automatically decomposes them into a DAG of sub-tasks, executes them in dependency order, and reports progress in real time.</p>
+  </section>
+
+  <!-- ── SCHEDULER ── -->
+  <section class="docs-section" id="scheduler">
+    <h1>Scheduler System</h1>
+    <p>Phase 18 adds a background task scheduler for autonomous agent execution.</p>
+    <h2>Capabilities</h2>
+    <ul>
+      <li>Schedule tasks at specific times or intervals (cron-like)</li>
+      <li>Run AI agents in the background without user interaction</li>
+      <li>Email notifications on completion (requires EMAIL_API_KEY)</li>
+      <li>Task history and status tracking</li>
+    </ul>
+    <h2>Use Cases</h2>
+    <ul>
+      <li>Nightly code reviews and test runs</li>
+      <li>Automated documentation generation</li>
+      <li>Periodic security audits</li>
+      <li>Scheduled data processing pipelines</li>
+    </ul>
+  </section>
+
+  <!-- ── BYOK ── -->
+  <section class="docs-section" id="byok">
+    <h1>BYOK System (Bring Your Own Key)</h1>
+    <p>Phase 5 allows users to supply their own API keys for any supported provider.</p>
+    <h2>How It Works</h2>
+    <ol>
+      <li>Open the Provider Settings panel in the platform</li>
+      <li>Enter your API key for any provider (OpenAI, Anthropic, Groq, etc.)</li>
+      <li>Keys are stored encrypted in the session database</li>
+      <li>The router automatically uses your keys before falling back to platform keys</li>
+    </ol>
+    <div class="callout callout-info">💡 BYOK allows unlimited usage on any provider — costs are billed directly to your account by the provider.</div>
+  </section>
+
+  <!-- ── MONETIZATION ── -->
+  <section class="docs-section" id="monetization">
+    <h1>Monetization System</h1>
+    <h2>Plans</h2>
+    <table class="docs-table">
+      <tr><th>Plan</th><th>Price</th><th>Limits</th><th>Features</th></tr>
+      <tr><td>Free</td><td>₹0</td><td>10 runs/day</td><td>Lite model routing, basic agents</td></tr>
+      <tr><td>Pro</td><td>₹20/month</td><td>Unlimited</td><td>Pro routing, all 5 agents, memory</td></tr>
+      <tr><td>Elite</td><td>₹50/month</td><td>Unlimited</td><td>Elite routing, multi-agent, scheduler, goals</td></tr>
+    </table>
+    <h2>Plan Gating</h2>
+    <p>All features are gated at the API level — plan limits are enforced server-side, not just in the UI.</p>
+  </section>
+
+  <!-- ── BILLING SETUP ── -->
+  <section class="docs-section" id="billing-setup">
+    <h1>Billing Setup (Razorpay)</h1>
+    <div class="callout callout-warn">⚠ Billing requires a Razorpay account. Get your keys at <a href="https://razorpay.com" target="_blank">razorpay.com</a></div>
+    <h2>Step 1 — Add Secrets</h2>
+    <pre><code>RAZORPAY_KEY_ID=rzp_live_xxxxxxxx
+RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxx
+EMAIL_API_KEY=re_xxxxxxx   # Optional — Resend for invoice emails
+EMAIL_FROM=billing@your-domain.com</code></pre>
+    <h2>Step 2 — Configure Webhook</h2>
+    <p>In Razorpay Dashboard → Settings → Webhooks, add:</p>
+    <pre><code>https://your-domain.replit.app/api/payments/webhook</code></pre>
+    <p>Enable events: <code>payment.captured</code>, <code>payment.failed</code></p>
+    <h2>Step 3 — Verify</h2>
+    <p>Open the platform → Click your plan badge → The Billing Setup Guide shows "● Connected" when Razorpay keys are active.</p>
+    <h2>Payment Flow</h2>
+    <pre><code>User clicks "Pay" → /api/payments/create-order (Razorpay order created)
+                   → Razorpay Checkout popup opens
+                   → User pays → /api/payments/verify (HMAC signature check)
+                   → Subscription activated → Invoice generated → Email sent
+                   → Razorpay webhook → /api/payments/webhook (idempotent backup)</code></pre>
+  </section>
+
+  <!-- ── SECURITY ── -->
+  <section class="docs-section" id="security">
+    <h1>Security</h1>
+    <h2>Authentication</h2>
+    <ul>
+      <li>JWT-based session authentication (Phase 19)</li>
+      <li>bcrypt password hashing</li>
+      <li>Token expiry and refresh</li>
+    </ul>
+    <h2>API Security</h2>
+    <ul>
+      <li>Rate limiting on all public endpoints</li>
+      <li>Input sanitization and SQL injection prevention</li>
+      <li>Razorpay webhook HMAC signature verification</li>
+      <li>CORS headers with configurable origins</li>
+      <li>Emergency kill switch (<code>/api/admin/kill-switch</code>)</li>
+    </ul>
+    <h2>Data Security</h2>
+    <ul>
+      <li>API keys stored in encrypted session storage</li>
+      <li>No plaintext secrets in logs</li>
+      <li>WAL mode SQLite for crash-safe writes</li>
+      <li>Structured logging with no sensitive data leakage</li>
+    </ul>
+  </section>
+
+  <!-- ── API REFERENCE ── -->
+  <section class="docs-section" id="api-reference">
+    <h1>API Reference</h1>
+    <h2>Core Endpoints</h2>
+    <table class="docs-table">
+      <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+      <tr><td>/api/queue-task</td><td>POST</td><td>Submit a task to the agent queue</td></tr>
+      <tr><td>/api/queue</td><td>GET</td><td>Get current queue status</td></tr>
+      <tr><td>/api/sessions</td><td>GET</td><td>List active sessions</td></tr>
+      <tr><td>/api/providers</td><td>GET</td><td>List available AI providers</td></tr>
+      <tr><td>/api/plan/info</td><td>GET</td><td>Get current subscription plan info</td></tr>
+      <tr><td>/api/plan/set</td><td>POST</td><td>Set plan (admin/coupon)</td></tr>
+      <tr><td>/api/health</td><td>GET</td><td>Health check</td></tr>
+    </table>
+    <h2>Billing Endpoints</h2>
+    <table class="docs-table">
+      <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+      <tr><td>/api/payments/plans</td><td>GET</td><td>List available plans and prices</td></tr>
+      <tr><td>/api/payments/create-order</td><td>POST</td><td>Create Razorpay order</td></tr>
+      <tr><td>/api/payments/verify</td><td>POST</td><td>Verify payment signature and activate plan</td></tr>
+      <tr><td>/api/payments/webhook</td><td>POST</td><td>Razorpay webhook receiver</td></tr>
+      <tr><td>/api/billing/info</td><td>GET</td><td>Subscription + invoice info</td></tr>
+      <tr><td>/api/billing/invoices</td><td>GET</td><td>Invoice list</td></tr>
+      <tr><td>/api/billing/cancel</td><td>POST</td><td>Cancel subscription</td></tr>
+      <tr><td>/api/invoice/&lt;id&gt;</td><td>GET</td><td>Download invoice HTML</td></tr>
+    </table>
+    <h2>Auth Endpoints</h2>
+    <table class="docs-table">
+      <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+      <tr><td>/api/auth/signup</td><td>POST</td><td>Create new user account</td></tr>
+      <tr><td>/api/auth/login</td><td>POST</td><td>Login and get JWT token</td></tr>
+    </table>
+  </section>
+
+  <!-- ── DEPLOYMENT ── -->
+  <section class="docs-section" id="deployment">
+    <h1>Deployment Guide</h1>
+    <h2>Replit (Recommended)</h2>
+    <ol>
+      <li>Fork or import the project to Replit</li>
+      <li>Add all required secrets in Replit's Secrets panel</li>
+      <li>Click <strong>Deploy</strong> to publish to <code>*.replit.app</code></li>
+      <li>Your app gets TLS, health checks, and auto-restart automatically</li>
+    </ol>
+    <h2>Self-Hosted (Gunicorn)</h2>
+    <pre><code>gunicorn -w 2 -b 0.0.0.0:5000 web_app:app</code></pre>
+    <h2>Production Checklist</h2>
+    <ul>
+      <li>✓ Set <code>SECRET_KEY</code> and <code>JWT_SECRET</code> to long random strings</li>
+      <li>✓ Use Razorpay <strong>live</strong> keys (not test keys)</li>
+      <li>✓ Configure webhook URL with your production domain</li>
+      <li>✓ Set <code>EMAIL_FROM</code> to a verified sender domain</li>
+      <li>✓ Enable HTTPS (automatic on Replit)</li>
+    </ul>
+  </section>
+
+  <!-- ── ENV VARS ── -->
+  <section class="docs-section" id="env-vars">
+    <h1>Environment Variables</h1>
+    <table class="docs-table">
+      <tr><th>Variable</th><th>Required</th><th>Description</th></tr>
+      <tr><td>SECRET_KEY</td><td><span class="badge badge-green">Required</span></td><td>Flask session secret</td></tr>
+      <tr><td>JWT_SECRET</td><td><span class="badge badge-green">Required</span></td><td>JWT signing secret</td></tr>
+      <tr><td>RAZORPAY_KEY_ID</td><td><span class="badge badge-blue">Billing</span></td><td>Razorpay API key ID</td></tr>
+      <tr><td>RAZORPAY_KEY_SECRET</td><td><span class="badge badge-blue">Billing</span></td><td>Razorpay API secret</td></tr>
+      <tr><td>EMAIL_API_KEY</td><td><span class="badge badge-purple">Optional</span></td><td>Resend API key for emails</td></tr>
+      <tr><td>EMAIL_FROM</td><td><span class="badge badge-purple">Optional</span></td><td>Sender email address</td></tr>
+      <tr><td>OPENAI_API_KEY</td><td><span class="badge badge-purple">Optional</span></td><td>OpenAI key (platform BYOK)</td></tr>
+      <tr><td>GEMINI_API_KEY</td><td><span class="badge badge-purple">Optional</span></td><td>Google Gemini key</td></tr>
+      <tr><td>ANTHROPIC_API_KEY</td><td><span class="badge badge-purple">Optional</span></td><td>Anthropic Claude key</td></tr>
+      <tr><td>GROQ_API_KEY</td><td><span class="badge badge-purple">Optional</span></td><td>Groq key</td></tr>
+    </table>
+    <div class="callout callout-info">💡 All API keys for AI providers can also be set by users via the BYOK panel in the platform UI — they are stored per-session.</div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function activate(el) {
+    document.querySelectorAll('.docs-nav a').forEach(a => a.classList.remove('active'));
+    el.classList.add('active');
+}
+
+// Highlight active nav item on scroll
+const sections = document.querySelectorAll('.docs-section');
+const navLinks  = document.querySelectorAll('.docs-nav a');
+const observer  = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            navLinks.forEach(a => {
+                a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
+            });
+        }
+    });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

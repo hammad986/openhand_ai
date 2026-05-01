@@ -1937,6 +1937,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/docs")
+def docs():
+    return render_template("docs.html")
+
+
 # ────────────────────────────────────────────────────────────────────────────
 # Routes — Config (Phase 5.2 hybrid API system)
 # ────────────────────────────────────────────────────────────────────────────

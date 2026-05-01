@@ -31,8 +31,9 @@ logger = logging.getLogger(__name__)
 RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 EMAIL_API_KEY       = os.getenv("EMAIL_API_KEY", "")       # Resend API key
-EMAIL_FROM          = os.getenv("EMAIL_FROM", "billing@antigravity.ai")
-APP_NAME            = "Antigravity AI"
+EMAIL_FROM          = os.getenv("EMAIL_FROM", "billing@nexora.ai")
+APP_NAME            = "Nexora"
+APP_FULL_NAME       = "Nexora AI Platform"
 
 RAZORPAY_ENABLED = bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
 
@@ -347,83 +348,111 @@ def _render_invoice_html(inv_id, plan, billing_cycle, amount, user_email,
     amount_inr = f"₹{amount // 100}"
     date_str   = issued_at.strftime("%B %d, %Y") if hasattr(issued_at, "strftime") else str(issued_at)[:10]
 
+    nexora_svg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#bc8cff" stroke="rgba(188,140,255,0.3)" stroke-width="0.5"/></svg>'
+    cust_row   = f"<div class='inv-row'><span class='inv-label'>Customer</span><span class='inv-value'>{user_name}</span></div>" if user_name else ""
+    email_row  = f"<div class='inv-row'><span class='inv-label'>Email</span><span class='inv-value'>{user_email}</span></div>" if user_email else ""
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Invoice {inv_id} — {APP_NAME}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invoice {inv_id[:8].upper()} — {APP_FULL_NAME}</title>
 <style>
-  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          background: #0d1117; color: #e6edf3; margin: 0; padding: 40px; }}
-  .inv-card {{ max-width: 680px; margin: 0 auto; background: #161b22;
-               border: 1px solid #30363d; border-radius: 12px; padding: 40px; }}
-  .inv-header {{ display: flex; justify-content: space-between; align-items: flex-start;
-                  border-bottom: 1px solid #30363d; padding-bottom: 24px; margin-bottom: 24px; }}
-  .inv-brand {{ font-size: 22px; font-weight: 800; color: #bc8cff; }}
-  .inv-badge {{ background: rgba(188,140,255,.15); color: #bc8cff;
-                border: 1px solid rgba(188,140,255,.3); border-radius: 20px;
-                padding: 4px 14px; font-size: 12px; font-weight: 700; }}
-  .inv-title {{ font-size: 28px; font-weight: 800; margin-bottom: 4px; }}
-  .inv-id {{ font-size: 12px; color: #8b949e; margin-bottom: 24px; }}
-  .inv-row {{ display: flex; justify-content: space-between;
-               border-bottom: 1px solid #21262d; padding: 10px 0; font-size: 14px; }}
-  .inv-row:last-child {{ border-bottom: none; }}
-  .inv-label {{ color: #8b949e; }}
-  .inv-value {{ font-weight: 600; }}
-  .inv-total {{ background: rgba(188,140,255,.08); border-radius: 8px; padding: 16px 20px;
-                margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }}
-  .inv-total-label {{ font-size: 14px; color: #8b949e; }}
-  .inv-total-value {{ font-size: 28px; font-weight: 800; color: #bc8cff; }}
-  .inv-footer {{ margin-top: 32px; padding-top: 20px; border-top: 1px solid #30363d;
-                  font-size: 12px; color: #8b949e; text-align: center; }}
-  .inv-status {{ display: inline-block; background: rgba(63,185,80,.12); color: #3fb950;
-                  border: 1px solid rgba(63,185,80,.3); border-radius: 20px;
-                  padding: 3px 12px; font-size: 11px; font-weight: 700; }}
-  @media print {{ body {{ background: white; color: black; }}
-                   .inv-card {{ border: none; background: white; }} }}
+  *{{box-sizing:border-box;margin:0;padding:0}}
+  body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+        background:#0d1117;color:#e6edf3;padding:40px 20px;}}
+  .inv-wrap{{max-width:700px;margin:0 auto}}
+  .inv-card{{background:#161b22;border:1px solid #30363d;border-radius:16px;
+             padding:48px;box-shadow:0 8px 32px rgba(0,0,0,.4)}}
+  .inv-header{{display:flex;justify-content:space-between;align-items:flex-start;
+               border-bottom:1px solid #30363d;padding-bottom:28px;margin-bottom:28px}}
+  .inv-brand{{display:flex;align-items:center;gap:10px}}
+  .inv-brand-name{{font-size:24px;font-weight:800;color:#bc8cff;letter-spacing:-.5px}}
+  .inv-brand-sub{{font-size:11px;color:#8b949e;margin-top:2px;text-transform:uppercase;letter-spacing:.06em}}
+  .inv-paid-badge{{background:rgba(63,185,80,.12);color:#3fb950;border:1px solid rgba(63,185,80,.3);
+                   border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;letter-spacing:.04em}}
+  .inv-doc-title{{font-size:32px;font-weight:800;color:#e6edf3;margin-bottom:6px}}
+  .inv-id{{font-size:12px;color:#8b949e;font-family:monospace;margin-bottom:28px}}
+  .inv-section{{background:#0d1117;border-radius:10px;border:1px solid #21262d;
+                overflow:hidden;margin-bottom:20px}}
+  .inv-row{{display:flex;justify-content:space-between;align-items:center;
+            padding:12px 18px;border-bottom:1px solid #21262d;font-size:14px}}
+  .inv-row:last-child{{border-bottom:none}}
+  .inv-label{{color:#8b949e;font-weight:500}}
+  .inv-value{{font-weight:600;color:#e6edf3;text-align:right}}
+  .inv-value.mono{{font-family:monospace;font-size:12px;color:#8b949e}}
+  .inv-total-block{{background:linear-gradient(135deg,rgba(188,140,255,.12),rgba(188,140,255,.05));
+                    border:1px solid rgba(188,140,255,.25);border-radius:12px;
+                    padding:22px 24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}}
+  .inv-total-label{{font-size:13px;color:#8b949e;text-transform:uppercase;letter-spacing:.06em;font-weight:600}}
+  .inv-total-value{{font-size:36px;font-weight:800;color:#bc8cff}}
+  .inv-footer{{border-top:1px solid #30363d;padding-top:24px;text-align:center}}
+  .inv-footer-msg{{font-size:14px;color:#e6edf3;margin-bottom:8px;font-weight:500}}
+  .inv-footer-brand{{font-size:11px;color:#8b949e;letter-spacing:.04em}}
+  .inv-footer-brand span{{color:#bc8cff;font-weight:700}}
+  @media print{{body{{background:white;color:black;padding:20px}}
+                .inv-card{{border:none;background:white;box-shadow:none}}
+                .inv-section,.inv-total-block{{border-color:#ddd;background:#f9f9f9}}
+                .inv-brand-name,.inv-total-value{{color:#6b21e8}}
+                .inv-label,.inv-footer-brand{{color:#666}}
+                .inv-value{{color:#111}}}}
 </style>
 </head>
 <body>
+<div class="inv-wrap">
 <div class="inv-card">
+
   <div class="inv-header">
-    <div>
-      <div class="inv-brand">⚡ {APP_NAME}</div>
-      <div style="font-size:12px;color:#8b949e;margin-top:4px">AI Development Platform</div>
+    <div class="inv-brand">
+      <div style="width:40px;height:40px;background:rgba(188,140,255,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(188,140,255,.2)">{nexora_svg}</div>
+      <div>
+        <div class="inv-brand-name">{APP_NAME}</div>
+        <div class="inv-brand-sub">AI Platform · Official Receipt</div>
+      </div>
     </div>
-    <div class="inv-badge">PAID ✓</div>
+    <div class="inv-paid-badge">✓ PAID</div>
   </div>
 
-  <div class="inv-title">Invoice</div>
-  <div class="inv-id">#{inv_id}</div>
+  <div class="inv-doc-title">Invoice</div>
+  <div class="inv-id">#{inv_id.upper()}</div>
 
-  <div class="inv-row">
-    <span class="inv-label">Invoice Date</span>
-    <span class="inv-value">{date_str}</span>
-  </div>
-  <div class="inv-row">
-    <span class="inv-label">Plan</span>
-    <span class="inv-value">{plan_name} ({billing_cycle.title()})</span>
-  </div>
-  {"<div class='inv-row'><span class='inv-label'>Customer</span><span class='inv-value'>" + (user_name or "—") + "</span></div>" if user_name else ""}
-  {"<div class='inv-row'><span class='inv-label'>Email</span><span class='inv-value'>" + user_email + "</span></div>" if user_email else ""}
-  <div class="inv-row">
-    <span class="inv-label">Payment ID</span>
-    <span class="inv-value" style="font-family:monospace;font-size:12px">{payment_id or "—"}</span>
-  </div>
-  <div class="inv-row">
-    <span class="inv-label">Status</span>
-    <span class="inv-status">PAID</span>
+  <div class="inv-section">
+    <div class="inv-row">
+      <span class="inv-label">Invoice Date</span>
+      <span class="inv-value">{date_str}</span>
+    </div>
+    <div class="inv-row">
+      <span class="inv-label">Subscription Plan</span>
+      <span class="inv-value">{plan_name} · {billing_cycle.title()}</span>
+    </div>
+    {cust_row}
+    {email_row}
+    <div class="inv-row">
+      <span class="inv-label">Payment Reference</span>
+      <span class="inv-value mono">{payment_id or "—"}</span>
+    </div>
+    <div class="inv-row">
+      <span class="inv-label">Status</span>
+      <span class="inv-paid-badge" style="font-size:11px;padding:3px 12px">PAID</span>
+    </div>
   </div>
 
-  <div class="inv-total">
-    <div class="inv-total-label">Total Paid</div>
+  <div class="inv-total-block">
+    <div>
+      <div class="inv-total-label">Total Amount Paid</div>
+      <div style="font-size:12px;color:#8b949e;margin-top:4px">Inclusive of all taxes</div>
+    </div>
     <div class="inv-total-value">{amount_inr}</div>
   </div>
 
   <div class="inv-footer">
-    <div>Thank you for your payment! Your {plan_name} plan is now active.</div>
-    <div style="margin-top:8px">Questions? Contact support — {APP_NAME}</div>
+    <div class="inv-footer-msg">Thank you for subscribing to {APP_NAME}! Your {plan_name} plan is now active.</div>
+    <div style="margin-top:6px;font-size:12px;color:#8b949e">For support, reach us at support@nexora.ai</div>
+    <div style="margin-top:16px" class="inv-footer-brand">Powered by <span>{APP_FULL_NAME}</span> · nexora.ai</div>
   </div>
+
+</div>
 </div>
 </body>
 </html>"""
@@ -441,25 +470,72 @@ def _send_payment_success_email(to_email: str, user_name: str, plan: str,
         return
     plan_name  = PLANS.get(plan, {}).get("name", plan.title())
     amount_inr = f"₹{amount // 100}"
-    html_body  = f"""
-    <div style="font-family:-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:32px">
-      <h1 style="color:#bc8cff;font-size:24px;margin-bottom:4px">⚡ {APP_NAME}</h1>
-      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">Payment Successful ✅</h2>
-      <p>Hi {user_name},</p>
-      <p>Your <strong>{plan_name} ({billing_cycle})</strong> subscription is now active.</p>
-      <div style="background:#f6f8fa;border-radius:8px;padding:16px;margin:20px 0">
-        <div><b>Plan:</b> {plan_name}</div>
-        <div><b>Amount Paid:</b> {amount_inr}</div>
-        <div><b>Valid Until:</b> {expiry}</div>
-        <div><b>Invoice:</b> #{invoice_id}</div>
-      </div>
-      <p style="color:#666">Thank you for choosing {APP_NAME}!</p>
-    </div>"""
+    html_body  = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0d1117;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d1117;padding:40px 20px">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="background:#161b22;border-radius:16px;border:1px solid #30363d;overflow:hidden;max-width:600px;width:100%">
+
+      <!-- Header -->
+      <tr><td style="background:linear-gradient(135deg,#161b22,#1a1f2a);padding:32px 40px;border-bottom:1px solid #30363d">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td>
+              <div style="font-size:26px;font-weight:800;color:#bc8cff;letter-spacing:-.5px">⚡ {APP_NAME}</div>
+              <div style="font-size:11px;color:#8b949e;margin-top:3px;text-transform:uppercase;letter-spacing:.08em">AI Platform · Payment Receipt</div>
+            </td>
+            <td align="right">
+              <span style="background:rgba(63,185,80,.12);color:#3fb950;border:1px solid rgba(63,185,80,.3);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700">✓ PAID</span>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <!-- Body -->
+      <tr><td style="padding:36px 40px">
+        <h2 style="color:#e6edf3;font-size:22px;font-weight:800;margin:0 0 8px 0">Payment Successful!</h2>
+        <p style="color:#8b949e;margin:0 0 28px 0;font-size:14px">Hi {user_name or 'there'}, your subscription is now active.</p>
+
+        <!-- Details card -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d1117;border:1px solid #21262d;border-radius:10px;overflow:hidden;margin-bottom:24px">
+          <tr style="border-bottom:1px solid #21262d">
+            <td style="padding:12px 18px;color:#8b949e;font-size:13px;font-weight:500">Subscription Plan</td>
+            <td style="padding:12px 18px;color:#e6edf3;font-size:13px;font-weight:700;text-align:right">{plan_name} · {billing_cycle.title()}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #21262d">
+            <td style="padding:12px 18px;color:#8b949e;font-size:13px;font-weight:500">Amount Paid</td>
+            <td style="padding:12px 18px;color:#bc8cff;font-size:18px;font-weight:800;text-align:right">{amount_inr}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #21262d">
+            <td style="padding:12px 18px;color:#8b949e;font-size:13px;font-weight:500">Valid Until</td>
+            <td style="padding:12px 18px;color:#e6edf3;font-size:13px;font-weight:700;text-align:right">{expiry}</td>
+          </tr>
+          <tr>
+            <td style="padding:12px 18px;color:#8b949e;font-size:13px;font-weight:500">Invoice ID</td>
+            <td style="padding:12px 18px;color:#8b949e;font-size:11px;font-family:monospace;text-align:right">#{invoice_id}</td>
+          </tr>
+        </table>
+
+        <p style="color:#8b949e;font-size:13px;margin:0 0 20px 0">You can download your invoice from the billing section in your dashboard anytime.</p>
+        <p style="color:#8b949e;font-size:13px;margin:0">For support, contact us at <a href="mailto:support@nexora.ai" style="color:#bc8cff;text-decoration:none">support@nexora.ai</a></p>
+      </td></tr>
+
+      <!-- Footer -->
+      <tr><td style="padding:20px 40px;border-top:1px solid #30363d;text-align:center">
+        <p style="color:#8b949e;font-size:11px;margin:0">Powered by <strong style="color:#bc8cff">{APP_FULL_NAME}</strong> · nexora.ai</p>
+        <p style="color:#484f58;font-size:10px;margin:6px 0 0 0">You received this email because you subscribed to {APP_NAME}. © 2026 {APP_FULL_NAME}</p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body></html>"""
 
     payload = json.dumps({
         "from":    EMAIL_FROM,
         "to":      [to_email],
-        "subject": f"Payment Confirmed — {plan_name} Plan Active | {APP_NAME}",
+        "subject": f"✓ Payment Confirmed — {plan_name} Plan Active | {APP_NAME}",
         "html":    html_body,
     }).encode()
 

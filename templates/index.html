@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Agent Control Platform</title>
+    <title>Nexora — AI Development Platform</title>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         :root {
@@ -2879,14 +2879,14 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
 <!-- ── Header ── -->
 <header class="nx-header">
   <!-- Logo -->
-  <div class="nx-logo" title="Antigravity AI">
+  <div class="nx-logo" title="Nexora AI Platform">
     <div class="nx-logo-icon">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
       </svg>
     </div>
     <div>
-      <div class="nx-logo-brand">Antigravity</div>
+      <div class="nx-logo-brand">Nexora</div>
     </div>
     <span class="nx-logo-badge">AI</span>
   </div>
@@ -3047,7 +3047,7 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       <div class="p8-modal-title">🚀 Choose Your Plan</div>
       <button class="p8-close-btn" onclick="p8CloseUpgradeModal()">×</button>
     </div>
-    <div class="p8-modal-sub" id="p8ModalSub">Unlock the full power of Antigravity AI</div>
+    <div class="p8-modal-sub" id="p8ModalSub">Unlock the full power of Nexora AI Platform</div>
 
     <!-- Phase 36: Billing cycle toggle -->
     <div class="p36-cycle-toggle" id="p36CycleToggle">
@@ -3094,6 +3094,24 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <div style="margin-top:14px;padding:12px;background:var(--surface);border-radius:8px;border:1px solid var(--panel-border)">
       <div style="font-size:11px;font-weight:700;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">📄 Invoice History</div>
       <div id="p36InvoiceList"><span style="font-size:12px;color:var(--text-muted)">No invoices yet.</span></div>
+    </div>
+
+    <!-- Phase 36: Billing Setup Guide -->
+    <div id="p36SetupGuide" style="margin-top:14px;padding:14px;background:rgba(188,140,255,.06);border-radius:8px;border:1px solid rgba(188,140,255,.2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:#bc8cff;text-transform:uppercase;letter-spacing:.05em">⚙ Billing Setup Guide</div>
+        <div id="p36WebhookStatus" style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">Checking…</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.7">
+        <div style="margin-bottom:6px"><strong style="color:var(--text)">Step 1 — Add Razorpay Keys</strong></div>
+        <div style="margin-bottom:10px">In Replit Secrets, add: <code style="background:var(--surface);padding:1px 5px;border-radius:3px;font-size:10px">RAZORPAY_KEY_ID</code> and <code style="background:var(--surface);padding:1px 5px;border-radius:3px;font-size:10px">RAZORPAY_KEY_SECRET</code></div>
+        <div style="margin-bottom:6px"><strong style="color:var(--text)">Step 2 — Configure Webhook</strong></div>
+        <div style="margin-bottom:6px">In Razorpay Dashboard → Settings → Webhooks, add this URL:</div>
+        <div id="p36WebhookUrl" style="background:var(--surface);padding:7px 10px;border-radius:5px;font-family:monospace;font-size:11px;color:#bc8cff;word-break:break-all;margin-bottom:8px;border:1px solid var(--panel-border)">Loading…</div>
+        <div style="margin-bottom:6px">Select events: <code style="background:var(--surface);padding:1px 5px;border-radius:3px;font-size:10px">payment.captured</code> and <code style="background:var(--surface);padding:1px 5px;border-radius:3px;font-size:10px">payment.failed</code></div>
+        <div style="margin-bottom:6px"><strong style="color:var(--text)">Step 3 — Test (Optional)</strong></div>
+        <div>Add <code style="background:var(--surface);padding:1px 5px;border-radius:3px;font-size:10px">EMAIL_API_KEY</code> (Resend) to enable invoice emails.</div>
+      </div>
     </div>
   </div>
 </div>
@@ -14052,7 +14070,32 @@ async function p36LoadBillingInfo() {
         if (!d.ok) return;
         p36RenderSubStatus(d.subscription);
         p36RenderInvoices(d.invoices || []);
+        p36RenderWebhookStatus(d.razorpay_enabled);
     } catch(e) {}
+}
+
+function p36RenderWebhookStatus(enabled) {
+    const statusEl = p8El('p36WebhookStatus');
+    const urlEl    = p8El('p36WebhookUrl');
+    const guide    = p8El('p36SetupGuide');
+
+    const webhookUrl = `${location.protocol}//${location.host}/api/payments/webhook`;
+    if (urlEl) urlEl.textContent = webhookUrl;
+
+    if (statusEl) {
+        if (enabled) {
+            statusEl.textContent = '● Connected';
+            statusEl.style.background = 'rgba(63,185,80,.12)';
+            statusEl.style.color       = '#3fb950';
+            statusEl.style.border      = '1px solid rgba(63,185,80,.3)';
+            if (guide) guide.style.borderColor = 'rgba(63,185,80,.2)';
+        } else {
+            statusEl.textContent = '○ Not Connected';
+            statusEl.style.background = 'rgba(248,81,73,.1)';
+            statusEl.style.color       = '#f85149';
+            statusEl.style.border      = '1px solid rgba(248,81,73,.25)';
+        }
+    }
 }
 
 function p36RenderSubStatus(sub) {
@@ -14132,7 +14175,7 @@ window.p36StartPayment = async function(plan, cycle) {
         key:         p36RazKey,
         amount:      order.amount,
         currency:    order.currency,
-        name:        'Antigravity AI',
+        name:        'Nexora AI Platform',
         description: `${order.plan_name} Plan (${order.billing_cycle})`,
         order_id:    order.razorpay_order_id,
         theme:       { color: '#bc8cff' },

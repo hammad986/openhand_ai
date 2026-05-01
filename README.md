@@ -1,164 +1,247 @@
-# 🤖 Multi-Agent AI Dev System
+# ⚡ Nexora AI Platform
 
-Lightweight, self-fixing AI coding agent — optimized for low-spec machines (8GB RAM, no GPU).
+> **Production-grade, multi-agent AI development platform with intelligent model routing, autonomous goal execution, and a full SaaS billing system.**
+
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.x-black?logo=flask)](https://flask.palletsprojects.com)
+[![License](https://img.shields.io/badge/License-MIT-green)](#)
+[![Razorpay](https://img.shields.io/badge/Billing-Razorpay-blue)](https://razorpay.com)
 
 ---
 
-## ⚡ Quick Start (3 steps)
+## 🚀 Overview
 
-```bash
-# 1. Install
-pip install -r requirements.txt
+Nexora is an autonomous AI coding platform. Describe what you want to build — the AI plans, codes, debugs, and ships it step by step. Built on a **Plan → Execute → Observe → Fix** loop with 15+ AI providers, 5 specialist agents, and a fully integrated SaaS billing system.
 
-# 2. Add API key
-cp .env.example .env
-# Edit .env → add your GROQ_API_KEY (free at console.groq.com)
+**Live capabilities:**
+- 🤖 Autonomous multi-agent coding with 5 specialist AI agents
+- 🧠 3-tier memory system with semantic recall across sessions
+- 🎯 Goal decomposition and autonomous task execution (Phase 16)
+- ⚡ Intelligent model routing across 15+ AI providers (Phase 9)
+- 💰 Razorpay SaaS billing — subscriptions, invoices, webhooks (Phase 36)
+- 🔑 BYOK for any supported provider (Phase 5)
+- 🛡️ Production security: JWT auth, rate limiting, kill switch (Phase 19)
 
-# 3. Run
-python main.py "Build a Flask hello world app"
+---
+
+## ⚡ Features
+
+### Core AI Engine
+| Feature | Description |
+|---------|-------------|
+| Multi-Agent Pipeline | Manager → Research → Coding → Debug agents in coordination |
+| 5 Specialist Agents | Reviewer, Debugger, Tester, Security Auditor, Optimizer |
+| Intelligent Routing | Auto-selects best model per task (fastest / cheapest / smartest) |
+| Auto-Failover | Switches providers on rate-limit or failure — zero downtime |
+| Self-Improvement | Learns from past errors to avoid repeating mistakes (Phase 14) |
+| Context Compression | 3-tier system to maximise context window efficiency (Phase 13) |
+
+### Platform
+| Feature | Description |
+|---------|-------------|
+| 15+ AI Providers | OpenAI, Gemini, Claude, Groq, OpenRouter, Ollama, xAI, Bedrock and more |
+| BYOK System | Per-user API key management with encrypted storage |
+| Session Memory | Short + long-term memory with ChromaDB vector store |
+| Task Scheduler | Background autonomous agent scheduling — cron-like (Phase 18) |
+| Goal AI | High-level goal decomposition into executable task graphs (Phase 16) |
+| SaaS Billing | Full Razorpay integration: orders, verification, webhooks, invoices |
+
+---
+
+## 🧠 AI Capabilities
+
+### The Agent Loop
 ```
+User Prompt → Planning Agent → Task Decomposition
+                             ↓
+                    Coding Agent → Tool Execution → File Writes
+                             ↓
+                    Debug Agent → Test & Verify → Fix Loop
+                             ↓
+                    Review Agent → Quality Check → Output
+```
+
+### Model Intelligence Routing (Phase 9)
+The router assigns the optimal model per task type:
+- **Planning** — High-reasoning: GPT-4o, Claude 3.5, Gemini Pro
+- **Coding** — Code-optimised: GPT-4o, Claude 3.5 Sonnet, DeepSeek Coder
+- **Debug** — Fast iterative: Groq Llama, GPT-4o-mini
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-User Task
-    │
-    ▼
-┌─────────────────────────────────────────┐
-│           BRAIN LAYER (router.py)        │
-│  Groq → Local(Ollama) → Together →      │
-│  OpenRouter → NVIDIA                    │
-│  Auto-failover + Cost-aware routing     │
-└──────────────────┬──────────────────────┘
-                   │
-    ┌──────────────▼──────────────┐
-    │      AGENT LOOP (agent.py)   │
-    │  Plan → Execute → Observe → │
-    │  Fix → Loop → Done           │
-    └──────────────┬──────────────┘
-        ┌──────────┴──────────┐
-        ▼                     ▼
-┌──────────────┐    ┌─────────────────┐
-│ TOOLS        │    │ MEMORY          │
-│ read_file    │    │ Chat history    │
-│ write_file   │    │ Task logs (SQL) │
-│ run_python   │    │ KV store (JSON) │
-│ run_shell    │    │ Code snippets   │
-│ git_commit   │    └─────────────────┘
-└──────────────┘
+┌─────────────────────────────────────────────────────┐
+│                    Browser (SPA)                    │
+│            templates/index.html (~16k LOC)          │
+└─────────────────────┬───────────────────────────────┘
+                      │ HTTP / REST
+┌─────────────────────▼───────────────────────────────┐
+│              Flask App (web_app.py)                 │
+│         ~10,000 lines · 36 feature phases           │
+├────────────┬────────────┬───────────┬───────────────┤
+│  agent.py  │ router.py  │memory.py  │  payments.py  │
+│  Agent     │  Model     │ 3-tier    │  Razorpay     │
+│  Loop      │  Router    │ Memory    │  Billing      │
+└────────────┴────────────┴───────────┴───────────────┘
+                      │
+┌─────────────────────▼───────────────────────────────┐
+│              SQLite Databases                       │
+│   sessions.db  (sessions, settings, scheduler)      │
+│   billing.db   (subscriptions, invoices, events)    │
+└─────────────────────────────────────────────────────┘
+```
+
+**Key files:**
+```
+web_app.py         # Flask app — all routes and business logic
+agent.py           # Core agent execution loop
+orchestrator.py    # Multi-agent orchestration
+router.py          # LLM routing logic
+model_router.py    # Intelligent model selection
+memory.py          # 3-tier memory system
+payments.py        # Razorpay billing integration
+auth_system.py     # JWT authentication
+tools.py + tools/  # Extensible tool registry
+templates/
+  index.html       # Main SPA (~16,000 lines)
+  docs.html        # Documentation page
 ```
 
 ---
 
-## 🧠 API Priority (auto-selected)
+## 🔌 API Providers
 
-| Priority | API         | Cost    | Notes              |
-|----------|-------------|---------|---------------------|
-| 1st      | Groq        | Free    | Fastest             |
-| 2nd      | Ollama      | Free    | Local, no internet  |
-| 3rd      | Together.ai | $0.0009 | Cheap               |
-| 4th      | OpenRouter  | $0.001  | Many models         |
-| 5th      | NVIDIA      | $0.001  | Backup              |
+| Provider | Models | Notes |
+|----------|--------|-------|
+| OpenAI | GPT-4o, GPT-4-turbo, GPT-3.5 | BYOK supported |
+| Google Gemini | 1.5 Pro / Flash / Ultra | BYOK supported |
+| Anthropic | Claude 3.5 Sonnet / Haiku / Opus | BYOK supported |
+| Groq | Llama 3, Mixtral | Ultra-fast inference |
+| OpenRouter | 100+ models | Single API key |
+| xAI / Grok | Grok-2 | BYOK supported |
+| AWS Bedrock | Claude, Titan | Enterprise |
+| Azure OpenAI | GPT-4 | Enterprise |
+| DeepSeek | DeepSeek Coder | Code-optimised |
+| Mistral | Large / Small | EU models |
+| Ollama | Any local model | Self-hosted |
 
 ---
 
-## 📟 CLI Usage
+## 💰 Pricing
+
+| Plan | Price | Daily Runs | Key Features |
+|------|-------|-----------|--------------|
+| **Free** | ₹0/month | 10 runs | Lite routing, basic agents |
+| **Pro** | ₹20/month | Unlimited | Pro routing, all 5 agents, memory |
+| **Elite** | ₹50/month | Unlimited | Elite routing, multi-agent, scheduler, goals |
+
+All plans include BYOK. Billing via Razorpay (INR). Yearly plans available at ~17% discount.
+
+---
+
+## 🔑 BYOK System
+
+Users supply their own API keys for any supported provider:
+
+1. Open Provider Settings in the platform UI
+2. Enter your API key for any provider
+3. Keys are encrypted and stored per-session in SQLite
+4. Router automatically uses your keys first, then platform keys as fallback
+
+---
+
+## 🛠️ Installation
+
+### Prerequisites
+- Python 3.10+
+- pip
+
+### Steps
 
 ```bash
-# Single task
-python main.py "Create a REST API with Flask"
+# 1. Clone
+git clone https://github.com/your-org/nexora-ai
+cd nexora-ai
 
-# Interactive mode
-python main.py
+# 2. Install
+pip install -r requirements.txt
 
-# Chat mode (no tools)
-python main.py --chat
+# 3. Set secrets
+export SECRET_KEY="your-long-random-secret"
+export JWT_SECRET="your-long-random-jwt-secret"
 
-# Force specific API
-python main.py --model groq "Build login page"
-python main.py --model local "Write a Python script"
-
-# View task history
-python main.py --history
-
-# Clear memory
-python main.py --clear
+# 4. Run
+python web_app.py
 ```
 
----
+Open `http://localhost:5000`. All databases are created automatically on first run.
 
-## 📁 Project Structure
+### Optional Secrets
 
-```
-ai-agent/
-├── main.py          ← CLI entry point
-├── agent.py         ← Core agent loop
-├── router.py        ← Multi-API router
-├── tools.py         ← Tool system
-├── memory.py        ← Memory (JSON + SQLite)
-├── config.py        ← All settings
-├── requirements.txt
-├── .env.example     ← API key template
-└── workspace/       ← Agent writes files here
-```
-
----
-
-## 🔧 Available Tools
-
-| Tool           | What it does                      |
-|----------------|-----------------------------------|
-| `write_file`   | Create or overwrite a file         |
-| `read_file`    | Read file contents                 |
-| `list_files`   | List workspace files               |
-| `run_python`   | Execute Python code                |
-| `run_shell`    | Run shell command                  |
-| `search_replace` | Edit specific text in file       |
-| `git_commit`   | Auto-commit changes                |
-| `delete_file`  | Delete a file                      |
-
----
-
-## 🔥 Advanced Features
-
-### 1. Multi-API Failover
-```
-Task sent → Groq fails → auto-retry on Ollama → success
-```
-
-### 2. Cost-Aware Routing
-Free APIs tried first. Paid APIs only as last resort.
-
-### 3. Self-Fixing Loop
-```
-Code fails → error sent back to LLM → LLM fixes → retry
-```
-
-### 4. Persistent Memory
-All tasks, code, and history saved to `memory.db` and `memory.json`.
-
----
-
-## 🔌 Optional: Local AI (Ollama)
-
-For 100% offline use:
 ```bash
-# Install Ollama
-curl -fsSL https://ollama.ai/install.sh | sh
+# AI Providers
+OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=...
+ANTHROPIC_API_KEY=sk-ant-...
+GROQ_API_KEY=gsk_...
 
-# Pull a coding model (3.8GB)
-ollama pull codellama
+# Billing (Razorpay)
+RAZORPAY_KEY_ID=rzp_live_...
+RAZORPAY_KEY_SECRET=...
 
-# Agent will use it automatically as fallback
+# Email receipts (Resend)
+EMAIL_API_KEY=re_...
+EMAIL_FROM=billing@your-domain.com
 ```
 
 ---
 
-## 📦 Get Free API Keys
+## 🚀 Deployment
 
-- **Groq** (fastest, free): https://console.groq.com
-- **OpenRouter** (many models): https://openrouter.ai
-- **Together.ai**: https://api.together.xyz
-- **NVIDIA**: https://integrate.api.nvidia.com
+### Replit (Recommended)
+1. Import to Replit
+2. Add secrets in the Secrets panel
+3. Click **Deploy** — TLS, health checks, and auto-restart included
+
+### Gunicorn
+```bash
+gunicorn -w 2 -b 0.0.0.0:5000 web_app:app
+```
+
+### Production Checklist
+- [ ] Strong `SECRET_KEY` and `JWT_SECRET` (32+ random chars)
+- [ ] Razorpay **live** keys (not test keys)
+- [ ] Webhook URL: `https://your-domain.com/api/payments/webhook`
+- [ ] Verified sender email domain for `EMAIL_FROM`
+- [ ] HTTPS enabled
+
+---
+
+## 📸 Screenshots
+
+| Main Interface | Billing & Plans | Documentation |
+|---------------|----------------|---------------|
+| *Main app UI* | *Upgrade modal* | */docs page* |
+
+---
+
+## 📌 Roadmap
+
+- [ ] WebSocket real-time streaming
+- [ ] Team/org accounts with RBAC
+- [ ] GitHub integration — commit, PR, review
+- [ ] Plugin marketplace for custom tools
+- [ ] Mobile app (React Native / Expo)
+- [ ] Multi-tenant SaaS mode
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+<p align="center"><strong>⚡ Nexora AI Platform</strong> — Built for developers, powered by AI</p>
