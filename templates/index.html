@@ -3187,6 +3187,7 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
             <div class="nx-more-item" data-nxtab="learning" onclick="nxSetTab('learning');p15LoadDashboard();nxCloseMore()">📊 Learning</div>
             <div class="nx-more-item" data-nxtab="goals" onclick="nxSetTab('goals');p16InitGoals();nxCloseMore()">🎯 Goal Mode</div>
             <div class="nx-more-item" data-nxtab="graph" onclick="nxSetTab('graph');p17InitGraph();nxCloseMore()">🧩 Execution Graph</div>
+            <div class="nx-more-item" data-nxtab="scheduler" onclick="nxSetTab('scheduler');p18InitScheduler();nxCloseMore()">⏱ Scheduler</div>
           </div>
         </div>
 
@@ -3199,6 +3200,7 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
         <button class="nx-tab secondary" data-nxtab="learning" onclick="nxSetTab('learning');p15LoadDashboard()">📊 Learning<span class="nx-tab-dot"></span></button>
         <button class="nx-tab secondary" data-nxtab="goals" onclick="nxSetTab('goals');p16InitGoals()">🎯 Goals<span class="nx-tab-dot"></span></button>
         <button class="nx-tab secondary" data-nxtab="graph" onclick="nxSetTab('graph');p17InitGraph()">🧩 Graph<span class="nx-tab-dot"></span></button>
+        <button class="nx-tab secondary" data-nxtab="scheduler" onclick="nxSetTab('scheduler');p18InitScheduler()">⏱ Scheduler<span class="nx-tab-dot"></span></button>
 
         <!-- Tab-specific action bar -->
         <div class="nx-tab-actions" id="nxTabActions"></div>
@@ -3449,6 +3451,122 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
             <div style="flex:1;overflow-y:auto;padding:10px 12px" id="p17DetailBody"></div>
             <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;flex-shrink:0" id="p17DetailActions"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- Phase 18: Scheduler tab -->
+      <div class="nx-tab-content" id="nxTab-scheduler" style="overflow-y:auto;padding:0">
+
+        <!-- Header -->
+        <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface);position:sticky;top:0;z-index:5">
+          <span style="font-size:1.05rem">⏱</span>
+          <strong style="font-size:0.85rem;background:linear-gradient(135deg,#fb923c,#f43f5e);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Phase 18 — Background Task Scheduler</strong>
+          <div style="flex:1"></div>
+          <span id="p18EngineBadge" style="font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:#4ade80">● Active</span>
+          <button class="btn tiny" onclick="p18LoadAll()">⟳ Refresh</button>
+          <button class="btn primary" onclick="p18ShowCreateForm()" style="font-size:11px">+ New Task</button>
+        </div>
+
+        <div style="padding:14px">
+
+          <!-- Status bar -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="p18StatsRow">
+            <div class="card" style="text-align:center">
+              <div style="font-size:1.4rem;font-weight:700;color:#fb923c" id="p18StatTotal">—</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">Total Tasks</div>
+            </div>
+            <div class="card" style="text-align:center">
+              <div style="font-size:1.4rem;font-weight:700;color:#4ade80" id="p18StatEnabled">—</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">Enabled</div>
+            </div>
+            <div class="card" style="text-align:center">
+              <div style="font-size:1.4rem;font-weight:700;color:#3b82f6" id="p18StatRunning">—</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">Running Now</div>
+            </div>
+            <div class="card" style="text-align:center">
+              <div style="font-size:10px;font-weight:600;color:#a78bfa" id="p18StatNext" style="word-break:break-word">—</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">Next Run</div>
+            </div>
+          </div>
+
+          <!-- Create task form (hidden by default) -->
+          <div class="card" id="p18CreateCard" style="display:none;margin-bottom:14px;border:1px solid #fb923c44">
+            <div class="card-header" style="display:flex;align-items:center;gap:8px">
+              <span>➕ Create Scheduled Task</span>
+              <button style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;margin-left:auto" onclick="p18HideCreateForm()">✕</button>
+            </div>
+            <div style="padding:10px 0;display:grid;gap:10px">
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px">Task Name</label>
+                  <input id="p18FName" type="text" placeholder="e.g. Daily health check" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-size:11px;box-sizing:border-box">
+                </div>
+                <div>
+                  <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px">Task Type</label>
+                  <select id="p18FType" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-size:11px">
+                    <option value="prompt">🤖 Prompt (agent task)</option>
+                    <option value="goal">🎯 Goal (decompose + run)</option>
+                    <option value="analysis">🔍 Analysis</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px">Prompt / Goal</label>
+                <textarea id="p18FPrompt" rows="3" placeholder="Describe what the AI should do when this task runs…"
+                  style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-size:11px;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px">Schedule Type</label>
+                  <select id="p18FSched" onchange="p18UpdateScheduleHint()" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-size:11px">
+                    <option value="once">🔂 Once</option>
+                    <option value="interval">🔁 Interval (repeat every N minutes)</option>
+                    <option value="daily">📅 Daily (at specific time)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:3px" id="p18FValLabel">Run at (ISO datetime or blank for now)</label>
+                  <input id="p18FVal" type="text" placeholder="e.g. 2025-01-15T09:00 or blank"
+                    style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-size:11px;box-sizing:border-box">
+                </div>
+              </div>
+
+              <div id="p18FHint" style="font-size:10px;color:#fb923c;padding:4px 6px;background:#fb923c11;border-radius:4px">
+                One-time task — runs once at the specified time (or immediately if blank).
+              </div>
+
+              <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button class="btn" style="font-size:11px" onclick="p18HideCreateForm()">Cancel</button>
+                <button class="btn primary" style="font-size:11px" onclick="p18CreateTask()" id="p18CreateBtn">✓ Create Task</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task list -->
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-header" style="display:flex;align-items:center;gap:8px">
+              📋 Scheduled Tasks
+              <span id="p18TaskCountBadge" style="background:var(--accent)22;color:var(--accent);border-radius:10px;padding:1px 7px;font-size:10px">0</span>
+            </div>
+            <div id="p18TaskList" style="padding:4px 0">
+              <div style="color:var(--muted);font-size:11px;padding:12px 0;text-align:center">No scheduled tasks yet. Click <b>+ New Task</b> to create one.</div>
+            </div>
+          </div>
+
+          <!-- Run history -->
+          <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;gap:8px">
+              📜 Recent Run History
+              <button class="btn tiny" style="margin-left:auto" onclick="p18LoadHistory()">⟳</button>
+            </div>
+            <div id="p18HistoryList" style="max-height:280px;overflow-y:auto;padding:4px 0">
+              <div style="color:var(--muted);font-size:11px;padding:8px 0">Loading…</div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -15855,6 +15973,255 @@ window.p16LoadChainDetail = async function(cid) {
 };
 
 console.log('[Phase 17] Task Graph Visualization + Execution Engine active.');
+
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════
+   PHASE 18 — BACKGROUND AUTONOMOUS AGENTS + TASK SCHEDULER
+   ═══════════════════════════════════════════════════════════════ */
+
+(function() {
+
+let _p18PollTimer = null;
+
+// ── Schedule hint text ────────────────────────────────────────────
+const SCHED_HINTS = {
+    once:     'One-time task — runs once at the specified time (or immediately if blank). Format: 2025-01-15T09:00',
+    interval: 'Repeating task — enter interval in minutes (e.g. 60 = every hour, 1440 = every day).',
+    daily:    'Daily task — enter time in HH:MM format (UTC), e.g. 09:00 for 9am UTC each day.',
+};
+const SCHED_LABELS = {
+    once:     'Run at (ISO datetime or blank for now)',
+    interval: 'Interval in minutes (e.g. 60)',
+    daily:    'Time of day HH:MM UTC (e.g. 09:00)',
+};
+
+window.p18UpdateScheduleHint = function() {
+    const t = (document.getElementById('p18FSched') || {}).value || 'once';
+    const hint  = document.getElementById('p18FHint');
+    const label = document.getElementById('p18FValLabel');
+    const inp   = document.getElementById('p18FVal');
+    if (hint)  hint.textContent  = SCHED_HINTS[t] || '';
+    if (label) label.textContent = SCHED_LABELS[t] || 'Value';
+    if (inp) {
+        const ph = { once: 'e.g. 2025-06-01T09:00 or blank', interval: 'e.g. 60', daily: 'e.g. 09:00' };
+        inp.placeholder = ph[t] || '';
+    }
+};
+
+// ── Init ─────────────────────────────────────────────────────────
+window.p18InitScheduler = function() {
+    p18LoadAll();
+    if (!_p18PollTimer) {
+        _p18PollTimer = setInterval(p18LoadAll, 10000);
+    }
+};
+
+window.p18LoadAll = async function() {
+    await Promise.all([p18LoadStatus(), p18LoadTasks(), p18LoadHistory()]);
+};
+
+// ── Status ────────────────────────────────────────────────────────
+window.p18LoadStatus = async function() {
+    try {
+        const r = await fetch('/api/scheduler/status');
+        const d = await r.json();
+        if (!d.ok) return;
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('p18StatTotal',   d.total_tasks);
+        set('p18StatEnabled', d.enabled_tasks);
+        set('p18StatRunning', d.running_count);
+        set('p18StatNext',    d.next_run_human || '—');
+        const badge = document.getElementById('p18EngineBadge');
+        if (badge) {
+            badge.textContent = d.running_count > 0 ? `● ${d.running_count} running` : '● Active';
+            badge.style.color = d.running_count > 0 ? '#fbbf24' : '#4ade80';
+        }
+    } catch(e) {}
+};
+
+// ── Task list ─────────────────────────────────────────────────────
+window.p18LoadTasks = async function() {
+    const el = document.getElementById('p18TaskList');
+    if (!el) return;
+    try {
+        const r = await fetch('/api/scheduler/tasks');
+        const d = await r.json();
+        if (!d.ok) { el.innerHTML = '<div style="color:#f87171;font-size:11px;padding:8px 0">Failed to load tasks.</div>'; return; }
+        const tasks = d.tasks || [];
+        const badge = document.getElementById('p18TaskCountBadge');
+        if (badge) badge.textContent = tasks.length;
+        if (!tasks.length) {
+            el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:12px 0;text-align:center">No scheduled tasks yet. Click <b>+ New Task</b> to create one.</div>';
+            return;
+        }
+        el.innerHTML = tasks.map(t => _p18TaskRow(t)).join('');
+    } catch(e) {
+        el.innerHTML = '<div style="color:#f87171;font-size:11px;padding:8px 0">Scheduler unavailable.</div>';
+    }
+};
+
+function _p18TaskRow(t) {
+    const statusColors = { idle:'#6b7280', running:'#3b82f6', completed:'#22c55e', failed:'#ef4444', paused:'#a855f7' };
+    const typeIcons    = { prompt:'🤖', goal:'🎯', analysis:'🔍' };
+    const schedIcons   = { once:'🔂', interval:'🔁', daily:'📅' };
+    const sc  = statusColors[t.status] || '#6b7280';
+    const dis = !t.enabled;
+    const schedLabel = t.schedule_type === 'interval' ? `every ${t.schedule_value} min` :
+                       t.schedule_type === 'daily' ? `daily ${t.schedule_value} UTC` : 'once';
+
+    return `<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);opacity:${dis ? '0.55' : '1'}">
+        <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font-size:12px">${typeIcons[t.task_type] || '🤖'}</span>
+                <span style="font-size:11px;font-weight:600;color:var(--text)">${_esc(t.name)}</span>
+                <span style="font-size:9px;padding:1px 6px;border-radius:8px;background:${sc}22;color:${sc}">${t.status}</span>
+                ${dis ? '<span style="font-size:9px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1px 5px">disabled</span>' : ''}
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc((t.prompt||'').substring(0,70))}</div>
+            <div style="display:flex;gap:10px;margin-top:4px;font-size:9px;flex-wrap:wrap">
+                <span style="color:#fb923c">${schedIcons[t.schedule_type] || '🔂'} ${schedLabel}</span>
+                <span style="color:var(--muted)">Next: ${t.next_run_human || '—'}</span>
+                <span style="color:var(--muted)">Runs: ${t.run_count} · Fails: ${t.fail_count}</span>
+                ${t.last_error ? `<span style="color:#f87171">⚠ ${_esc(t.last_error.substring(0,40))}</span>` : ''}
+            </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">
+            <div style="display:flex;gap:4px">
+                <button class="btn tiny" title="${t.enabled ? 'Disable' : 'Enable'}" onclick="p18ToggleTask('${t.id}',this)">${t.enabled ? '⏸' : '▶'}</button>
+                <button class="btn tiny" title="Run now" onclick="p18RunNow('${t.id}',this)">▶▶</button>
+                <button class="btn tiny" style="color:#f87171" title="Delete" onclick="p18DeleteTask('${t.id}',this)">🗑</button>
+            </div>
+            <div style="font-size:9px;color:var(--muted)">Last: ${t.last_run_human || '—'}</div>
+        </div>
+    </div>`;
+}
+
+// ── History ───────────────────────────────────────────────────────
+window.p18LoadHistory = async function() {
+    const el = document.getElementById('p18HistoryList');
+    if (!el) return;
+    try {
+        const r = await fetch('/api/scheduler/history?limit=30');
+        const d = await r.json();
+        if (!d.ok) return;
+        const hist = d.history || [];
+        if (!hist.length) {
+            el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px 0">No runs yet.</div>';
+            return;
+        }
+        el.innerHTML = hist.map(h => {
+            const sc = h.status === 'success' ? '#22c55e' : '#ef4444';
+            const icon = h.status === 'success' ? '✅' : '❌';
+            const dt = h.run_at ? new Date(h.run_at * 1000).toLocaleString() : '—';
+            const dur = h.duration ? `${h.duration.toFixed(1)}s` : '';
+            return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+                <span style="font-size:11px;margin-top:1px">${icon}</span>
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:10px;font-weight:500;color:var(--text)">${_esc((h.task_name || h.task_id || '').substring(0,50))}</div>
+                    <div style="font-size:9px;color:var(--muted)">${dt}${dur ? ' · ' + dur : ''}</div>
+                    ${h.error ? `<div style="font-size:9px;color:#f87171;margin-top:1px">${_esc(h.error.substring(0,60))}</div>` : ''}
+                </div>
+                <span style="font-size:9px;color:${sc};flex-shrink:0">${h.status}</span>
+            </div>`;
+        }).join('');
+    } catch(e) {}
+};
+
+// ── Create form ───────────────────────────────────────────────────
+window.p18ShowCreateForm = function() {
+    const c = document.getElementById('p18CreateCard');
+    if (c) { c.style.display = 'block'; c.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+};
+window.p18HideCreateForm = function() {
+    const c = document.getElementById('p18CreateCard');
+    if (c) c.style.display = 'none';
+    ['p18FName','p18FPrompt','p18FVal'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+};
+
+window.p18CreateTask = async function() {
+    const btn    = document.getElementById('p18CreateBtn');
+    const name   = (document.getElementById('p18FName')   || {}).value?.trim() || 'Unnamed Task';
+    const type   = (document.getElementById('p18FType')   || {}).value || 'prompt';
+    const prompt = (document.getElementById('p18FPrompt') || {}).value?.trim() || '';
+    const sched  = (document.getElementById('p18FSched')  || {}).value || 'once';
+    const val    = (document.getElementById('p18FVal')    || {}).value?.trim() || '';
+
+    if (!prompt) { if (typeof toast === 'function') toast('Prompt is required', 'err'); return; }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Creating…'; }
+    try {
+        const r = await fetch('/api/scheduler/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, task_type: type, prompt, schedule_type: sched, schedule_value: val }),
+        });
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.error || 'Create failed');
+        if (typeof toast === 'function') toast('Task scheduled!', 'ok');
+        p18HideCreateForm();
+        await p18LoadAll();
+    } catch(e) {
+        if (typeof toast === 'function') toast(`Error: ${e.message}`, 'err');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '✓ Create Task'; }
+    }
+};
+
+// ── Task actions ──────────────────────────────────────────────────
+window.p18ToggleTask = async function(tid, btn) {
+    if (btn) btn.disabled = true;
+    try {
+        const r = await fetch(`/api/scheduler/tasks/${tid}/toggle`, { method: 'POST' });
+        const d = await r.json();
+        if (d.ok) {
+            if (typeof toast === 'function') toast(d.enabled ? 'Task enabled' : 'Task disabled', 'ok');
+            await p18LoadTasks();
+        }
+    } catch(e) {} finally {
+        if (btn) btn.disabled = false;
+    }
+};
+
+window.p18RunNow = async function(tid, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+    try {
+        const r = await fetch(`/api/scheduler/tasks/${tid}/run-now`, { method: 'POST' });
+        const d = await r.json();
+        if (d.ok) {
+            if (typeof toast === 'function') toast('Task triggered!', 'ok');
+            setTimeout(p18LoadAll, 2000);
+        } else {
+            if (typeof toast === 'function') toast(d.error || 'Failed', 'err');
+        }
+    } catch(e) {
+        if (typeof toast === 'function') toast('Network error', 'err');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '▶▶'; }
+    }
+};
+
+window.p18DeleteTask = async function(tid, btn) {
+    if (!confirm('Delete this scheduled task?')) return;
+    if (btn) btn.disabled = true;
+    try {
+        const r = await fetch(`/api/scheduler/tasks/${tid}`, { method: 'DELETE' });
+        const d = await r.json();
+        if (d.ok) {
+            if (typeof toast === 'function') toast('Task deleted', 'ok');
+            await p18LoadAll();
+        }
+    } catch(e) {} finally {
+        if (btn) btn.disabled = false;
+    }
+};
+
+// ── Helpers ───────────────────────────────────────────────────────
+function _esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+console.log('[Phase 18] Background Autonomous Agents + Task Scheduler active.');
 
 })();
 

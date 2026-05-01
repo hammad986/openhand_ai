@@ -35,6 +35,9 @@ load_dotenv()
 from mcp_context import MCPContext
 mcp = MCPContext()
 
+from scheduler import TaskScheduler, compute_next_run
+_scheduler = TaskScheduler()
+
 # ────────────────────────────────────────────────────────────────────────────
 # Paths & app
 # ────────────────────────────────────────────────────────────────────────────
@@ -1669,6 +1672,62 @@ def queue_worker():
 
 _worker = threading.Thread(target=queue_worker, daemon=True)
 _worker.start()
+
+
+def _scheduler_enqueue(prompt: str, cfg: dict) -> str:
+    """Adapter that lets the scheduler call enqueue_task and returns sid."""
+    sid = enqueue_task(prompt, cfg=cfg)
+    return sid or ""
+
+
+def _scheduler_goal(prompt: str, importance: int) -> int:
+    """Adapter that creates and auto-runs a goal chain for the scheduler."""
+    runner = _get_chain_runner()
+    if runner is None:
+        raise RuntimeError("chain runner unavailable")
+    cid = runner.memory.create_chain(
+        goal=prompt, importance=importance, system_generated=False
+    )
+    cfg = get_setting("default_config", default_managed_config())
+    t = threading.Thread(
+        target=_auto_run_chain, args=(cid, cfg), daemon=True,
+        name=f"sched-chain-{cid}"
+    )
+    t.start()
+    return cid
+
+
+def _auto_run_chain(cid: int, cfg: dict):
+    """Drive a chain to completion in a background thread (scheduler use)."""
+    runner = _get_chain_runner()
+    if runner is None:
+        return
+    max_rounds = 40
+    for _ in range(max_rounds):
+        row = runner.memory.next_pending_task(cid)
+        if row is None:
+            break
+        runner.memory.mark_task_running(row["id"])
+        try:
+            sid = enqueue_task(row["goal"], cfg=cfg,
+                               chain_id=cid, chain_task_id=row["id"])
+        except Exception as e:
+            runner.memory.mark_task_done(row["id"], ok=False,
+                                          result=str(e))
+        time.sleep(2)
+        # Wait for the session to finish before starting next task
+        for _ in range(120):
+            s = db_session(sid) if sid else None
+            if s and s.get("status") in ("completed", "failed", "done"):
+                break
+            time.sleep(3)
+
+
+# ── Phase 18: start the scheduler background worker ──────────────
+_scheduler.start(
+    enqueue_fn=_scheduler_enqueue,
+    goal_fn=_scheduler_goal,
+)
 
 
 def enqueue_task(task, model=None, cfg=None,
@@ -7233,6 +7292,130 @@ def api_goal_chain_run(cid):
                              json={"config": cfg}, timeout=10)
             result = resp.json()
         return jsonify({"ok": True, "result": result})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Phase 18 — Background Task Scheduler API
+# ────────────────────────────────────────────────────────────────────────────
+
+@app.route("/api/scheduler/tasks", methods=["GET"])
+def api_scheduler_list():
+    """List all scheduled tasks."""
+    try:
+        tasks = _scheduler.list_tasks()
+        return jsonify({"ok": True, "tasks": [t.to_dict() for t in tasks]})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/scheduler/tasks", methods=["POST"])
+def api_scheduler_create():
+    """Create a new scheduled task."""
+    try:
+        data = request.get_json(force=True) or {}
+        name           = str(data.get("name", "Unnamed Task"))[:100]
+        task_type      = data.get("task_type", "prompt")
+        prompt         = str(data.get("prompt", ""))[:2000]
+        schedule_type  = data.get("schedule_type", "once")
+        schedule_value = str(data.get("schedule_value", ""))
+        enabled        = bool(data.get("enabled", True))
+        config         = data.get("config") or {}
+
+        if not prompt.strip():
+            return jsonify({"ok": False, "error": "prompt is required"}), 400
+        if task_type not in ("prompt", "goal", "analysis"):
+            return jsonify({"ok": False, "error": "invalid task_type"}), 400
+        if schedule_type not in ("once", "interval", "daily"):
+            return jsonify({"ok": False, "error": "invalid schedule_type"}), 400
+
+        task = _scheduler.create_task(
+            name=name, task_type=task_type, prompt=prompt,
+            schedule_type=schedule_type, schedule_value=schedule_value,
+            enabled=enabled, config=config,
+        )
+        return jsonify({"ok": True, "task": task.to_dict()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/scheduler/tasks/<tid>", methods=["GET"])
+def api_scheduler_get(tid):
+    """Get a single scheduled task."""
+    task = _scheduler.get_task(tid)
+    if not task:
+        return jsonify({"ok": False, "error": "not found"}), 404
+    history = _scheduler.get_history(tid, limit=20)
+    d = task.to_dict()
+    d["history"] = history
+    return jsonify({"ok": True, "task": d})
+
+
+@app.route("/api/scheduler/tasks/<tid>", methods=["PATCH"])
+def api_scheduler_update(tid):
+    """Update a scheduled task's fields."""
+    try:
+        task = _scheduler.get_task(tid)
+        if not task:
+            return jsonify({"ok": False, "error": "not found"}), 404
+        data = request.get_json(force=True) or {}
+        allowed = {"name", "task_type", "prompt", "schedule_type",
+                   "schedule_value", "enabled"}
+        updates = {k: v for k, v in data.items() if k in allowed}
+        if "enabled" in updates:
+            updates["enabled"] = int(bool(updates["enabled"]))
+        _scheduler.update_task(tid, **updates)
+        updated = _scheduler.get_task(tid)
+        return jsonify({"ok": True, "task": updated.to_dict() if updated else {}})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/scheduler/tasks/<tid>", methods=["DELETE"])
+def api_scheduler_delete(tid):
+    """Delete a scheduled task and its run history."""
+    try:
+        _scheduler.delete_task(tid)
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/scheduler/tasks/<tid>/run-now", methods=["POST"])
+def api_scheduler_run_now(tid):
+    """Manually trigger a scheduled task to run immediately."""
+    result = _scheduler.run_now(tid)
+    return jsonify(result)
+
+
+@app.route("/api/scheduler/tasks/<tid>/toggle", methods=["POST"])
+def api_scheduler_toggle(tid):
+    """Toggle enabled/disabled state of a scheduled task."""
+    task = _scheduler.get_task(tid)
+    if not task:
+        return jsonify({"ok": False, "error": "not found"}), 404
+    new_enabled = not task.enabled
+    _scheduler.update_task(tid, enabled=int(new_enabled))
+    return jsonify({"ok": True, "enabled": new_enabled})
+
+
+@app.route("/api/scheduler/status", methods=["GET"])
+def api_scheduler_status():
+    """Get scheduler engine status and running task counts."""
+    try:
+        return jsonify({"ok": True, **_scheduler.status()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/scheduler/history", methods=["GET"])
+def api_scheduler_history():
+    """Get recent run history across all tasks."""
+    try:
+        limit = min(int(request.args.get("limit", 30)), 100)
+        history = _scheduler.get_all_recent_history(limit=limit)
+        return jsonify({"ok": True, "history": history})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 

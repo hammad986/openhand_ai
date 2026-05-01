@@ -1,0 +1,197 @@
+You have successfully completed Phase 17 (Execution Graph Visualization).
+
+Now we implement a critical production capability:
+
+---
+
+# 🚀 PHASE 18 — BACKGROUND AUTONOMOUS AGENTS + TASK SCHEDULER
+
+---
+
+# 🎯 OBJECTIVE
+
+Enable the system to:
+
+* run tasks automatically in the background
+* schedule tasks (time-based or event-based)
+* operate without constant user interaction
+
+---
+
+# 🧠 CORE IDEA
+
+Move from:
+
+"User-triggered AI"
+
+→ to
+
+"Continuously running AI system"
+
+---
+
+# 🧠 STEP 1 — BACKGROUND WORKER SYSTEM
+
+Extend existing worker system:
+
+* support long-running tasks
+* support queued execution
+
+Each task should have:
+
+{
+task_id,
+type,
+status,
+schedule,
+last_run,
+next_run
+}
+
+---
+
+# 🧠 STEP 2 — TASK SCHEDULER
+
+Add scheduling types:
+
+1. One-time execution
+2. Interval-based (every X minutes/hours)
+3. Cron-style scheduling (advanced)
+
+---
+
+# 🧠 STEP 3 — UI: SCHEDULER PANEL
+
+Add new tab:
+
+"⏱ Scheduler"
+
+---
+
+# 🧠 STEP 4 — SCHEDULER UI FEATURES
+
+User can:
+
+* create scheduled task
+* edit schedule
+* enable/disable task
+* delete task
+
+---
+
+# 🧠 STEP 5 — TASK TYPES
+
+Allow scheduling of:
+
+* Goal Mode execution
+* Chat prompt execution
+* Analysis tasks
+
+---
+
+# 🧠 STEP 6 — EXECUTION LOGS
+
+Each scheduled task should store:
+
+* run history
+* success/failure
+* logs
+
+---
+
+# 🧠 STEP 7 — BACKGROUND EXECUTION LOOP
+
+Worker should:
+
+* continuously check pending tasks
+* execute when time matches
+* update status
+
+---
+
+# 🧠 STEP 8 — FAILURE HANDLING
+
+If scheduled task fails:
+
+* retry based on policy
+* log failure
+
+---
+
+# 🧠 STEP 9 — UI: LIVE STATUS
+
+Show:
+
+* active background tasks
+* running tasks
+* next scheduled run
+
+---
+
+# 🧠 STEP 10 — INTEGRATION WITH EXISTING SYSTEM
+
+* reuse WorkflowEngine
+* reuse ModelRouter
+* reuse Learning system
+
+---
+
+# 🧠 STEP 11 — SAFETY LIMITS
+
+Add:
+
+* max concurrent tasks
+* timeout protection
+* retry limits
+
+---
+
+# 🧠 STEP 12 — NOTIFICATIONS (BASIC)
+
+Show:
+
+* task completed
+* task failed
+
+---
+
+# ⚠️ RULES
+
+* DO NOT block main UI
+* MUST be async
+* MUST be stable under load
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. Scheduler backend system
+2. Background worker loop
+3. Scheduler UI panel
+4. Task management APIs
+5. Execution logs
+6. Integration with existing pipeline
+
+---
+
+# 🚀 FINAL GOAL
+
+System should behave like:
+
+"An AI that works for the user even when they are not actively using it"
+
+---
+
+# 🔍 FINAL VALIDATION (MANDATORY)
+
+* schedule multiple tasks
+* verify execution timing
+* verify logs
+* verify no crashes
+* verify concurrency safety
+
+---
+
+Deliver a:
+
+"Reliable background autonomous AI system"
