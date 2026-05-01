@@ -1,0 +1,52 @@
+# 🧠 Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 🧪 Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+my_env/
+my_env_*/
+
+# 🔐 Environment Files (CRITICAL)
+.env
+.env.*
+*.env
+
+# 🗄️ Databases / Local State
+*.db
+*.sqlite3
+*.db-shm
+*.db-wal
+*.json
+
+# 📦 Logs & Temp
+*.log
+logs/
+tmp/
+temp/
+
+# 🖥️ OS Files
+.DS_Store
+Thumbs.db
+
+# 🧱 Build / Cache
+.cache/
+dist/
+build/
+instance/
+memory_vectors/
+
+# 🧪 Testing / Debug Leftovers
+*.bak
+*.old
+*.backup
+
+# ── Workspace / Runtime
+workspace/
+uploads/
+scratch/
