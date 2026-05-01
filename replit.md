@@ -71,6 +71,65 @@ Complete multi-tenant auth rebuilt from scratch. Key files: `auth_system.py`, `w
 - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` → from GitHub → Settings → Developer Settings → OAuth Apps
 - Callback URLs to register: `https://<your-domain>/api/auth/google/callback` and `.../github/callback`
 
+## Idempotency + Billing Safety Layer (`idempotency.py`)
+
+Production-grade transaction safety system. All tables live in `saas_platform.db`.
+
+**DB Tables**:
+- `request_logs` — idempotency key cache (id, user_id, idempotency_key, endpoint, request_hash, response_snapshot, status_code, created_at, expires_at)
+- `daily_token_usage` — per-user daily AI token consumption (user_id, date_utc, tokens)
+- `payment_dedup` — billing activation dedup (payment_id PK, order_id, user_id, plan, activated_at)
+- `provider_failures` — provider failure event log (id, provider, error, user_id, created_at)
+
+**Protected Routes** (Idempotency-Key header OR auto-hash):
+- `POST /api/queue-task` (TTL 1h)
+- `POST /api/payments/create-order` (TTL 2h)
+- `POST /api/payments/verify` (TTL 48h)
+- `POST /api/p11/team/run` (TTL 1h)
+
+**Features**:
+- `@idempotent(ttl_hours)` decorator: caches 2xx responses, replays with `X-Idempotency-Replayed: true` header
+- `billing_dedup_check(payment_id)` / `billing_dedup_store(...)`: prevents double plan activation
+- `daily_token_check(user_id, plan)` / `daily_token_consume(user_id, tokens)`: daily AI cost caps (free: 50k, pro: 500k, elite: 2M tokens)
+- `retry_allowed(n)` + `backoff_seconds(attempt)`: exponential backoff, max 3 retries
+- `log_provider_failure(provider, error)`: provider failure event logging
+- Background cleanup thread purges expired entries every hour
+- Webhook dedup: `payments.log_webhook_event()` returns False for duplicate `(event_type, payment_id)` pairs — webhook handler skips processing on replay
+
+**API Endpoints**:
+- `GET /api/idempotency/status` — engine status + protected routes list + token stats
+- `GET /api/idempotency/token-usage` — current user daily token usage
+
+## Customer Support System (`support.py`)
+
+Enterprise-grade support ticketing. DB: `support.db`.
+
+**DB Tables**:
+- `support_tickets` — id (UUID), user_id, user_email, user_name, subject, message, status, priority, tag, billing_ref, created_at, updated_at
+- `ticket_messages` — id, ticket_id, sender (user/admin), user_id, message, created_at
+
+**Ticket Lifecycle**: open → in_progress → resolved → closed
+
+**AI Auto-tagging**: regex patterns classify tickets as: `billing`, `bug`, `feature`, `ai_error`, `general`
+
+**Billing info auto-attach**: tickets tagged `billing` automatically attach current subscription info
+
+**Rate limiting**: 3 tickets per user per hour (in-memory, configurable via `TICKET_RATE_LIMIT`)
+
+**API Endpoints**:
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/api/support/ticket` | Create ticket (returns 201) |
+| GET | `/api/support/tickets` | List tickets (filters: status, priority; ?admin=1 for all) |
+| GET | `/api/support/ticket/<id>` | Get ticket + full message thread |
+| POST | `/api/support/ticket/<id>/reply` | Add reply (sender: user/admin) |
+| PATCH | `/api/support/ticket/<id>/status` | Update status |
+| GET | `/api/support/stats` | Admin summary stats |
+
+**Email notifications** (via Resend, uses `EMAIL_API_KEY`): ticket created, admin reply received, status changed
+
+**UI**: Support tab in main panel — left sidebar with ticket list + filters, right panel with chat-style conversation, new ticket form, status controls. Badge shows open ticket count.
+
 ## Security (Updated)
 - Rate limiting on all API endpoints (tight limits on auth/task-queuing routes)
 - Security headers on every response: `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `X-XSS-Protection`, `Referrer-Policy`

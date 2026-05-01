@@ -1659,7 +1659,7 @@ class Memory:
     def _load_json(self) -> dict:
         if self.json_path.exists():
             try: return json.loads(self.json_path.read_text())
-            except: return {}
+            except Exception: return {}
         return {}
 
     def _save_json(self):

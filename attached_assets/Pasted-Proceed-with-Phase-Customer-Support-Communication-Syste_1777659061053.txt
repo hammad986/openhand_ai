@@ -1,0 +1,167 @@
+Proceed with Phase: Customer Support & Communication System (Production Grade).
+
+This is a critical trust layer for SaaS. Build it with enterprise-level reliability.
+
+---
+
+# 🎯 OBJECTIVE
+
+Create a full support system that allows:
+
+* Users to raise issues
+* Admin to track/respond
+* Email notifications for trust
+* Ticket lifecycle management
+
+---
+
+# 🧱 PART 1 — DATABASE DESIGN
+
+Create table: support_tickets
+
+Fields:
+
+* id (UUID)
+* user_id
+* subject
+* message
+* status (open / in_progress / resolved / closed)
+* priority (low / medium / high)
+* created_at
+* updated_at
+
+Create table: ticket_messages
+
+* id
+* ticket_id
+* sender (user/admin)
+* message
+* created_at
+
+---
+
+# 📩 PART 2 — API ENDPOINTS
+
+Implement:
+
+POST /api/support/ticket
+GET /api/support/tickets
+GET /api/support/ticket/<id>
+POST /api/support/ticket/<id>/reply
+PATCH /api/support/ticket/<id>/status
+
+---
+
+# 📧 PART 3 — EMAIL SYSTEM
+
+Integrate email provider (Resend or SMTP):
+
+On ticket creation:
+
+* send confirmation email to user
+
+On reply:
+
+* notify user
+
+On status change:
+
+* notify user
+
+Email must include:
+
+* ticket ID
+* subject
+* message preview
+
+---
+
+# 🎨 PART 4 — UI SYSTEM
+
+Create Support tab in UI:
+
+User side:
+
+* "Create Ticket" form
+* ticket list
+* chat-style ticket conversation
+
+Admin side (basic):
+
+* ticket list
+* status change
+* reply panel
+
+---
+
+# ⚙️ PART 5 — PRIORITY & FILTERS
+
+Allow:
+
+* filter by status
+* filter by priority
+* sort by newest/oldest
+
+---
+
+# 🛡️ PART 6 — SECURITY
+
+* only ticket owner can view ticket
+* validate inputs
+* rate limit ticket creation
+
+---
+
+# 🧠 PART 7 — AUTO TAGGING (ADVANCED)
+
+Use AI to tag ticket:
+
+* billing issue
+* bug
+* feature request
+* AI error
+
+---
+
+# 🧾 PART 8 — INTEGRATION WITH BILLING
+
+If ticket contains:
+
+* payment keyword
+
+→ attach billing info automatically
+
+---
+
+# 🔔 PART 9 — OPTIONAL (if time)
+
+* email threading
+* attachment support
+
+---
+
+# 🧪 PART 10 — TESTING
+
+Test:
+
+* ticket creation
+* reply flow
+* email sending
+* permission checks
+
+---
+
+# 🚀 FINAL RESULT
+
+System must confirm:
+
+"CUSTOMER SUPPORT SYSTEM FULLY OPERATIONAL"
+
+---
+
+# 🔥 NOTE
+
+This system must feel like real SaaS support — not basic form.
+
+After this phase, system becomes:
+👉 production-ready from user trust perspective

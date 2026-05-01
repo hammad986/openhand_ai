@@ -38,6 +38,37 @@ mcp = MCPContext()
 from scheduler import TaskScheduler, compute_next_run
 _scheduler = TaskScheduler()
 
+# ── Idempotency + Billing Safety Engine ──────────────────────────────────────
+try:
+    from idempotency import (
+        idempotent, check_idempotency, store_idempotency,
+        billing_dedup_check, billing_dedup_store,
+        daily_token_check, daily_token_consume, daily_token_stats,
+        retry_allowed, backoff_seconds, MAX_RETRIES,
+        log_provider_failure,
+    )
+    _IDEMPOTENCY_AVAILABLE = True
+except Exception as _idem_err:
+    import logging as _ilog
+    _ilog.getLogger(__name__).warning("[Idempotency] Module unavailable: %s", _idem_err)
+    _IDEMPOTENCY_AVAILABLE = False
+    def idempotent(*a, **kw):
+        def _d(f): return f
+        return _d
+    def daily_token_check(*a, **kw): return True, 0, 999999, 999999
+    def daily_token_consume(*a, **kw): pass
+    def daily_token_stats(*a, **kw): return {}
+    def log_provider_failure(*a, **kw): pass
+
+# ── Customer Support System ───────────────────────────────────────────────────
+try:
+    import support as _support
+    _SUPPORT_AVAILABLE = True
+except Exception as _sup_err:
+    import logging as _slog
+    _slog.getLogger(__name__).warning("[Support] Module unavailable: %s", _sup_err)
+    _SUPPORT_AVAILABLE = False
+
 # ────────────────────────────────────────────────────────────────────────────
 # Paths & app
 # ────────────────────────────────────────────────────────────────────────────
@@ -3063,6 +3094,7 @@ def api_goals_run_now():
 
 
 @app.route("/api/queue-task", methods=["POST"])
+@idempotent(ttl_hours=1)
 def api_queue_task():
     # Phase 19: kill switch check
     if is_kill_switch_active():
@@ -3095,6 +3127,23 @@ def api_queue_task():
                             "upgrade_needed": True}), 403
     except Exception:
         pass  # Never let billing logic break task submission
+
+    # ── Daily token cap (AI cost protection) ─────────────────────────────────
+    try:
+        _uid_for_cap = str(getattr(__import__("flask").g, "user_id", "anon"))
+        _plan_for_cap = p8_effective_plan(p8_get_state())
+        _cap_ok, _cap_used, _cap_limit, _cap_rem = daily_token_check(_uid_for_cap, _plan_for_cap)
+        if not _cap_ok:
+            return jsonify({
+                "error": (f"Daily AI token limit reached ({_cap_used:,}/{_cap_limit:,} tokens). "
+                          "Resets at midnight UTC. Upgrade your plan for higher limits."),
+                "token_cap_exceeded": True,
+                "tokens_used":  _cap_used,
+                "tokens_limit": _cap_limit,
+                "plan":         _plan_for_cap,
+            }), 429
+    except Exception:
+        pass  # Never block tasks due to token cap errors
 
     cfg = get_setting("default_config", default_managed_config())
     ok, err, _ = validate_config(cfg)
@@ -10030,6 +10079,7 @@ def api_p11_team_status():
 
 
 @app.route("/api/p11/team/run", methods=["POST"])
+@idempotent(ttl_hours=1)
 def api_p11_team_run():
     """Start the multi-agent team on a task."""
     d         = request.get_json() or {}
@@ -10100,6 +10150,7 @@ except Exception as _pay_err:
 
 
 @app.route("/api/payments/create-order", methods=["POST"])
+@idempotent(ttl_hours=2)
 def api_payments_create_order():
     """Create a Razorpay order for plan upgrade."""
     if not _BILLING_AVAILABLE:
@@ -10130,6 +10181,7 @@ def api_payments_create_order():
 
 
 @app.route("/api/payments/verify", methods=["POST"])
+@idempotent(ttl_hours=48)
 def api_payments_verify():
     """Verify Razorpay payment signature and activate subscription."""
     if not _BILLING_AVAILABLE:
@@ -10194,10 +10246,13 @@ def api_payments_webhook():
         user_email = entity.get("email", "")
         user_name  = entity.get("contact", "")
 
-        _pay.log_webhook_event(event_type, payment_id, order_id, payload)
+        # log_webhook_event returns False if this event was already processed (idempotency)
+        _is_new_event = _pay.log_webhook_event(event_type, payment_id, order_id, payload)
         logger = _logging.getLogger(__name__)
 
-        if event_type == "payment.captured":
+        if not _is_new_event:
+            logger.info("[Billing] Webhook replay detected — skipping: %s / %s", event_type, payment_id)
+        elif event_type == "payment.captured":
             logger.info("[Billing] Webhook payment.captured — %s plan=%s", payment_id, plan)
             if plan in ("pro", "elite"):
                 _pay.activate_subscription(
@@ -10327,6 +10382,201 @@ def api_billing_webhook_status():
     })
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Idempotency / Token Cap — status endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route("/api/idempotency/status")
+def api_idempotency_status():
+    """Return idempotency engine status and current user token usage."""
+    import flask
+    uid = str(getattr(flask.g, "user_id", "anon"))
+    try:
+        _p8_state = p8_get_state()
+        _plan = p8_effective_plan(_p8_state)
+    except Exception:
+        _plan = "free"
+
+    stats = daily_token_stats(uid, _plan) if _IDEMPOTENCY_AVAILABLE else {}
+    return jsonify({
+        "ok":                    True,
+        "idempotency_available": _IDEMPOTENCY_AVAILABLE,
+        "support_available":     _SUPPORT_AVAILABLE,
+        "token_stats":           stats,
+        "max_retries":           MAX_RETRIES if _IDEMPOTENCY_AVAILABLE else 3,
+        "protected_routes": [
+            "/api/queue-task",
+            "/api/payments/create-order",
+            "/api/payments/verify",
+            "/api/p11/team/run",
+        ],
+    })
+
+
+@app.route("/api/idempotency/token-usage")
+def api_token_usage():
+    """Current user daily token usage."""
+    import flask
+    uid = str(getattr(flask.g, "user_id", "anon"))
+    try:
+        _plan = p8_effective_plan(p8_get_state())
+    except Exception:
+        _plan = "free"
+    return jsonify({"ok": True, **daily_token_stats(uid, _plan)})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Support System — API endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route("/api/support/ticket", methods=["POST"])
+def api_support_create_ticket():
+    """Create a new support ticket."""
+    if not _SUPPORT_AVAILABLE:
+        return jsonify({"ok": False, "error": "Support system unavailable"}), 503
+
+    import flask
+    uid  = str(getattr(flask.g, "user_id", "anon"))
+    d    = request.get_json() or {}
+    subject  = (d.get("subject") or "").strip()
+    message  = (d.get("message") or "").strip()
+    priority = (d.get("priority") or "medium").lower().strip()
+    user_email = (d.get("user_email") or "").strip()
+    user_name  = (d.get("user_name") or "").strip()
+
+    if not subject or not message:
+        return jsonify({"ok": False, "error": "Subject and message are required"}), 400
+
+    try:
+        ticket = _support.create_ticket(
+            user_id=uid,
+            subject=subject,
+            message=message,
+            priority=priority,
+            user_email=user_email,
+            user_name=user_name,
+        )
+        return jsonify({"ok": True, "ticket": ticket}), 201
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 429
+    except Exception as e:
+        _logging.getLogger(__name__).error("[Support] create_ticket error: %s", e)
+        return jsonify({"ok": False, "error": "Failed to create ticket"}), 500
+
+
+@app.route("/api/support/tickets")
+def api_support_list_tickets():
+    """List support tickets for current user (or all for admin)."""
+    if not _SUPPORT_AVAILABLE:
+        return jsonify({"ok": False, "error": "Support system unavailable"}), 503
+
+    import flask
+    uid       = str(getattr(flask.g, "user_id", "anon"))
+    is_admin  = request.args.get("admin") == "1"
+    status    = request.args.get("status", "")
+    priority  = request.args.get("priority", "")
+    limit     = min(int(request.args.get("limit", "50")), 200)
+
+    tickets = _support.list_tickets(
+        user_id=uid if not is_admin else None,
+        status=status or None,
+        priority=priority or None,
+        limit=limit,
+        is_admin=is_admin,
+    )
+    return jsonify({"ok": True, "tickets": tickets, "total": len(tickets)})
+
+
+@app.route("/api/support/ticket/<ticket_id>")
+def api_support_get_ticket(ticket_id):
+    """Get a single ticket with its messages."""
+    if not _SUPPORT_AVAILABLE:
+        return jsonify({"ok": False, "error": "Support system unavailable"}), 503
+
+    import flask
+    uid      = str(getattr(flask.g, "user_id", "anon"))
+    is_admin = request.args.get("admin") == "1"
+
+    ticket = _support.get_ticket(ticket_id, user_id=uid, is_admin=is_admin)
+    if not ticket:
+        return jsonify({"ok": False, "error": "Ticket not found or access denied"}), 404
+    return jsonify({"ok": True, "ticket": ticket})
+
+
+@app.route("/api/support/ticket/<ticket_id>/reply", methods=["POST"])
+def api_support_reply(ticket_id):
+    """Add a reply message to a ticket."""
+    if not _SUPPORT_AVAILABLE:
+        return jsonify({"ok": False, "error": "Support system unavailable"}), 503
+
+    import flask
+    uid     = str(getattr(flask.g, "user_id", "anon"))
+    d       = request.get_json() or {}
+    message = (d.get("message") or "").strip()
+    sender  = (d.get("sender") or "user").lower()
+    is_admin = d.get("is_admin", False)
+
+    if not message:
+        return jsonify({"ok": False, "error": "Message cannot be empty"}), 400
+
+    try:
+        result = _support.reply_to_ticket(
+            ticket_id=ticket_id,
+            message=message,
+            sender="admin" if is_admin else "user",
+            user_id=uid,
+            is_admin=is_admin,
+        )
+        return jsonify({"ok": True, "message": result})
+    except PermissionError as e:
+        return jsonify({"ok": False, "error": str(e)}), 403
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    except Exception as e:
+        _logging.getLogger(__name__).error("[Support] reply error: %s", e)
+        return jsonify({"ok": False, "error": "Failed to send reply"}), 500
+
+
+@app.route("/api/support/ticket/<ticket_id>/status", methods=["PATCH"])
+def api_support_update_status(ticket_id):
+    """Update ticket status."""
+    if not _SUPPORT_AVAILABLE:
+        return jsonify({"ok": False, "error": "Support system unavailable"}), 503
+
+    import flask
+    uid      = str(getattr(flask.g, "user_id", "anon"))
+    d        = request.get_json() or {}
+    status   = (d.get("status") or "").lower().strip()
+    is_admin = d.get("is_admin", False)
+
+    if not status:
+        return jsonify({"ok": False, "error": "status is required"}), 400
+
+    try:
+        result = _support.update_ticket_status(
+            ticket_id=ticket_id,
+            new_status=status,
+            user_id=uid,
+            is_admin=is_admin,
+        )
+        return jsonify({"ok": True, **result})
+    except (PermissionError, ValueError) as e:
+        return jsonify({"ok": False, "error": str(e)}), 403
+    except Exception as e:
+        _logging.getLogger(__name__).error("[Support] status update error: %s", e)
+        return jsonify({"ok": False, "error": "Failed to update status"}), 500
+
+
+@app.route("/api/support/stats")
+def api_support_stats():
+    """Admin: ticket summary stats."""
+    if not _SUPPORT_AVAILABLE:
+        return jsonify({"ok": False, "error": "Support system unavailable"}), 503
+    stats = _support.get_support_stats()
+    return jsonify({"ok": True, **stats})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     # Phase 19: debug mode controlled by env var — never True in production
     _debug = os.getenv("FLASK_DEBUG", "0").strip() == "1"

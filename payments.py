@@ -212,7 +212,32 @@ def activate_subscription(plan: str, billing_cycle: str, payment_id: str,
                            user_id: str = "default",
                            user_email: str = "",
                            user_name: str = "") -> dict:
-    """Activate or upgrade a subscription after verified payment."""
+    """Activate or upgrade a subscription after verified payment.
+
+    IDEMPOTENT: If payment_id was already activated, return the existing
+    subscription without creating a duplicate. This prevents double-activation
+    from webhook replays or client retries.
+    """
+    # ── Billing dedup: prevent double-activation ──────────────────────────────
+    try:
+        from idempotency import billing_dedup_check, billing_dedup_store
+        if billing_dedup_check(payment_id):
+            logger.warning(
+                "[Billing] Duplicate activation attempt for payment_id=%s — returning cached result",
+                payment_id,
+            )
+            # Return the existing subscription info
+            sub = get_active_subscription(user_id)
+            if sub:
+                return {
+                    "subscription_id": sub["id"],
+                    "invoice_id":      sub.get("payment_id", ""),
+                    "expiry":          sub["expiry_date"][:10],
+                    "duplicate":       True,
+                }
+    except ImportError:
+        pass
+
     now    = datetime.datetime.utcnow()
     days   = PLANS[plan][f"days_{billing_cycle}"]
     expiry = now + datetime.timedelta(days=days)
@@ -240,6 +265,13 @@ def activate_subscription(plan: str, billing_cycle: str, payment_id: str,
     )
 
     _update_p8_plan(plan, expiry.date().isoformat())
+
+    # ── Record in dedup table so future activations for this payment are skipped ──
+    try:
+        from idempotency import billing_dedup_store
+        billing_dedup_store(payment_id, order_id, user_id, plan)
+    except ImportError:
+        pass
 
     if user_email:
         _send_payment_success_email(
@@ -577,14 +609,30 @@ def _update_p8_plan(plan: str, expires: str | None):
 # Webhook event logging
 # ─────────────────────────────────────────────────────────────────────────────
 
-def log_webhook_event(event_type: str, payment_id: str, order_id: str, payload: dict):
+def log_webhook_event(event_type: str, payment_id: str, order_id: str, payload: dict) -> bool:
+    """Log a webhook event. Returns False if this exact event was already processed (dedup)."""
     eid = f"evt_{uuid.uuid4().hex[:16]}"
     now = datetime.datetime.utcnow().isoformat()
     try:
         with _db_lock, _get_conn() as conn:
+            # Idempotency: check if (event_type, payment_id) already logged
+            if payment_id:
+                existing = conn.execute(
+                    "SELECT 1 FROM payment_events WHERE event_type=? AND payment_id=?",
+                    (event_type, payment_id),
+                ).fetchone()
+                if existing:
+                    logger.warning(
+                        "[Billing] Duplicate webhook event %s for payment_id=%s — skipping",
+                        event_type, payment_id,
+                    )
+                    return False  # Already processed
+
             conn.execute("""
                 INSERT INTO payment_events (id, event_type, payment_id, order_id, payload, created_at)
                 VALUES (?,?,?,?,?,?)
             """, (eid, event_type, payment_id, order_id, json.dumps(payload), now))
+        return True  # New event, should be processed
     except Exception as e:
         logger.warning("[Billing] Could not log webhook event: %s", e)
+        return True  # On error, allow processing to continue

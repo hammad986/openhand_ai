@@ -586,7 +586,7 @@ class Agent:
             m = re.search(r"\{.*\}", text, re.DOTALL)
             if m:
                 try: return json.loads(m.group())
-                except: pass
+                except Exception: pass
         return None
 
     def _plan_task(self, task: str) -> list[str]:

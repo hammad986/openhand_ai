@@ -365,7 +365,7 @@ class ModelRouter:
                 if r.status_code == 500:
                     try:
                         err = r.json().get("error", r.text)
-                    except: pass
+                    except Exception: pass
                 err_type = classify_error(err, r.status_code)
                 if "memory" in err.lower():
                     raise MemoryError(f"Ollama out of memory: {err}")
