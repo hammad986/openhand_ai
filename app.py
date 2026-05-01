@@ -1,4 +1,4 @@
-"""app.py — Single-command entry point for OpenHand AI.
+"""app.py — Single-command entry point for Nexora AI Platform.
 
 Usage:
     python app.py
@@ -51,7 +51,7 @@ print(r"""
  \___/| .__/ \___|_| |_|_| |_|\__,_|_| |_|\__,_|/_/  \_\_____|___|
       |_|
 """)
-print(f"  🤖  OpenHand AI — Phase 30 Production Build")
+print(f"  🤖  Nexora AI Platform — Production Build")
 print(f"  🌐  Starting server on http://localhost:{PORT}")
 print(f"  ⌨   Press Ctrl+C to stop\n")
 

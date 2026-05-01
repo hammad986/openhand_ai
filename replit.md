@@ -1,4 +1,4 @@
-# Multi-Agent AI Dev System
+# Nexora AI Platform
 
 ## Overview
 This project is an autonomous coding agent featuring a multi-LLM router with auto-failover and cost-aware routing. It incorporates a web-based user interface and terminal features, operating on a Plan → Execute → Observe → Fix development loop. The system aims to provide a robust, self-improving, and highly customizable environment for AI-driven software development.
@@ -23,10 +23,23 @@ Security and production hardening (Phase 19) include rate limiting, input saniti
 
 A real SaaS billing system (Phase 36) is integrated via Razorpay. It includes:
 - `payments.py` — order creation, HMAC signature verification, webhook processing, subscription activation/expiry, invoice HTML generation, and Resend email delivery.
-- Routes: `/api/payments/create-order`, `/api/payments/verify`, `/api/payments/webhook`, `/api/invoice/<id>`, `/api/billing/info`, `/api/billing/invoices`, `/api/billing/cancel`, `/api/payments/plans`.
+- Routes: `/api/payments/create-order`, `/api/payments/verify`, `/api/payments/webhook`, `/api/invoice/<id>`, `/api/billing/info`, `/api/billing/invoices`, `/api/billing/cancel`, `/api/payments/plans`, `/api/billing/webhook-status` (NEW).
 - Billing DB: `billing.db` (SQLite, auto-created) with `subscriptions`, `invoices`, `payment_events` tables.
-- UI: billing cycle toggle (Monthly/Yearly), INR plan pricing (₹20/₹50 per month), real Razorpay checkout popup, subscription status chip, invoice history with download links, billing mini-block in inspector panel.
-- **Secrets required to activate**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` (from Razorpay dashboard), and optionally `EMAIL_API_KEY` (Resend for invoice emails).
+- UI: billing cycle toggle (Monthly/Yearly), INR plan pricing (₹20/₹50 per month), real Razorpay checkout popup, subscription status chip, invoice history with download links, billing mini-block in inspector panel, **Billing Setup Guide tab** in Settings (NEW).
+- **Secrets required to activate**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` (from Razorpay dashboard), `RAZORPAY_WEBHOOK_SECRET` (for webhook validation), and optionally `EMAIL_API_KEY` (Resend for invoice emails), `EMAIL_FROM`.
+- **Billing Setup Guide**: Settings → 💳 Billing Setup — shows webhook URL, connection status (Connected/Partial/Not Configured), and step-by-step Razorpay setup instructions.
+
+## Security (Updated)
+- Rate limiting on all API endpoints (tight limits on auth/task-queuing routes)
+- Security headers on every response: `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `X-XSS-Protection`, `Referrer-Policy`
+- SQL column-name whitelist in `db_update_session` to prevent injection
+- JWT secret loaded exclusively from environment secrets (never hardcoded)
+- Debug mode controlled by `FLASK_DEBUG` env var (defaults off)
+- Gunicorn configured for 1 worker + 8 threads (required for shared in-memory state)
+
+## Branding
+Platform name: **NEXORA**. All files updated to remove "openhand"/"OpenHand" references.
+Coupon codes: `NEXORA`, `NEXORA90`, `HAMMAD30`, `ELITE7`, `TRYAGENT`, `AGENTELITE`, `PROLIFE`, `ELITE30`.
 
 ## External Dependencies
 - **Core Packages**: Flask, gunicorn, requests, psutil, bcrypt, PyJWT, python-dotenv, tiktoken, razorpay.

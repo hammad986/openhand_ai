@@ -134,7 +134,7 @@ class GitHubTool(BaseTool):
             elif action == "create_repo":
                 name = params.get("repo", "").split("/")[-1]
                 body = {"name": name, "private": params.get("private", False),
-                        "description": params.get("description", "Created by OpenHand AI")}
+                        "description": params.get("description", "Created by Nexora AI Platform")}
                 r = requests.post(f"{self._base}/user/repos", headers=self._headers(),
                                   json=body, timeout=10)
                 r.raise_for_status()
@@ -156,7 +156,7 @@ class GitHubTool(BaseTool):
             elif action == "commit":
                 repo = params["repo"]
                 files: list = params.get("files", [])
-                message = params.get("message", "Automated commit by OpenHand AI")
+                message = params.get("message", "Automated commit by Nexora AI Platform")
                 branch = params.get("branch", "main")
                 results = []
                 import base64
@@ -250,7 +250,7 @@ class WebTool(BaseTool):
 
             elif action == "scrape":
                 url = params.get("url", "")
-                headers = {"User-Agent": "Mozilla/5.0 OpenHandAI/1.0"}
+                headers = {"User-Agent": "Mozilla/5.0 NexoraAI/1.0"}
                 r = requests.get(url, headers=headers, timeout=15)
                 r.raise_for_status()
                 text = strip_tags(r.text)

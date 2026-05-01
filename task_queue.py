@@ -161,7 +161,7 @@ class TaskQueue:
         self._persist(task)
         self._emit("task_queued", {"id": tid, "name": task.name, "priority": priority})
         if _REDIS_OK and _rc:
-            try: _rc.lpush("openhand:task_queue",
+            try: _rc.lpush("nexora:task_queue",
                            json.dumps({"id": tid, "priority": priority}))
             except Exception: pass
         return tid

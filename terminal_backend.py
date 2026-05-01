@@ -425,7 +425,7 @@ class PtySession:
         if venv_info.get("ready"):
             status = "created" if venv_info.get("created") else "found"
             banner = (
-                f"\x1b[32m[OpenHand] venv '{VENV_NAME}' {status} — activating…\x1b[0m\r\n"
+                f"\x1b[32m[Nexora] venv '{VENV_NAME}' {status} — activating…\x1b[0m\r\n"
             )
             activate_cmd = build_activate_command(self.cwd)
             self.write(banner)
@@ -433,8 +433,8 @@ class PtySession:
             self._venv_activated = True
         else:
             warn = (
-                f"\x1b[33m[OpenHand] venv '{VENV_NAME}' not ready — running without isolation.\x1b[0m\r\n"
-                f"\x1b[33m[OpenHand] Run: python -m venv {VENV_NAME}  to create it.\x1b[0m\r\n"
+                f"\x1b[33m[Nexora] venv '{VENV_NAME}' not ready — running without isolation.\x1b[0m\r\n"
+                f"\x1b[33m[Nexora] Run: python -m venv {VENV_NAME}  to create it.\x1b[0m\r\n"
             )
             self.write(warn)
 

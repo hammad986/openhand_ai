@@ -334,7 +334,7 @@ class ModelRouter:
         r = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={"Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY']}",
-                     "HTTP-Referer": "https://openhand.ai"},
+                     "HTTP-Referer": "https://nexora.ai"},
             json={"model": model, "messages": msgs,
                   "max_tokens": max_tokens, "temperature": temp, "seed": 42}, timeout=30)
         r.raise_for_status()

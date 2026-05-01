@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexora — AI Development Platform</title>
+    <meta name="description" content="Nexora AI Platform — Autonomous multi-agent AI that plans, codes, debugs and ships your software.">
+    <meta name="application-name" content="Nexora">
+    <meta property="og:title" content="Nexora — AI Development Platform">
+    <meta property="og:description" content="Autonomous multi-agent AI that plans, codes, debugs and ships your software.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1117'/%3E%3Cpolygon points='16,3 20.5,11.5 30,13 23,20 24.7,29.5 16,25 7.3,29.5 9,20 2,13 11.5,11.5' fill='%23bc8cff' stroke='%236b3fa0' stroke-width='0.5'/%3E%3C/svg%3E">
+    <link rel="shortcut icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1117'/%3E%3Cpolygon points='16,3 20.5,11.5 30,13 23,20 24.7,29.5 16,25 7.3,29.5 9,20 2,13 11.5,11.5' fill='%23bc8cff' stroke='%236b3fa0' stroke-width='0.5'/%3E%3C/svg%3E">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         :root {
@@ -5938,6 +5944,7 @@ window.addEventListener('load', nxInit);
                 <button class="settings-tab"        data-stab="sessions"     onclick="switchSettingsTab('sessions')">Sessions</button>
                 <button class="settings-tab"        data-stab="memory"       onclick="switchSettingsTab('memory')">Memory</button>
                 <button class="settings-tab"        data-stab="advanced"     onclick="switchSettingsTab('advanced')">Advanced</button>
+                <button class="settings-tab"        data-stab="billing-setup" onclick="switchSettingsTab('billing-setup')">💳 Billing Setup</button>
             </div>
 
             <!-- API tab -->
@@ -6135,7 +6142,7 @@ window.addEventListener('load', nxInit);
                     </div>
                     <div class="p8-coupon-msg" id="p8SettingsCouponMsg"></div>
                     <div style="font-size:10px;color:var(--text-dim);margin-top:6px">
-                        Try: <code>HAMMAD30</code> · <code>ELITE7</code> · <code>TRYAGENT</code>
+                        Try: <code>NEXORA</code> · <code>NEXORA90</code> · <code>ELITE7</code> · <code>TRYAGENT</code>
                     </div>
                 </div>
 
@@ -6341,6 +6348,84 @@ window.addEventListener('load', nxInit);
                     </div>
                 </div>
             </div>
+
+            <!-- ══ Billing Setup Guide tab ══ -->
+            <div class="settings-pane" id="spane-billing-setup">
+                <!-- Status card -->
+                <div class="section">
+                    <h3>Razorpay Connection Status</h3>
+                    <div id="webhookStatusCard" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);margin-bottom:4px">
+                        <span id="webhookStatusDot" style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:var(--muted)"></span>
+                        <span id="webhookStatusLabel" style="font-size:13px;font-weight:600;color:var(--text)">Checking…</span>
+                        <button class="btn tiny" onclick="loadWebhookStatus()" style="margin-left:auto">Refresh</button>
+                    </div>
+                    <div id="webhookStatusDetail" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+                </div>
+
+                <!-- Webhook URL -->
+                <div class="section">
+                    <h3>Webhook URL</h3>
+                    <div class="info-box" style="font-size:11px;margin-bottom:8px">
+                        Copy this URL and paste it into your Razorpay Dashboard → Webhooks. Razorpay will call this endpoint after every payment event to keep your subscriptions in sync.
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center">
+                        <input id="webhookUrlInput" type="text" readonly
+                               style="flex:1;font-family:monospace;font-size:11px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--accent)"
+                               value="Loading…">
+                        <button class="btn tiny" onclick="copyWebhookUrl()">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Step-by-step guide -->
+                <div class="section">
+                    <h3>Setup Guide</h3>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="min-width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">1</div>
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--text)">Add Razorpay API Keys</div>
+                                <div style="font-size:11px;color:var(--muted);margin-top:2px">Go to Replit Secrets and add <code style="color:var(--accent)">RAZORPAY_KEY_ID</code> and <code style="color:var(--accent)">RAZORPAY_KEY_SECRET</code> from your Razorpay Dashboard → Settings → API Keys.</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="min-width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">2</div>
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--text)">Register the Webhook</div>
+                                <div style="font-size:11px;color:var(--muted);margin-top:2px">In Razorpay Dashboard → Settings → Webhooks → Add New Webhook. Paste the webhook URL shown above.</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="min-width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">3</div>
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--text)">Select Events</div>
+                                <div style="font-size:11px;color:var(--muted);margin-top:2px">Enable: <code style="color:var(--accent)">payment.captured</code> and <code style="color:var(--accent)">payment.failed</code> in the webhook event checkboxes.</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="min-width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">4</div>
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--text)">Save Webhook Secret</div>
+                                <div style="font-size:11px;color:var(--muted);margin-top:2px">Razorpay will generate a <b>Webhook Secret</b>. Copy it and add it to Replit Secrets as <code style="color:var(--accent)">RAZORPAY_WEBHOOK_SECRET</code>. Then restart the app.</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="min-width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">✓</div>
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--green)">Done — click Refresh above</div>
+                                <div style="font-size:11px;color:var(--muted);margin-top:2px">The status should update to ✅ Connected once all three secrets are present.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email config -->
+                <div class="section">
+                    <h3>Email Notifications (Optional)</h3>
+                    <div class="info-box" style="font-size:11px">
+                        To send payment confirmation emails, add a <a href="https://resend.com" target="_blank" style="color:var(--accent)">Resend</a> API key as <code style="color:var(--accent)">EMAIL_API_KEY</code> in Replit Secrets. Set <code style="color:var(--accent)">EMAIL_FROM</code> to your verified sender address (e.g. <code>billing@yourdomain.com</code>).
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -6475,6 +6560,7 @@ function switchSettingsTab(name) {
         loadModelRouting();
     }
     if (name === 'memory') loadLessons();
+    if (name === 'billing-setup') loadWebhookStatus();
 }
 
 document.addEventListener('keydown', (e) => {
@@ -6482,6 +6568,41 @@ document.addEventListener('keydown', (e) => {
         closeSettings();
     }
 });
+
+// ─── Billing Setup Guide ───────────────────────────────────────────────
+async function loadWebhookStatus() {
+    const dot   = $('webhookStatusDot');
+    const label = $('webhookStatusLabel');
+    const detail = $('webhookStatusDetail');
+    const urlInput = $('webhookUrlInput');
+    if (label) label.textContent = 'Checking…';
+    try {
+        const r = await api('GET', '/api/billing/webhook-status');
+        if (!r.ok) return;
+        const d = r.data;
+        if (urlInput) urlInput.value = d.webhook_url || '';
+        const colors = { connected: 'var(--green)', partial: 'var(--yellow)', not_configured: 'var(--red)' };
+        if (dot)   dot.style.background = colors[d.status] || 'var(--muted)';
+        if (label) label.textContent = d.status_label || d.status;
+        const parts = [];
+        if (!d.has_key_id)        parts.push('RAZORPAY_KEY_ID missing');
+        if (!d.has_key_secret)    parts.push('RAZORPAY_KEY_SECRET missing');
+        if (!d.has_webhook_secret) parts.push('RAZORPAY_WEBHOOK_SECRET missing');
+        if (detail) detail.textContent = parts.length ? parts.join(' · ') : 'All secrets configured.';
+    } catch(e) {
+        if (label) label.textContent = 'Error loading status';
+    }
+}
+
+function copyWebhookUrl() {
+    const inp = $('webhookUrlInput');
+    if (!inp || !inp.value) return;
+    navigator.clipboard.writeText(inp.value).then(() => showToast('Webhook URL copied!')).catch(() => {
+        inp.select();
+        document.execCommand('copy');
+        showToast('Webhook URL copied!');
+    });
+}
 
 // ─── Config / mode handling ────────────────────────────────────────────
 async function loadProviders() {

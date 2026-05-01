@@ -1,2 +1,1 @@
-web: gunicorn -w 4 --threads 8 --timeout 120 web_app:app
-worker: python -u autonomous_worker.py
+web: gunicorn -w 1 --threads 8 --timeout 120 --bind 0.0.0.0:5000 web_app:app

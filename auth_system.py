@@ -14,7 +14,7 @@ from flask import request, jsonify, g
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_JWT_SECRET = "openhand_saas_secret_key_123"
+_DEFAULT_JWT_SECRET = "nexora_saas_secret_key_change_in_production"
 SECRET_KEY = os.environ.get("JWT_SECRET", _DEFAULT_JWT_SECRET)
 
 # Warn loudly if the default secret is still in use

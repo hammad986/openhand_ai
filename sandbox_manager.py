@@ -95,7 +95,7 @@ class _DockerSandbox:
     def run(self, code: str, language: str, timeout: int,
             task_id: str, mem_mb: int, cpu: float, workspace_dir: str = None) -> SandboxResult:
         t0 = time.time()
-        cid = f"openhand-sb-{task_id[:12]}"
+        cid = f"nexora-sb-{task_id[:12]}"
         tmpdir = workspace_dir if workspace_dir else tempfile.mkdtemp(prefix="sb_")
         try:
             # Write code file
