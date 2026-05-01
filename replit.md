@@ -35,6 +35,16 @@ The UI was upgraded from the basic "Phase 57" bridge to a full feature-complete 
 - **`config.py` extended**: All new API key env vars, endpoint URLs, model defaults, cost-per-1k, capability map, and `PLAN_PROVIDER_PREFERENCE` dict added.
 - **`web_app.py` extended**: `PROVIDERS` dict with full metadata (category, url, speed, quality, caps, models, plan_pref). `p5_get_best_provider()` routing function. `/api/providers` returns rich catalog. `/api/p5/routing` new endpoint.
 
+### Phase 6: Decision Intelligence Layer
+- **Priority Selector**: Three-mode routing control (💰 Cheapest / ⚡ Fastest / 🧠 Smartest) persisted in `localStorage` (`p6_priority`) and synced to backend `/api/p6/priority`. Affects all AUTO routing decisions.
+- **Provider Lock**: Pin a specific provider from the Intelligence tab; auto-unpin by selecting "Auto". Syncs with Phase 5 provider badge.
+- **Smart Recommendation Engine**: `p6OnTaskType()` debounces 600ms after the user types, calls `/api/p6/recommend` with task text + plan + priority, shows an inline recommendation bar below the header with the top provider and a one-click "Use ↗" button.
+- **AUTO Pre-execution Hook**: Overrides `nxRunOrStop` — when provider is unlocked (AUTO), fetches recommendation just before running and applies the best provider silently.
+- **Intelligence Settings Tab**: New "🧠 Intelligence" tab in Settings modal with: priority selector, provider lock buttons (one per capable provider), full provider comparison table (latency bars, cost tiers, quality tiers, capabilities, success rate, lock toggle), and live performance badges.
+- **Performance Recording**: Status badge MutationObserver records success/fail events to `/api/p6/perf/record` for live runtime measurements.
+- **Backend functions**: `p6_analyze_task()`, `p6_recommend()`, `p6_record_perf()`, `p6_compute_badges()` in `web_app.py`. Static intelligence matrix `_P6_INTEL` (19 providers × latency/cost/quality/caps). Task pattern mapping `_P6_TASK_PATTERNS`.
+- **New endpoints**: `GET /api/p6/performance` (full perf + badges), `POST /api/p6/perf/record`, `POST /api/p6/recommend`, `GET|POST /api/p6/priority`.
+
 ### Phase 4: Intelligence & Personalization Layer
 - **Dark/Light Theme**: Full theme toggle (🌙/☀️ button in header). CSS `light-theme` class on `<body>` with all vars overridden. Theme persisted in `localStorage` (`p4_theme`). Smooth variable-based transitions.
 - **Token/Cost Tracker Pill**: Live `🔢 Ntok · $X.XXXX` pill in header polling `/api/costs/totals` every 5s (and `/api/session/<sid>` when a session is active). Shows only when usage > 0.

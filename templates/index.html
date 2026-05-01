@@ -248,6 +248,114 @@
         .p5-route-info .p5-ri-prov { color:#58a6ff; font-weight:600; }
         .p5-route-info .p5-ri-chain { color:#8b949e; font-size:0.68rem; margin-top:3px; }
         body.light-theme .p5-route-info { background:#f6f8fa; border-color:#d0d7de; }
+
+        /* ================================================================
+           PHASE 6 — Decision Intelligence Layer
+           ================================================================ */
+
+        /* Priority selector */
+        .p6-priority-row { display:flex; gap:6px; margin:8px 0; }
+        .p6-prio-btn {
+            flex:1; padding:7px 4px; border-radius:7px; border:1px solid #30363d;
+            background:transparent; color:#8b949e; font-size:0.76rem; cursor:pointer;
+            text-align:center; font-family:inherit; transition:none !important;
+        }
+        .p6-prio-btn:hover { background:#21262d; color:#e6edf3; }
+        .p6-prio-btn.active.cheap  { background:#1a2a0d; color:#3fb950; border-color:#3fb95055; }
+        .p6-prio-btn.active.fast   { background:#0d1f3c; color:#58a6ff; border-color:#58a6ff55; }
+        .p6-prio-btn.active.smart  { background:#1a1226; color:#bc8cff; border-color:#bc8cff55; }
+        body.light-theme .p6-prio-btn { border-color:#d0d7de; color:#57606a; }
+        body.light-theme .p6-prio-btn.active.cheap { background:#e6ffec; color:#1a7f37; border-color:#1a7f3755; }
+        body.light-theme .p6-prio-btn.active.fast  { background:#ddf4ff; color:#0969da; border-color:#0969da55; }
+        body.light-theme .p6-prio-btn.active.smart { background:#fbefff; color:#8250df; border-color:#8250df55; }
+
+        /* Recommendation card */
+        .p6-rec-card {
+            background:#0d1f3c; border:1px solid #1f3f6c; border-radius:8px;
+            padding:9px 12px; margin:6px 0; display:none;
+        }
+        .p6-rec-card.visible { display:block; }
+        .p6-rec-header { display:flex; align-items:center; gap:7px; margin-bottom:6px; }
+        .p6-rec-icon { font-size:1rem; }
+        .p6-rec-label { font-size:0.82rem; color:#e6edf3; font-weight:600; flex:1; }
+        .p6-rec-score { font-size:0.68rem; color:#8b949e; }
+        .p6-rec-reason { font-size:0.74rem; color:#79c0ff; margin-bottom:5px; }
+        .p6-rec-meta { display:flex; gap:6px; flex-wrap:wrap; }
+        .p6-rec-tag {
+            font-size:0.65rem; padding:1px 7px; border-radius:4px;
+            border:1px solid #30363d; color:#8b949e; background:#161b22;
+        }
+        .p6-rec-tag.latency { color:#3fb950; border-color:#3fb95033; }
+        .p6-rec-tag.cost    { color:#d29922; border-color:#d2992233; }
+        .p6-rec-tag.quality { color:#bc8cff; border-color:#bc8cff33; }
+        .p6-rec-apply { margin-top:8px; width:100%; }
+        body.light-theme .p6-rec-card { background:#ddf4ff; border-color:#0969da33; }
+        body.light-theme .p6-rec-reason { color:#0969da; }
+        body.light-theme .p6-rec-label { color:#1f2328; }
+
+        /* Intelligence panel in Settings */
+        .p6-intel-table { width:100%; border-collapse:collapse; font-size:0.76rem; }
+        .p6-intel-table th {
+            text-align:left; color:#8b949e; font-weight:600; font-size:0.65rem;
+            text-transform:uppercase; letter-spacing:0.07em;
+            padding:5px 8px; border-bottom:1px solid #21262d;
+        }
+        .p6-intel-table td { padding:7px 8px; border-bottom:1px solid #1c2230; vertical-align:middle; }
+        .p6-intel-table tr:last-child td { border-bottom:0; }
+        .p6-intel-table tr:hover td { background:#1c2230; }
+        .p6-tier-pill {
+            display:inline-block; padding:1px 6px; border-radius:4px;
+            font-size:0.63rem; font-weight:600;
+        }
+        .p6-tier-pill.free    { background:#1a2a0d; color:#3fb950; }
+        .p6-tier-pill.lowest  { background:#122010; color:#4ac26b; }
+        .p6-tier-pill.low     { background:#0d2310; color:#56d364; }
+        .p6-tier-pill.medium  { background:#2a1e00; color:#d29922; }
+        .p6-tier-pill.high    { background:#2a0d0d; color:#f85149; }
+        .p6-qual-pill {
+            display:inline-block; padding:1px 6px; border-radius:4px;
+            font-size:0.63rem; font-weight:600;
+        }
+        .p6-qual-pill.highest  { background:#1a1226; color:#bc8cff; }
+        .p6-qual-pill.high     { background:#0d1f3c; color:#79c0ff; }
+        .p6-qual-pill.good     { background:#0d1f14; color:#56d364; }
+        .p6-qual-pill.variable { background:#161b22; color:#8b949e; }
+        .p6-latency-bar-wrap { display:flex; align-items:center; gap:6px; }
+        .p6-latency-bar {
+            height:5px; border-radius:3px; background:#3fb950; flex-shrink:0;
+            max-width:60px; min-width:4px;
+        }
+        .p6-badge-row { display:flex; gap:4px; flex-wrap:wrap; }
+        .p6-badge {
+            font-size:0.63rem; padding:1px 5px; border-radius:3px;
+            background:#1a2a0d; color:#3fb950; border:1px solid #3fb95033;
+        }
+        .p6-compare-winner { background:#0d1f3c44; }
+        /* Provider lock */
+        .p6-lock-btn {
+            font-size:0.65rem; padding:2px 6px; border-radius:4px;
+            border:1px solid #30363d; background:transparent;
+            color:#8b949e; cursor:pointer; transition:none !important;
+        }
+        .p6-lock-btn.locked { background:#1a2a0d; color:#3fb950; border-color:#3fb95055; }
+        body.light-theme .p6-intel-table td { border-bottom-color:#f0f2f5; }
+        body.light-theme .p6-intel-table tr:hover td { background:#f0f2f5; }
+
+        /* Inline recommendation in command bar area */
+        .p6-inline-rec {
+            display:none; align-items:center; gap:6px; padding:4px 10px;
+            background:#0d1f3c; border-top:1px solid #1f3f6c;
+            font-size:0.73rem; color:#79c0ff;
+        }
+        .p6-inline-rec.visible { display:flex; }
+        .p6-inline-rec .p6-ir-use {
+            margin-left:auto; cursor:pointer; color:#3fb950; font-size:0.7rem;
+            white-space:nowrap; padding:2px 7px; border:1px solid #3fb95033;
+            border-radius:4px; background:#0d1f14;
+        }
+        .p6-inline-rec .p6-ir-use:hover { background:#1a2a0d; }
+        body.light-theme .p6-inline-rec { background:#ddf4ff; border-color:#0969da22; color:#0969da; }
+        body.light-theme .p6-inline-rec .p6-ir-use { background:#e6ffec; color:#1a7f37; border-color:#1a7f3733; }
         * { box-sizing:border-box; margin:0; padding:0; }
         html, body { height:100%; overflow:hidden; }
         body {
@@ -2234,7 +2342,7 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
            onchange="nxHandleFolderUpload(this)">
     <div class="p4-suggest-wrap" style="flex:1;position:relative;display:flex;flex-direction:column">
       <textarea id="taskInput" placeholder="Describe what you want to build… (Ctrl+Enter to run)" autocomplete="off" spellcheck="false"
-        oninput="p4OnTaskInput(this.value)"
+        oninput="p4OnTaskInput(this.value);p6OnTaskType(this.value)"
         onfocus="p4OnTaskInput(this.value)"
         onblur="setTimeout(()=>p4CloseSuggest(),200)"></textarea>
       <div class="p4-suggest-box" id="p4SuggestBox"></div>
@@ -2277,6 +2385,15 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <button class="nx-icon-btn" title="Settings" onclick="openSettings()">⚙</button>
   </div>
 </header>
+
+<!-- Phase 6: Inline task recommendation bar -->
+<div class="p6-inline-rec" id="p6InlineRec">
+  <span>🧠</span>
+  <span id="p6IrText">Best for this task:</span>
+  <b id="p6IrProv" style="color:#79c0ff"></b>
+  <span id="p6IrReason" style="color:#8b949e;font-size:0.7rem"></span>
+  <span class="p6-ir-use" onclick="p6ApplyRecommendation()">Use ↗</span>
+</div>
 
 <!-- Phase 5: Failover status bar (shows when provider switches) -->
 <div class="p5-failover-bar" id="p5FailoverBar">
@@ -4618,10 +4735,11 @@ window.addEventListener('load', nxInit);
         </div>
         <div class="modal-body">
             <div class="settings-tabs">
-                <button class="settings-tab active" data-stab="api"      onclick="switchSettingsTab('api')">Providers &amp; API</button>
-                <button class="settings-tab"        data-stab="sessions" onclick="switchSettingsTab('sessions')">Sessions</button>
-                <button class="settings-tab"        data-stab="memory"   onclick="switchSettingsTab('memory')">Memory</button>
-                <button class="settings-tab"        data-stab="advanced" onclick="switchSettingsTab('advanced')">Advanced</button>
+                <button class="settings-tab active" data-stab="api"          onclick="switchSettingsTab('api')">Providers &amp; API</button>
+                <button class="settings-tab"        data-stab="intelligence" onclick="switchSettingsTab('intelligence')">🧠 Intelligence</button>
+                <button class="settings-tab"        data-stab="sessions"     onclick="switchSettingsTab('sessions')">Sessions</button>
+                <button class="settings-tab"        data-stab="memory"       onclick="switchSettingsTab('memory')">Memory</button>
+                <button class="settings-tab"        data-stab="advanced"     onclick="switchSettingsTab('advanced')">Advanced</button>
             </div>
 
             <!-- API tab -->
@@ -4703,6 +4821,58 @@ window.addEventListener('load', nxInit);
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Intelligence tab (Phase 6) -->
+            <div class="settings-pane" id="spane-intelligence">
+
+                <!-- Priority Selector -->
+                <div class="section">
+                    <h3>Routing Priority
+                        <span style="font-size:0.72rem;font-weight:400;color:var(--muted);margin-left:8px">Affects all AUTO routing decisions</span>
+                    </h3>
+                    <div class="p6-priority-row" id="p6PriorityRow">
+                        <button class="p6-prio-btn cheap" onclick="p6SetPriority('cheap',this)">💰 Cheapest<br><small>Minimize cost</small></button>
+                        <button class="p6-prio-btn fast"  onclick="p6SetPriority('fast',this)">⚡ Fastest<br><small>Min latency</small></button>
+                        <button class="p6-prio-btn smart" onclick="p6SetPriority('smart',this)">🧠 Smartest<br><small>Best quality</small></button>
+                    </div>
+                    <div class="info-box" id="p6PrioDesc" style="font-size:0.76rem;margin-top:6px">
+                        Currently using <b id="p6PrioLabel">fast</b> routing — optimizes for response speed.
+                    </div>
+                </div>
+
+                <!-- Provider Lock -->
+                <div class="section">
+                    <h3>Provider Lock <span style="font-size:0.72rem;font-weight:400;color:var(--muted);margin-left:8px">Pin a specific provider</span></h3>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" id="p6LockRow">
+                        <button class="p6-lock-btn" onclick="p6LockProvider('auto')" id="p6Lock_auto">🔓 Auto (unlocked)</button>
+                    </div>
+                    <div class="info-box" style="font-size:0.76rem;margin-top:6px" id="p6LockDesc">
+                        No lock — the router chooses the best provider automatically.
+                    </div>
+                </div>
+
+                <!-- Model Intelligence Table -->
+                <div class="section">
+                    <h3>Model Intelligence
+                        <button class="btn tiny" style="float:right" onclick="p6LoadIntelPanel()">Refresh</button>
+                    </h3>
+                    <div class="info-box" style="font-size:0.76rem;margin-bottom:10px">
+                        Compare all providers side-by-side. Latency bars show estimated response time (shorter = faster). Bold rows have runtime measurements.
+                    </div>
+                    <div id="p6IntelTable">
+                        <div class="empty" style="padding:14px 0">Loading…</div>
+                    </div>
+                </div>
+
+                <!-- Real-time Performance Tracking -->
+                <div class="section">
+                    <h3>Live Performance <button class="btn tiny" style="float:right" onclick="p6LoadPerfBadges()">Refresh</button></h3>
+                    <div id="p6PerfBadges">
+                        <div class="empty" style="padding:8px 0">No runtime data yet — data is collected as you use the system.</div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Sessions tab -->
@@ -11659,5 +11829,354 @@ window.openSettings = function(tab) {
 };
 
 console.log('[Phase 5] BYOK Multi-Provider System active. Providers:', Object.keys({}).length || 'loading…');
+})();
+
+/* ================================================================
+   PHASE 6 — DECISION INTELLIGENCE LAYER
+   ================================================================ */
+(function() {
+'use strict';
+
+/* ── State ──────────────────────────────────────────────────────── */
+let p6Priority     = localStorage.getItem('p6_priority') || 'fast';
+let p6LockedProv   = localStorage.getItem('p6_locked_prov') || 'auto';
+let p6IntelData    = null;   // cached from /api/p6/performance
+let p6RecTimer     = null;   // debounce timer for task recommendation
+let p6LastRecProv  = null;   // last recommended provider id
+
+const P6_PRIO_DESC = {
+    cheap: 'Optimizes for lowest cost — free and budget providers preferred.',
+    fast:  'Optimizes for lowest latency — fastest providers preferred.',
+    smart: 'Optimizes for highest quality — strongest models preferred.',
+};
+const P6_COST_TIERS  = ['free','lowest','low','medium','high'];
+const P6_QUAL_TIERS  = ['variable','good','high','highest'];
+const P6_LATENCY_MAX = 3000; // ms, used for bar width scaling
+
+
+/* ── Priority Control ───────────────────────────────────────────── */
+window.p6SetPriority = async function(prio, btn) {
+    p6Priority = prio;
+    localStorage.setItem('p6_priority', prio);
+    // Save to backend
+    try { await fetch('/api/p6/priority', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({priority:prio})}); } catch{}
+    // Update UI
+    document.querySelectorAll('.p6-prio-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    else {
+        const bEl = document.querySelector(`.p6-prio-btn.${prio}`);
+        if (bEl) bEl.classList.add('active');
+    }
+    const labelEl = document.getElementById('p6PrioLabel');
+    const descEl  = document.getElementById('p6PrioDesc');
+    if (labelEl) labelEl.textContent = prio;
+    if (descEl) descEl.innerHTML = `Currently using <b>${prio}</b> routing — ${P6_PRIO_DESC[prio]}`;
+    // Re-score current task
+    const ti = document.getElementById('taskInput');
+    if (ti && ti.value.trim().length > 5) p6OnTaskType(ti.value);
+};
+
+// Restore saved priority
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => p6SetPriority(p6Priority, null), 600);
+    p6BuildLockRow();
+});
+
+
+/* ── Provider Lock Control ──────────────────────────────────────── */
+window.p6LockProvider = function(pid) {
+    p6LockedProv = pid;
+    localStorage.setItem('p6_locked_prov', pid);
+    // Sync with Phase 5 provider selector
+    if (typeof p5SelectProvider === 'function') p5SelectProvider(pid, null);
+    p6BuildLockRow();
+    const desc = document.getElementById('p6LockDesc');
+    if (desc) {
+        if (pid === 'auto') {
+            desc.innerHTML = 'No lock — the router chooses the best provider automatically.';
+        } else {
+            const label = (typeof p5ProviderMap !== 'undefined' ? p5ProviderMap[pid]?.label : null) || pid;
+            desc.innerHTML = `🔒 Locked to <b>${label}</b> — all tasks will use this provider.`;
+        }
+    }
+};
+
+function p6BuildLockRow() {
+    const row = document.getElementById('p6LockRow');
+    if (!row) return;
+    // Only build once providers are loaded
+    const providers = (typeof p5Providers !== 'undefined') ? p5Providers : [];
+    const chatProviders = providers.filter(p => (p.caps||[]).includes('coding') || (p.caps||[]).includes('thinking'));
+    let html = `<button class="p6-lock-btn${p6LockedProv==='auto'?' locked':''}" onclick="p6LockProvider('auto')" id="p6Lock_auto">🔓 Auto</button>`;
+    chatProviders.forEach(p => {
+        const dot = p.available ? '🟢' : '⚫';
+        html += `<button class="p6-lock-btn${p6LockedProv===p.id?' locked':''}" onclick="p6LockProvider('${p.id}')" id="p6Lock_${p.id}">${dot} ${p.label.split(' ')[0]}</button>`;
+    });
+    row.innerHTML = html;
+}
+
+// Rebuild lock row once Phase 5 providers are loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const waitForProviders = setInterval(() => {
+        if (typeof p5Providers !== 'undefined' && p5Providers.length > 0) {
+            clearInterval(waitForProviders);
+            p6BuildLockRow();
+        }
+    }, 500);
+});
+
+
+/* ── Model Intelligence Table ───────────────────────────────────── */
+window.p6LoadIntelPanel = async function() {
+    const container = document.getElementById('p6IntelTable');
+    if (!container) return;
+    container.innerHTML = '<div class="empty" style="padding:8px 0">Loading…</div>';
+    try {
+        const r = await fetch('/api/p6/performance');
+        if (!r.ok) throw new Error('fetch failed');
+        const d = await r.json();
+        p6IntelData = d.performance;
+        const badges = d.badges || {};
+        const providers = (typeof p5Providers !== 'undefined') ? p5Providers : [];
+
+        // Build table rows sorted by score (based on current priority)
+        const rows = providers.map(p => {
+            const perf = d.performance[p.id] || {};
+            return { p, perf };
+        }).filter(({p}) => (p.caps||[]).some(c=>['coding','thinking','debugging'].includes(c)));
+
+        // Sort by priority
+        const costRank = {free:0,lowest:1,low:2,medium:3,high:4};
+        rows.sort((a,b)=>{
+            if (p6Priority==='cheap')  return costRank[a.perf.cost_tier||'medium'] - costRank[b.perf.cost_tier||'medium'];
+            if (p6Priority==='fast')   return (a.perf.latency_est||9999) - (b.perf.latency_est||9999);
+            if (p6Priority==='smart')  {
+                const qr={variable:0,good:1,high:2,highest:3};
+                return (qr[b.perf.quality_tier||'good']||0) - (qr[a.perf.quality_tier||'good']||0);
+            }
+            return 0;
+        });
+
+        const tbody = rows.map(({p, perf}, i) => {
+            const latMs  = perf.avg_latency_ms || perf.latency_est || 1500;
+            const barW   = Math.max(4, Math.round(60 * Math.min(latMs, P6_LATENCY_MAX) / P6_LATENCY_MAX));
+            const barCol = latMs < 400 ? '#3fb950' : latMs < 900 ? '#d29922' : '#f85149';
+            const hasData = (perf.calls||0) > 0;
+            const sr      = perf.success_rate != null ? `${perf.success_rate}%` : '—';
+            const pBadges = (badges[p.id]||[]).map(b=>`<span class="p6-badge">${b}</span>`).join('');
+            const winner  = i === 0 ? ' class="p6-compare-winner"' : '';
+            const capHtml = (p.caps||[]).slice(0,2).map(c=>`<span class="p5-cap-tag ${c}">${c}</span>`).join('');
+            const lockBtn = `<button class="p6-lock-btn${p6LockedProv===p.id?' locked':''}" onclick="p6LockProvider('${p.id}')" title="Lock to this provider">${p6LockedProv===p.id?'🔒':'🔓'}</button>`;
+            return `<tr${winner}>
+                <td style="font-weight:${hasData?'600':'400'}">${p.label}${pBadges ? '<br>'+pBadges : ''}</td>
+                <td><div class="p6-latency-bar-wrap">
+                    <div class="p6-latency-bar" style="width:${barW}px;background:${barCol}"></div>
+                    <span style="font-size:0.68rem;color:#8b949e">${hasData?Math.round(latMs):latMs+'ms*'}</span>
+                </div></td>
+                <td><span class="p6-tier-pill ${perf.cost_tier||'medium'}">${perf.cost_tier||'?'}</span></td>
+                <td><span class="p6-qual-pill ${perf.quality_tier||'good'}">${perf.quality_tier||'?'}</span></td>
+                <td>${capHtml}</td>
+                <td style="color:${sr==='—'?'#8b949e':'#3fb950'}">${sr}</td>
+                <td>${lockBtn}</td>
+            </tr>`;
+        }).join('');
+
+        container.innerHTML = `<table class="p6-intel-table">
+            <thead><tr>
+                <th>Provider</th><th>Latency${p6Priority==='fast'?' ★':''}</th>
+                <th>Cost${p6Priority==='cheap'?' ★':''}</th>
+                <th>Quality${p6Priority==='smart'?' ★':''}</th>
+                <th>Capabilities</th><th>Success</th><th>Lock</th>
+            </tr></thead>
+            <tbody>${tbody}</tbody>
+        </table>
+        <div style="font-size:0.65rem;color:#8b949e;margin-top:6px">* Static estimate. Run tasks to collect real measurements. ★ = sorted by current priority.</div>`;
+    } catch(e) {
+        container.innerHTML = '<div class="empty" style="padding:8px 0;color:var(--red)">Failed to load. Check connection.</div>';
+    }
+};
+
+
+/* ── Performance Badges Panel ───────────────────────────────────── */
+window.p6LoadPerfBadges = async function() {
+    const el = document.getElementById('p6PerfBadges');
+    if (!el) return;
+    try {
+        const r = await fetch('/api/p6/performance');
+        if (!r.ok) throw new Error();
+        const d = await r.json();
+        const badges = d.badges || {};
+        const perf   = d.performance || {};
+        // Providers with any calls
+        const active = Object.entries(perf).filter(([,p])=>(p.calls||0)>0);
+        if (!active.length) {
+            el.innerHTML = '<div class="empty" style="padding:8px 0">No runtime data yet.</div>';
+            return;
+        }
+        el.innerHTML = active.map(([pid, p]) => {
+            const label = (typeof p5ProviderMap !== 'undefined') ? (p5ProviderMap[pid]?.label || pid) : pid;
+            const bs = (badges[pid]||[]).map(b=>`<span class="p6-badge">${b}</span>`).join('');
+            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:5px 0;border-bottom:1px solid #21262d">
+                <span style="font-size:0.78rem;color:#e6edf3;font-weight:500;min-width:100px">${label}</span>
+                <span style="font-size:0.7rem;color:#8b949e">${p.calls} calls · ${p.success_rate!=null?p.success_rate+'% ok':'—'} · ${p.avg_latency_ms?Math.round(p.avg_latency_ms)+'ms avg':'—'}</span>
+                ${bs}
+            </div>`;
+        }).join('');
+    } catch(e) {
+        el.innerHTML = '<div class="empty" style="padding:8px 0">Unable to load.</div>';
+    }
+};
+
+
+/* ── Smart Task Recommendation Engine ───────────────────────────── */
+let p6LastRec = null;  // full rec response cached
+
+window.p6OnTaskType = function(text) {
+    const rec = document.getElementById('p6InlineRec');
+    if (!rec) return;
+    if (!text || text.trim().length < 8) {
+        rec.classList.remove('visible');
+        p6LastRec = null;
+        return;
+    }
+    clearTimeout(p6RecTimer);
+    p6RecTimer = setTimeout(() => p6FetchRecommendation(text), 600);
+};
+
+async function p6FetchRecommendation(text) {
+    try {
+        const planBadge = document.querySelector('.nx-plan-name, .nx-plan-badge');
+        const plan = planBadge ? planBadge.textContent.toLowerCase().trim() : 'pro';
+        const r = await fetch('/api/p6/recommend', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({task: text, plan: plan, priority: p6Priority})
+        });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (!d.ok || !d.top) return;
+        p6LastRec = d;
+        const top = d.top;
+        p6LastRecProv = top.id;
+        // Show inline rec bar
+        const rec  = document.getElementById('p6InlineRec');
+        const prov = document.getElementById('p6IrProv');
+        const rsn  = document.getElementById('p6IrReason');
+        if (rec && prov) {
+            prov.textContent = top.label;
+            if (rsn) rsn.textContent = top.reasons.length ? '— ' + top.reasons[0] : '';
+            rec.classList.add('visible');
+        }
+    } catch(e) {}
+}
+
+window.p6ApplyRecommendation = function() {
+    if (!p6LastRecProv) return;
+    if (typeof p5SelectProvider === 'function') p5SelectProvider(p6LastRecProv, null);
+    const rec = document.getElementById('p6InlineRec');
+    if (rec) rec.classList.remove('visible');
+    if (typeof toast === 'function') toast(`Provider set to ${p6LastRec?.top?.label || p6LastRecProv}`, 'ok');
+};
+
+
+/* ── AUTO Mode upgrade — pre-execution recommendation ──────────── */
+// Hook into the run workflow to pick the best provider if locked to AUTO
+const _p6OrigRun = window.nxRunOrStop;
+window.nxRunOrStop = async function() {
+    const taskInput = document.getElementById('taskInput');
+    if (taskInput && taskInput.value.trim() && p6LockedProv === 'auto' && typeof p5SelectProvider === 'function') {
+        // Fetch best provider for this task in background, then run
+        try {
+            const planBadge = document.querySelector('.nx-plan-name, .nx-plan-badge');
+            const plan = planBadge ? planBadge.textContent.toLowerCase().trim() : 'pro';
+            const r = await fetch('/api/p6/recommend', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({task: taskInput.value.trim(), plan, priority: p6Priority})
+            });
+            if (r.ok) {
+                const d = await r.json();
+                if (d.ok && d.top && d.top.id !== 'local') {
+                    p5SelectProvider(d.top.id, null);
+                    console.log(`[P6 AUTO] Pre-selected ${d.top.label} for task (score: ${d.top.score})`);
+                }
+            }
+        } catch(e) {}
+    }
+    if (_p6OrigRun) _p6OrigRun.call(this);
+};
+
+
+/* ── Performance recording after session completion ─────────────── */
+// Hook into session status updates to record performance data
+const _p6OrigPollSession = window.pollSessionStatus;
+if (_p6OrigPollSession) {
+    let _p6SessionStart = {};
+    const _p6OrigPollOrig = _p6OrigPollSession;
+    window.pollSessionStatus = function(sid) {
+        if (!_p6SessionStart[sid]) _p6SessionStart[sid] = Date.now();
+        _p6OrigPollOrig.call(this, sid);
+    };
+}
+
+// Monitor session completions to record perf
+document.addEventListener('DOMContentLoaded', () => {
+    // Watch for status badge changes
+    const statusBadge = document.getElementById('nxGlobalStatus');
+    if (statusBadge) {
+        const obs = new MutationObserver((muts) => {
+            for (const m of muts) {
+                const text = statusBadge.textContent.trim().toLowerCase();
+                if (text === 'done' || text === 'complete' || text === 'success') {
+                    // Record a success for the active provider
+                    const activeProv = (typeof p5ActiveProvider !== 'undefined') ? p5ActiveProvider : 'auto';
+                    if (activeProv && activeProv !== 'auto') {
+                        fetch('/api/p6/perf/record', {
+                            method:'POST', headers:{'Content-Type':'application/json'},
+                            body: JSON.stringify({provider: activeProv, latency_ms: 800, success: true})
+                        }).catch(()=>{});
+                    }
+                } else if (text === 'failed' || text === 'error') {
+                    const activeProv = (typeof p5ActiveProvider !== 'undefined') ? p5ActiveProvider : 'auto';
+                    if (activeProv && activeProv !== 'auto') {
+                        fetch('/api/p6/perf/record', {
+                            method:'POST', headers:{'Content-Type':'application/json'},
+                            body: JSON.stringify({provider: activeProv, latency_ms: 0, success: false})
+                        }).catch(()=>{});
+                    }
+                }
+            }
+        });
+        obs.observe(statusBadge, {childList: true, characterData: true, subtree: true});
+    }
+});
+
+
+/* ── Open Intelligence tab when settings open ───────────────────── */
+const _p6OrigOpen = window.openSettings;
+window.openSettings = function(tab) {
+    if (_p6OrigOpen) _p6OrigOpen.call(this, tab);
+    if (tab === 'intelligence') {
+        setTimeout(() => {
+            p6LoadIntelPanel();
+            p6LoadPerfBadges();
+            p6SetPriority(p6Priority, null);
+        }, 200);
+    }
+};
+
+// Also hook into tab switching
+const _p6OrigSwitch = window.switchSettingsTab;
+window.switchSettingsTab = function(tab) {
+    if (_p6OrigSwitch) _p6OrigSwitch.call(this, tab);
+    if (tab === 'intelligence') {
+        setTimeout(() => {
+            p6LoadIntelPanel();
+            p6LoadPerfBadges();
+            p6SetPriority(p6Priority, null);
+        }, 150);
+    }
+};
+
+console.log('[Phase 6] Decision Intelligence Layer active. Priority:', p6Priority);
 })();
 </div></body></html>

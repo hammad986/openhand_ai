@@ -1592,6 +1592,276 @@ def api_p5_routing():
     })
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 6 — Decision Intelligence Layer
+# ══════════════════════════════════════════════════════════════════════════════
+
+_P6_PERF_KEY   = "p6_provider_perf"    # settings key for persistent perf data
+_P6_PRIO_KEY   = "p6_user_priority"    # settings key for user priority preference
+
+# Static intelligence matrix — static estimates (ms latency, cost tier)
+# Runtime measurements overlay these defaults.
+_P6_INTEL = {
+    "openai":      {"latency_est": 900,  "cost_tier": "medium", "quality_tier": "high",   "best_for": ["coding", "reasoning", "debugging"]},
+    "anthropic":   {"latency_est": 1200, "cost_tier": "high",   "quality_tier": "highest","best_for": ["reasoning", "debugging", "long-context"]},
+    "gemini":      {"latency_est": 600,  "cost_tier": "low",    "quality_tier": "high",   "best_for": ["coding", "multimodal", "fast-tasks"]},
+    "groq":        {"latency_est": 200,  "cost_tier": "free",   "quality_tier": "good",   "best_for": ["fast-tasks", "coding", "prototyping"]},
+    "openrouter":  {"latency_est": 800,  "cost_tier": "low",    "quality_tier": "high",   "best_for": ["coding", "reasoning", "access-all"]},
+    "xai":         {"latency_est": 1000, "cost_tier": "high",   "quality_tier": "high",   "best_for": ["reasoning", "current-events"]},
+    "bedrock":     {"latency_est": 1100, "cost_tier": "medium", "quality_tier": "high",   "best_for": ["enterprise", "reasoning"]},
+    "azure":       {"latency_est": 850,  "cost_tier": "medium", "quality_tier": "high",   "best_for": ["enterprise", "coding", "debugging"]},
+    "fireworks":   {"latency_est": 300,  "cost_tier": "low",    "quality_tier": "good",   "best_for": ["fast-tasks", "coding"]},
+    "deepseek":    {"latency_est": 400,  "cost_tier": "lowest", "quality_tier": "high",   "best_for": ["coding", "reasoning", "budget"]},
+    "mistral":     {"latency_est": 350,  "cost_tier": "low",    "quality_tier": "good",   "best_for": ["coding", "fast-tasks"]},
+    "cohere":      {"latency_est": 500,  "cost_tier": "low",    "quality_tier": "good",   "best_for": ["summarization", "search"]},
+    "huggingface": {"latency_est": 2000, "cost_tier": "free",   "quality_tier": "variable","best_for": ["experimentation"]},
+    "together":    {"latency_est": 400,  "cost_tier": "low",    "quality_tier": "good",   "best_for": ["coding", "fast-tasks"]},
+    "nvidia":      {"latency_est": 350,  "cost_tier": "low",    "quality_tier": "good",   "best_for": ["coding", "fast-tasks"]},
+    "replicate":   {"latency_est": 3000, "cost_tier": "medium", "quality_tier": "high",   "best_for": ["image-generation", "multimodal"]},
+    "elevenlabs":  {"latency_est": 400,  "cost_tier": "medium", "quality_tier": "highest","best_for": ["text-to-speech"]},
+    "deepgram":    {"latency_est": 300,  "cost_tier": "low",    "quality_tier": "high",   "best_for": ["speech-to-text"]},
+    "local":       {"latency_est": 1500, "cost_tier": "free",   "quality_tier": "variable","best_for": ["privacy", "offline", "experimentation"]},
+}
+
+# Task keyword → capability tags (used for recommendation)
+_P6_TASK_PATTERNS = [
+    (["fast", "quick", "simple", "prototype", "demo"],           "fast-tasks"),
+    (["debug", "fix", "error", "bug", "traceback", "exception"], "debugging"),
+    (["reason", "think", "analyze", "explain", "understand"],     "reasoning"),
+    (["code", "build", "implement", "function", "class", "api"],  "coding"),
+    (["image", "picture", "photo", "vision", "multimodal"],       "multimodal"),
+    (["cheap", "free", "budget", "cost"],                         "budget"),
+    (["enterprise", "corporate", "compliance", "gdpr"],           "enterprise"),
+    (["long", "document", "context", "large"],                    "long-context"),
+    (["speech", "voice", "audio", "tts", "transcribe"],           "text-to-speech"),
+]
+
+
+def p6_analyze_task(task_text: str) -> list:
+    """Extract capability needs from task text. Returns list of capability tags."""
+    lower = task_text.lower()
+    needs = []
+    for keywords, tag in _P6_TASK_PATTERNS:
+        if any(kw in lower for kw in keywords):
+            needs.append(tag)
+    if not needs:
+        needs = ["coding"]  # default
+    return needs
+
+
+def p6_get_perf() -> dict:
+    """Load stored per-provider performance data."""
+    return get_setting(_P6_PERF_KEY, {})
+
+
+def p6_record_perf(provider: str, latency_ms: float, success: bool, was_fallback: bool = False):
+    """Record a provider call result and update rolling stats."""
+    perf = p6_get_perf()
+    if provider not in perf:
+        perf[provider] = {
+            "calls": 0, "successes": 0, "failures": 0,
+            "fallbacks": 0, "total_latency_ms": 0,
+            "min_latency_ms": None, "max_latency_ms": None,
+            "last_used": None,
+        }
+    p = perf[provider]
+    p["calls"] += 1
+    if success:
+        p["successes"] += 1
+        p["total_latency_ms"] += latency_ms
+        if p["min_latency_ms"] is None or latency_ms < p["min_latency_ms"]:
+            p["min_latency_ms"] = latency_ms
+        if p["max_latency_ms"] is None or latency_ms > p["max_latency_ms"]:
+            p["max_latency_ms"] = latency_ms
+    else:
+        p["failures"] += 1
+    if was_fallback:
+        p["fallbacks"] += 1
+    p["last_used"] = time.time()
+    set_setting(_P6_PERF_KEY, perf)
+
+
+def p6_compute_badges(perf: dict) -> dict:
+    """Compute performance badges for providers with enough data."""
+    badges = {}
+    if not perf:
+        return badges
+    # Only score providers with >= 3 calls
+    eligible = {pid: p for pid, p in perf.items() if p.get("calls", 0) >= 3}
+    if not eligible:
+        return badges
+    # Fastest: lowest avg latency
+    def avg_lat(p): return p["total_latency_ms"] / max(p["successes"], 1)
+    def sr(p):      return p["successes"] / max(p["calls"], 1)
+    fastest = min(eligible, key=lambda pid: avg_lat(eligible[pid]))
+    most_reliable = max(eligible, key=lambda pid: sr(eligible[pid]))
+    badges[fastest]       = badges.get(fastest, [])
+    badges[fastest].append("⚡ Fastest today")
+    badges[most_reliable] = badges.get(most_reliable, [])
+    badges[most_reliable].append("✅ Most reliable")
+    # Cheapest: by cost_tier from _P6_INTEL
+    cost_rank = {"free": 0, "lowest": 1, "low": 2, "medium": 3, "high": 4}
+    cheapest = min(eligible, key=lambda pid: cost_rank.get(_P6_INTEL.get(pid, {}).get("cost_tier", "high"), 4))
+    badges[cheapest] = badges.get(cheapest, [])
+    badges[cheapest].append("💰 Cheapest")
+    return badges
+
+
+def p6_recommend(task_text: str, plan_mode: str, user_priority: str, available_keys: dict) -> dict:
+    """Full recommendation: analyze task, score providers, return ranked list with reasons."""
+    from config import Config
+    needs  = p6_analyze_task(task_text)
+    perf   = p6_get_perf()
+    badges = p6_compute_badges(perf)
+
+    priority_weights = {
+        "cheap": {"cost": 0.6, "speed": 0.2, "quality": 0.2},
+        "fast":  {"cost": 0.1, "speed": 0.7, "quality": 0.2},
+        "smart": {"cost": 0.1, "speed": 0.2, "quality": 0.7},
+    }.get(user_priority, {"cost": 0.2, "speed": 0.4, "quality": 0.4})
+
+    cost_score  = {"free": 1.0, "lowest": 0.9, "low": 0.75, "medium": 0.4, "high": 0.1}
+    qual_score  = {"highest": 1.0, "high": 0.8, "good": 0.6, "variable": 0.3}
+    speed_score = lambda lat: max(0, 1.0 - lat / 3000)  # 0ms=1.0, 3000ms=0.0
+
+    results = []
+    for pid, meta in PROVIDERS.items():
+        key_env = meta.get("key_env")
+        has_key = (not key_env) or bool(os.getenv(key_env)) or bool(available_keys.get(pid))
+        if not has_key:
+            continue
+        intel = _P6_INTEL.get(pid, {})
+        best_for = intel.get("best_for", [])
+        caps     = meta.get("caps", [])
+
+        # Capability match score
+        cap_match = sum(1 for n in needs if n in best_for or n in caps)
+
+        # Runtime latency if available
+        p_perf = perf.get(pid, {})
+        runtime_lat = (p_perf.get("total_latency_ms", 0) / max(p_perf.get("successes", 1), 1)
+                       if p_perf.get("successes", 0) > 0
+                       else intel.get("latency_est", 1500))
+
+        c = cost_score.get(intel.get("cost_tier", "medium"), 0.4)
+        q = qual_score.get(intel.get("quality_tier", "good"),  0.5)
+        s = speed_score(runtime_lat)
+        sr = p_perf.get("successes", 0) / max(p_perf.get("calls", 1), 1) if p_perf.get("calls", 0) > 0 else 0.7
+
+        total = (priority_weights["cost"]    * c +
+                 priority_weights["speed"]   * s +
+                 priority_weights["quality"] * q +
+                 0.15 * cap_match +
+                 0.05 * sr)
+
+        # Build reason
+        reasons = []
+        if "fast-tasks" in needs or user_priority == "fast":
+            if intel.get("latency_est", 9999) < 400: reasons.append("fastest response")
+        if "debugging" in needs and "debugging" in caps: reasons.append("great at debugging")
+        if "reasoning" in needs and "thinking" in caps:  reasons.append("strong reasoning")
+        if "budget" in needs or user_priority == "cheap":
+            if intel.get("cost_tier") in ("free", "lowest"): reasons.append("lowest cost")
+        if not reasons:
+            reasons.append(f"{intel.get('quality_tier','good')} quality")
+        plan_prefs = meta.get("plan_pref", [])
+        if plan_mode in plan_prefs: reasons.insert(0, f"ideal for {plan_mode} mode")
+
+        results.append({
+            "id":      pid,
+            "label":   meta["label"],
+            "score":   round(total, 4),
+            "reasons": reasons[:2],
+            "badges":  badges.get(pid, []),
+            "latency_est": int(runtime_lat),
+            "cost_tier":   intel.get("cost_tier", "medium"),
+            "quality_tier":intel.get("quality_tier", "good"),
+            "caps":    caps,
+            "best_for":best_for,
+            "calls":   p_perf.get("calls", 0),
+            "success_rate": round(sr * 100, 1),
+        })
+
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return {"needs": needs, "ranked": results}
+
+
+@app.route("/api/p6/performance")
+def api_p6_performance():
+    """Return per-provider performance stats + badges."""
+    perf   = p6_get_perf()
+    badges = p6_compute_badges(perf)
+    # Merge with static intel
+    out = {}
+    for pid, intel in _P6_INTEL.items():
+        p = perf.get(pid, {})
+        sr = round(p.get("successes", 0) / max(p.get("calls", 1), 1) * 100, 1) if p.get("calls", 0) > 0 else None
+        avg_l = round(p["total_latency_ms"] / max(p.get("successes", 1), 1)) if p.get("successes", 0) > 0 else intel.get("latency_est")
+        out[pid] = {
+            "calls":        p.get("calls", 0),
+            "success_rate": sr,
+            "avg_latency_ms": avg_l,
+            "min_latency_ms": p.get("min_latency_ms"),
+            "max_latency_ms": p.get("max_latency_ms"),
+            "fallbacks":    p.get("fallbacks", 0),
+            "last_used":    p.get("last_used"),
+            "badges":       badges.get(pid, []),
+            "cost_tier":    intel.get("cost_tier"),
+            "quality_tier": intel.get("quality_tier"),
+            "latency_est":  intel.get("latency_est"),
+            "best_for":     intel.get("best_for", []),
+        }
+    return jsonify({"ok": True, "performance": out, "badges": badges})
+
+
+@app.route("/api/p6/perf/record", methods=["POST"])
+def api_p6_record_perf():
+    """Record a provider call result. Called by the frontend after each session completes."""
+    d = request.get_json() or {}
+    provider     = d.get("provider", "")
+    latency_ms   = float(d.get("latency_ms", 0))
+    success      = bool(d.get("success", True))
+    was_fallback = bool(d.get("was_fallback", False))
+    if provider not in PROVIDERS:
+        return jsonify({"ok": False, "error": "unknown provider"}), 400
+    p6_record_perf(provider, latency_ms, success, was_fallback)
+    perf   = p6_get_perf()
+    badges = p6_compute_badges(perf)
+    return jsonify({"ok": True, "badges": badges.get(provider, [])})
+
+
+@app.route("/api/p6/recommend", methods=["POST"])
+def api_p6_recommend():
+    """Analyze task text and return ranked provider recommendations."""
+    d         = request.get_json() or {}
+    task_text = d.get("task", "")
+    plan_mode = d.get("plan", "pro").lower()
+    priority  = d.get("priority", get_setting(_P6_PRIO_KEY, "fast"))
+    stored    = get_setting("default_config", default_managed_config())
+    keys      = stored.get("api_keys") or {}
+    rec = p6_recommend(task_text, plan_mode, priority, keys)
+    top = rec["ranked"][0] if rec["ranked"] else None
+    return jsonify({
+        "ok":       True,
+        "needs":    rec["needs"],
+        "top":      top,
+        "ranked":   rec["ranked"][:6],
+    })
+
+
+@app.route("/api/p6/priority", methods=["GET", "POST"])
+def api_p6_priority():
+    """Get or set user routing priority (cheap / fast / smart)."""
+    if request.method == "POST":
+        d = request.get_json() or {}
+        prio = d.get("priority", "fast").lower()
+        if prio not in ("cheap", "fast", "smart"):
+            return jsonify({"ok": False, "error": "priority must be cheap/fast/smart"}), 400
+        set_setting(_P6_PRIO_KEY, prio)
+        return jsonify({"ok": True, "priority": prio})
+    return jsonify({"ok": True, "priority": get_setting(_P6_PRIO_KEY, "fast")})
+
+
 @app.route("/api/get-config")
 def api_get_config():
     cfg = get_setting("default_config", default_managed_config())
