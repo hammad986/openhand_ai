@@ -12,6 +12,17 @@ A lightweight, self-fixing autonomous coding agent with a multi-LLM router (auto
 - **Templates**: HTML UI in `/templates/`
 - **Session data**: SQLite (`sessions.db`) + per-session workspaces (`./workspace/<sid>/`)
 
+## UI — NX Advanced Interface (v2)
+The UI was upgraded from the basic "Phase 57" bridge to a full feature-complete platform UI:
+- **Header**: Logo + command bar (Ctrl+Enter to run) + voice/attach + model selector + status badge + sessions + ⌘K command palette + settings
+- **Left Panel** (280px, resizable): AI Thinking stream (Thoughts/Decisions/Recall), session card, HITL controls (pause/resume/inject), quick start examples
+- **Center Panel** (tabbed): Logs, Preview, Code/Files (Monaco), Terminal (PTY), Metrics, Agents, Timeline, Steps
+- **Right Inspector** (290px, resizable): Live status stats (elapsed/steps/tokens/queue), model info, system metrics (CPU/memory with bars), error card with Fix-with-AI, decisions, output
+- **Status Bar**: Model name | Mode | Status | Session | Keyboard hints
+- **Command Palette** (Ctrl+K): All major actions searchable
+- **Keyboard Shortcuts**: Ctrl+Enter (run), Ctrl+K (palette), Ctrl+S (save file), Escape (close)
+- **Resizable panels**: Drag handles between all 3 columns
+
 ## Running the App
 - **Workflow**: "Start application" — runs `python web_app.py`
 - **Port**: 5000

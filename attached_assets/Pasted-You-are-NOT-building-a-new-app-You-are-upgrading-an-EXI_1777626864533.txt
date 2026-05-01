@@ -1,0 +1,176 @@
+You are NOT building a new app.
+
+You are upgrading an EXISTING production-grade AI system.
+
+Your task is to transform the CURRENT UI into a fully integrated, advanced, intelligent AI platform interface — matching modern standards like Replit + ChatGPT — while preserving ALL backend capabilities.
+
+---
+
+# 🎯 PRIMARY OBJECTIVE
+
+1. Analyze the ENTIRE backend system
+2. Extract ALL available capabilities
+3. Ensure EVERY backend feature is exposed in UI
+4. Upgrade UI to a premium, clean, resizable, intelligent interface
+
+---
+
+# 🔍 STEP 1: BACKEND FEATURE DISCOVERY
+
+Scan all Python files and identify:
+
+* API endpoints (/api/*)
+* Workflow stages (intent → plan → execute → verify → explain → store)
+* Model routing (Ollama, Groq, Gemini, etc.)
+* Artifact system (files, zip, preview)
+* Metrics system (/api/system/metrics)
+* Authentication (if present)
+* GitHub analyzer / README generator
+* Tool execution (sandbox, terminal, etc.)
+
+---
+
+# ⚠️ CRITICAL RULE
+
+If any backend capability exists BUT is NOT visible in UI:
+
+👉 You MUST expose it in UI
+
+NO feature should remain hidden.
+
+---
+
+# 🧠 STEP 2: UI INTELLIGENCE MAPPING
+
+Map backend → UI:
+
+Examples:
+
+* Workflow stages → visual step tracker
+* Metrics API → live dashboard
+* Logs → real-time stream panel
+* Artifacts → file explorer + preview
+* Errors → smart error panel + “Fix with AI”
+* Models → model selector UI
+
+---
+
+# 🏗️ STEP 3: UI ARCHITECTURE (MANDATORY)
+
+Build a clean, modern layout:
+
+### Layout:
+
+LEFT:
+
+* AI Thinking panel (auto-expand)
+* Steps / Decisions / Logs (real-time)
+
+CENTER:
+
+* Command bar (main focus)
+* Preview / Code / Logs toggle
+* File editor + preview system
+
+RIGHT:
+
+* Inspector panel:
+
+  * Status
+  * Metrics
+  * Output
+  * Errors
+
+BOTTOM:
+
+* Terminal (auto open on run/error)
+
+---
+
+# 🧩 STEP 4: ADVANCED UX (REQUIRED)
+
+Implement:
+
+* Resizable panels (drag handles)
+* Collapsible panels
+* Smooth animations (200–300ms)
+* Auto panel behavior:
+
+  * Run → open thinking + terminal
+  * Success → refresh preview
+  * Error → highlight + focus
+
+---
+
+# 🎮 STEP 5: INTERACTION SYSTEM
+
+Add:
+
+* Ctrl + Enter → run
+* Ctrl + K → command palette
+* Auto-scroll logs
+* File switching
+* Live preview updates
+
+---
+
+# 🎨 STEP 6: VISUAL QUALITY
+
+* Premium dark theme
+* Clean spacing (8px system)
+* Inter + Mono fonts
+* Minimal clutter
+* Focused workspace (NOT dashboard chaos)
+
+---
+
+# 🔥 STEP 7: MISSING FEATURE DETECTION
+
+If ANY of these are missing — ADD them:
+
+* Model selector (local vs cloud)
+* Metrics dashboard
+* File explorer
+* Error recovery system
+* Download artifacts (zip)
+* Execution history
+* Session tracking
+
+---
+
+# 🚫 STRICT RULES
+
+* DO NOT remove backend logic
+* DO NOT break existing APIs
+* DO NOT hide features
+* DO NOT build generic UI
+
+---
+
+# 🎯 FINAL GOAL
+
+A **fully integrated AI development platform UI**:
+
+* Smart
+* Interactive
+* Resizable
+* Feature-complete
+* Production-ready
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. List of backend features found
+2. List of features mapped to UI
+3. List of newly added features
+4. Screenshots or UI proof
+5. Final working UI
+
+---
+
+# ⚡ IMPORTANT
+
+This is NOT UI beautification.
+
+This is FULL SYSTEM UI INTEGRATION + UX ENGINEERING.
