@@ -436,7 +436,30 @@ def _looks_text(path, sample_bytes=2048):
     return (non_text / len(chunk)) < 0.30
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+
+# ── Phase 19: Security hardening ─────────────────────────────────────────────
+from security import (
+    _general_limiter, _task_limiter, _auth_limiter, _scheduler_limiter,
+    check_rate_limit, get_client_ip,
+    sanitise_prompt, sanitise_task_name, sanitise_text,
+    validate_file_path, is_kill_switch_active,
+    MAX_CONCURRENT_SESSIONS, MAX_TOKENS_PER_REQUEST,
+    get_app_secret_key, apply_cors_headers, is_production,
+)
+app.secret_key = get_app_secret_key()
+
+# ── Logging ────────────────────────────────────────────────────────────────
+import logging as _logging
+_log_level = _logging.DEBUG if not is_production() else _logging.INFO
+_logging.basicConfig(
+    level=_log_level,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        _logging.StreamHandler(),
+        _logging.FileHandler("app.log", encoding="utf-8"),
+    ],
+)
+app.logger.setLevel(_log_level)
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -1794,6 +1817,118 @@ def stop_running_session(sid):
 
 
 # ────────────────────────────────────────────────────────────────────────────
+# Phase 19 — Global request hooks: rate limiting + CORS + error handling
+# ────────────────────────────────────────────────────────────────────────────
+
+# Paths that get a tighter per-IP rate limit
+_TASK_PATHS      = {"/api/queue-task", "/api/goals/run-now", "/api/chains"}
+_AUTH_PATHS      = {"/api/auth/login", "/api/auth/signup"}
+_SCHEDULER_PATHS = {"/api/scheduler/tasks", "/api/scheduler/history"}
+
+
+@app.before_request
+def _p19_rate_limit():
+    """Global per-IP sliding-window rate limiter."""
+    path = request.path
+    # Auth endpoints — tightest limit
+    if path in _AUTH_PATHS:
+        ok, wait = check_rate_limit(_auth_limiter, request)
+        if not ok:
+            return jsonify({"ok": False, "error": f"Too many auth attempts. Retry in {wait}s."}), 429
+    # Task-queuing endpoints
+    elif path in _TASK_PATHS:
+        ok, wait = check_rate_limit(_task_limiter, request)
+        if not ok:
+            return jsonify({"ok": False, "error": f"Too many requests. Retry in {wait}s."}), 429
+    # Scheduler endpoints
+    elif path.startswith("/api/scheduler"):
+        ok, wait = check_rate_limit(_scheduler_limiter, request)
+        if not ok:
+            return jsonify({"ok": False, "error": f"Too many scheduler requests. Retry in {wait}s."}), 429
+    # General API
+    elif path.startswith("/api/"):
+        ok, wait = check_rate_limit(_general_limiter, request)
+        if not ok:
+            return jsonify({"ok": False, "error": f"Rate limit exceeded. Retry in {wait}s."}), 429
+
+
+@app.after_request
+def _p19_cors(response):
+    """Apply CORS headers to every response."""
+    return apply_cors_headers(response, request)
+
+
+@app.errorhandler(400)
+def _err_400(e):
+    return jsonify({"ok": False, "error": "Bad request"}), 400
+
+
+@app.errorhandler(404)
+def _err_404(e):
+    return jsonify({"ok": False, "error": "Not found"}), 404
+
+
+@app.errorhandler(405)
+def _err_405(e):
+    return jsonify({"ok": False, "error": "Method not allowed"}), 405
+
+
+@app.errorhandler(429)
+def _err_429(e):
+    return jsonify({"ok": False, "error": "Too many requests"}), 429
+
+
+@app.errorhandler(500)
+def _err_500(e):
+    app.logger.error("[500] Unhandled exception on %s: %s", request.path, e, exc_info=True)
+    return jsonify({"ok": False, "error": "Internal server error"}), 500
+
+
+# Phase 19 — Emergency kill switch + admin status endpoint
+@app.route("/api/admin/kill-switch", methods=["POST"])
+def api_admin_kill_switch():
+    """Toggle the kill switch via env (reads live at call time)."""
+    admin_key = request.headers.get("X-Admin-Key", "")
+    expected  = os.getenv("ADMIN_KEY", "")
+    if not expected or admin_key != expected:
+        return jsonify({"ok": False, "error": "Forbidden"}), 403
+    action = (request.get_json(force=True) or {}).get("action", "")
+    if action == "enable":
+        os.environ["KILL_SWITCH"] = "1"
+        app.logger.warning("[KILL SWITCH] Enabled by admin request from %s", get_client_ip(request))
+        return jsonify({"ok": True, "kill_switch": True})
+    elif action == "disable":
+        os.environ["KILL_SWITCH"] = "0"
+        app.logger.info("[KILL SWITCH] Disabled by admin request from %s", get_client_ip(request))
+        return jsonify({"ok": True, "kill_switch": False})
+    return jsonify({"ok": False, "error": "action must be 'enable' or 'disable'"}), 400
+
+
+@app.route("/api/admin/status", methods=["GET"])
+def api_admin_status():
+    """Internal health/status for ops monitoring (requires admin key)."""
+    admin_key = request.headers.get("X-Admin-Key", "")
+    expected  = os.getenv("ADMIN_KEY", "")
+    if not expected or admin_key != expected:
+        return jsonify({"ok": False, "error": "Forbidden"}), 403
+    import psutil
+    cpu  = psutil.cpu_percent(interval=0.1)
+    ram  = psutil.virtual_memory().percent
+    with queue_lock:
+        q_running = running.get("sid")
+        q_pending = list(pending_queue)
+    return jsonify({
+        "ok": True,
+        "kill_switch": is_kill_switch_active(),
+        "cpu_percent": cpu,
+        "ram_percent": ram,
+        "queue_running": q_running,
+        "queue_pending": len(q_pending),
+        "production": is_production(),
+    })
+
+
+# ────────────────────────────────────────────────────────────────────────────
 # Routes — UI
 # ────────────────────────────────────────────────────────────────────────────
 
@@ -2909,8 +3044,17 @@ def api_goals_run_now():
 
 @app.route("/api/queue-task", methods=["POST"])
 def api_queue_task():
+    # Phase 19: kill switch check
+    if is_kill_switch_active():
+        return jsonify({"error": "Service temporarily suspended. Try again later."}), 503
+
     data = request.get_json() or {}
-    task = (data.get("task") or "").strip()
+    raw_task = (data.get("task") or "").strip()
+    # Phase 19: sanitise and length-cap the prompt
+    task, _perr = sanitise_prompt(raw_task)
+    if _perr:
+        return jsonify({"error": _perr}), 400
+
     model = data.get("model") or None
     plan_mode = (data.get("plan_mode") or "elite").lower()
     # Phase 12 — conversation context
@@ -7385,6 +7529,8 @@ def api_scheduler_delete(tid):
 @app.route("/api/scheduler/tasks/<tid>/run-now", methods=["POST"])
 def api_scheduler_run_now(tid):
     """Manually trigger a scheduled task to run immediately."""
+    if is_kill_switch_active():
+        return jsonify({"ok": False, "error": "Service temporarily suspended."}), 503
     result = _scheduler.run_now(tid)
     return jsonify(result)
 
@@ -9628,4 +9774,7 @@ def api_p11_team_memory():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
+    # Phase 19: debug mode controlled by env var — never True in production
+    _debug = os.getenv("FLASK_DEBUG", "0").strip() == "1"
+    _port  = int(os.getenv("PORT", "5000"))
+    app.run(host="0.0.0.0", port=_port, debug=_debug, threaded=True)

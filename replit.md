@@ -172,3 +172,46 @@ Optional heavy packages (disk-intensive, loaded lazily at runtime):
 - **UI**: Goal input textarea + priority selector, task breakdown list, progress bar, active chains panel
 - **Execution**: uses existing chain runner (`runner.create_chain()` + `/api/chains/<cid>/run-next`)
 - **Polling**: 5s interval updates task statuses and progress bar
+
+### Phase 17 — Execution Graph Visualization
+- **Endpoint**: `GET /api/goal/graph/<cid>` — returns DAG of task nodes with status/deps for a chain
+- **Retry/skip endpoints**: `POST /api/chains/<cid>/tasks/<tid>/retry`, `POST /api/chains/<cid>/tasks/<tid>/skip`
+- **Tab**: "🧩 Execution Graph" in More ▾ dropdown (`nxTab-graph`)
+- **UI**: Canvas-based DAG with zoom/pan, colour-coded node status, hover tooltips, detail panel, real-time polling
+- **JS**: `p17InitGraph()`, canvas renderer with node layout algorithm
+
+### Phase 18 — Background Autonomous Agents + Task Scheduler
+- **File**: `scheduler.py` — SQLite-backed `TaskScheduler` with daemon thread, supports once/interval/daily schedules
+- **DB**: `scheduler.db` — persists tasks and run history
+- **Execution adapters**: `_scheduler_enqueue` (prompt tasks), `_scheduler_goal` (goal/chain tasks), `_auto_run_chain`
+- **API**: full CRUD at `/api/scheduler/tasks` (GET/POST), `/<tid>` (GET/PATCH/DELETE), `/run-now`, `/toggle`, `/status`, `/history`
+- **Tab**: "⏱ Scheduler" in More ▾ dropdown (`nxTab-scheduler`)
+- **UI**: stats bar, create form with schedule-type hints, task list with inline controls, run history panel, 10s auto-poll
+- **Limits**: `MAX_CONCURRENT` (default 2) from `MAX_SCHEDULER_CONCURRENT` env var, `POLL_INTERVAL` (default 30s) configurable
+
+### Phase 19 — Security + Production Hardening
+- **File**: `security.py` — centralised rate limiter, input sanitiser, path validator, CORS helper, production config helpers
+- **Rate limiting**: sliding-window per-IP limiter; auth (10/min), tasks (20/min), scheduler (30/min), general API (120/min) — all env-configurable
+- **Auth hardening**: `auth_system.py` — removed `?dev=1` backdoor (gated via `ALLOW_DEV_AUTH=1` env), JWT expiry errors differentiated, password min-length enforced
+- **Prompt sanitisation**: control-char stripping + `MAX_PROMPT_LEN` (8000 chars default) applied at `/api/queue-task`
+- **Error handlers**: Flask `@app.errorhandler` for 400/404/405/429/500 — all return clean JSON, no stack traces to clients; 500s logged server-side
+- **Debug mode**: `app.run(debug=...)` now reads `FLASK_DEBUG` env var (default off)
+- **Secret key**: `app.secret_key` reads `SECRET_KEY` env var; logs warning if unset
+- **Kill switch**: `POST /api/admin/kill-switch` (requires `X-Admin-Key` header) toggles `KILL_SWITCH` env var; blocks all task/scheduler submissions
+- **Admin status**: `GET /api/admin/status` returns CPU/RAM/queue state (requires admin key)
+- **CORS**: `Access-Control-Allow-*` headers on every response; restricted to `CORS_ALLOWED_ORIGINS` in production
+- **Logging**: structured log format to both stdout and `app.log` file; level = DEBUG in dev, INFO in production
+- **Deployment files**: `.env.example` (reference config), `gunicorn.conf.py` (1 worker, 4 threads, WAL SQLite, 120s timeout)
+- **requirements.txt**: deduplicated; 8 pinned packages
+
+## Deployment (Production)
+```bash
+# 1. Set required env vars (see .env.example)
+export SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
+export JWT_SECRET=$(python -c "import secrets; print(secrets.token_hex(32))")
+export FLASK_ENV=production
+export ADMIN_KEY=your-admin-key
+
+# 2. Run with gunicorn
+gunicorn -c gunicorn.conf.py web_app:app
+```

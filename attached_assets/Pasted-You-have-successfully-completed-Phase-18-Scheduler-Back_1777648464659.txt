@@ -1,0 +1,190 @@
+You have successfully completed Phase 18 (Scheduler + Background Agents).
+
+Before deployment, we must perform a full production hardening and security audit.
+
+---
+
+# 🚀 PHASE 19 — SECURITY + PRODUCTION HARDENING
+
+---
+
+# 🎯 OBJECTIVE
+
+Make the system:
+
+* secure
+* abuse-resistant
+* stable under real-world load
+
+---
+
+# 🧠 STEP 1 — AUTHENTICATION HARDENING
+
+Verify:
+
+* all sensitive APIs require authentication
+* JWT validation is strict
+* no endpoint is accidentally public
+
+---
+
+# 🧠 STEP 2 — RATE LIMITING
+
+Implement:
+
+* per-user request limits
+* scheduler execution limits
+* API abuse protection
+
+---
+
+# 🧠 STEP 3 — INPUT VALIDATION
+
+Sanitize:
+
+* prompts
+* file uploads
+* GitHub imports
+* scheduler inputs
+
+Prevent:
+
+* code injection
+* path traversal
+* malicious payloads
+
+---
+
+# 🧠 STEP 4 — PROMPT INJECTION DEFENSE
+
+Enhance safety_layer:
+
+* block system override attempts
+* block data exfiltration patterns
+* enforce safe prompt boundaries
+
+---
+
+# 🧠 STEP 5 — RESOURCE PROTECTION
+
+Add:
+
+* max concurrent workflows
+* scheduler concurrency cap
+* CPU/RAM thresholds
+
+---
+
+# 🧠 STEP 6 — COST CONTROL
+
+Add:
+
+* max tokens per request
+* per-user usage cap
+* emergency kill switch
+
+---
+
+# 🧠 STEP 7 — ERROR HANDLING
+
+Ensure:
+
+* no raw stack traces exposed
+* clean error messages
+* all failures logged internally
+
+---
+
+# 🧠 STEP 8 — LOGGING & MONITORING
+
+Centralize:
+
+* errors
+* task execution logs
+* scheduler logs
+
+---
+
+# 🧠 STEP 9 — FILE SYSTEM SAFETY
+
+Ensure:
+
+* all execution inside workspace
+* no access outside allowed dirs
+
+---
+
+# 🧠 STEP 10 — DEPLOYMENT CONFIG
+
+Prepare:
+
+* production .env
+* remove debug mode
+* secure secret keys
+* proper CORS policy
+
+---
+
+# 🧠 STEP 11 — LOAD TEST
+
+Simulate:
+
+* multiple users
+* concurrent tasks
+* scheduler load
+
+---
+
+# 🧠 STEP 12 — FINAL CODEBASE AUDIT
+
+Scan entire system:
+
+* unused code
+* duplicate logic
+* broken imports
+* API mismatches
+* UI sync issues
+
+---
+
+# ⚠️ RULES
+
+* DO NOT break functionality
+* DO NOT remove features
+* ONLY harden and secure
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. security fixes applied
+2. rate limiting system
+3. input validation
+4. cost protection
+5. logging system
+6. deployment-ready config
+
+---
+
+# 🚀 FINAL GOAL
+
+System should be:
+
+"Safe to expose publicly on the internet without risk of abuse or failure"
+
+---
+
+# 🔍 FINAL VALIDATION (CRITICAL)
+
+* zero console errors
+* zero backend crashes
+* all endpoints secured
+* scheduler stable
+* memory stable
+* UI fully synced
+
+---
+
+Deliver a:
+
+"Fully secure, production-ready AI platform"

@@ -24,7 +24,9 @@ Safety:
 from __future__ import annotations
 
 import json
+import logging
 import math
+import os
 import sqlite3
 import threading
 import time
@@ -33,11 +35,13 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone, timedelta
 from typing import Any, Callable, Optional
 
+logger = logging.getLogger(__name__)
+
 # ── Config ────────────────────────────────────────────────────────
 SCHEDULER_DB    = "scheduler.db"
-MAX_CONCURRENT  = 2       # max tasks running at the same time
+MAX_CONCURRENT  = int(os.getenv("MAX_SCHEDULER_CONCURRENT", "2"))  # from env
 MAX_RETRIES     = 3       # max run attempts per scheduled run slot
-POLL_INTERVAL   = 30      # seconds between scheduler sweeps
+POLL_INTERVAL   = int(os.getenv("SCHEDULER_POLL_INTERVAL", "30"))  # seconds
 MAX_HISTORY     = 50      # run-history entries kept per task
 HISTORY_TRIM    = 40      # trim to this many after exceeding MAX_HISTORY
 
@@ -330,7 +334,7 @@ class TaskScheduler:
             try:
                 self._sweep()
             except Exception as e:
-                print(f"[scheduler] sweep error: {e}", flush=True)
+                logger.error("[scheduler] sweep error: %s", e)
             self._stop.wait(POLL_INTERVAL)
 
     def _sweep(self):
