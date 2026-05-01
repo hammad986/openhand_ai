@@ -1450,7 +1450,7 @@ body {
 }
 .nx-tab.has-update .nx-tab-dot { opacity: 1; }
 .nx-tab-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; padding: 0 6px; flex-shrink: 0; }
-.nx-tab-content { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.nx-tab-content { display: none; flex: 1; overflow: hidden; flex-direction: column; position: relative; }
 .nx-tab-content.active { display: flex; }
 
 /* ── Secondary tabs — hidden behind More ── */
@@ -1485,39 +1485,86 @@ body {
 /* ── Idle hero — shown when no session active ── */
 .nx-idle-hero {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  flex: 1; padding: 40px 24px; gap: 24px;
-  background: var(--surface); animation: nxFadeIn 0.4s var(--ease);
+  flex: 1; padding: 40px 24px; gap: 20px;
+  background: var(--surface); animation: nxFadeIn 0.35s var(--ease);
   overflow: auto;
 }
 .nx-idle-hero.hidden { display: none; }
-@keyframes nxFadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+@keyframes nxFadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+/* Hero logo: breathe when idle */
 .nx-hero-logo {
-  width: 48px; height: 48px; border-radius: 12px;
+  width: 52px; height: 52px; border-radius: 14px;
   background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; box-shadow: 0 0 24px var(--accent-glow);
+  font-size: 24px;
+  box-shadow: 0 0 0 0 var(--accent-glow);
+  animation: nxHeroBreathe 3s ease-in-out infinite;
 }
-.nx-hero-heading { font-size: 22px; font-weight: 700; color: var(--text); text-align: center; }
-.nx-hero-sub { font-size: 13px; color: var(--text-muted); text-align: center; max-width: 380px; line-height: 1.5; }
+@keyframes nxHeroBreathe {
+  0%,100% { box-shadow: 0 0 18px var(--accent-glow); transform: scale(1); }
+  50%      { box-shadow: 0 0 32px rgba(99,102,241,0.4); transform: scale(1.04); }
+}
+.nx-hero-text { text-align: center; }
+.nx-hero-heading { font-size: 22px; font-weight: 700; color: var(--text); text-align: center; line-height: 1.2; }
+.nx-hero-sub { font-size: 13px; color: var(--text-muted); text-align: center; max-width: 380px; line-height: 1.6; margin-top: 6px; }
 .nx-hero-chips {
-  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 480px;
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 500px;
 }
 .nx-hero-chip {
   padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
   background: var(--panel2); border: 1px solid var(--panel-border);
   color: var(--text-muted); cursor: pointer;
-  transition: all var(--dur); font-family: 'Inter', sans-serif;
+  transition: all 180ms var(--ease); font-family: 'Inter', sans-serif;
 }
-.nx-hero-chip:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--text); transform: translateY(-1px); }
-.nx-hero-hint { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+.nx-hero-chip:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--text); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); }
+.nx-hero-hint { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .nx-hero-hint kbd {
   background: var(--panel2); border: 1px solid var(--panel-border); border-radius: 4px;
   padding: 2px 6px; font-size: 10px; font-family: 'JetBrains Mono', monospace;
   color: var(--text-muted);
 }
 
+/* ── Success flash banner (shown in logs area on task complete) ── */
+.nx-success-flash {
+  position: absolute; top: 0; left: 0; right: 0;
+  background: linear-gradient(90deg, rgba(34,197,94,0.12) 0%, rgba(34,197,94,0.04) 100%);
+  border-bottom: 1px solid rgba(34,197,94,0.25);
+  padding: 9px 16px; display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 500; color: var(--green);
+  animation: nxSlideDown 0.25s var(--ease);
+  z-index: 10;
+}
+@keyframes nxSlideDown { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform: translateY(0); } }
+.nx-success-flash .nx-sf-icon { font-size: 15px; }
+.nx-success-flash .nx-sf-close {
+  margin-left: auto; background: none; border: none; color: var(--green);
+  cursor: pointer; font-size: 13px; opacity: 0.6; padding: 0 2px;
+}
+.nx-success-flash .nx-sf-close:hover { opacity: 1; }
+
+/* ── Error highlight in logs ── */
+.nx-error-highlight-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  background: linear-gradient(90deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.04) 100%);
+  border-bottom: 1px solid rgba(239,68,68,0.25);
+  padding: 9px 16px; display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 500; color: var(--red);
+  animation: nxSlideDown 0.25s var(--ease); z-index: 10;
+}
+.nx-error-highlight-bar .nx-fix-cta {
+  margin-left: auto; background: var(--red); color: white; border: none;
+  padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+.nx-error-highlight-bar .nx-fix-cta:hover { background: #dc2626; }
+
 /* ── Command bar focus glow ── */
-#taskInput:focus { box-shadow: 0 0 0 2px var(--accent-glow), 0 0 16px var(--accent-glow); outline: none; }
+.nx-cmd-wrap:focus-within {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-dim), 0 0 20px var(--accent-glow) !important;
+}
 
 /* ── Error state: inspector pulse ── */
 .nx-right.error-pulse { animation: nxErrorPulse 0.5s ease 2; }
@@ -1530,6 +1577,11 @@ body {
 /* ── Status bar running animation ── */
 @keyframes nxRunDot { 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
 #nxRunDot { animation: nxRunDot 1.2s ease infinite; }
+
+/* ── Collapsible inspector section ── */
+.nx-insp-section-collapsible { overflow: hidden; transition: max-height 250ms var(--ease), opacity 200ms; }
+.nx-insp-section-collapsible.collapsed { max-height: 0; opacity: 0; }
+.nx-insp-section-collapsible.expanded { max-height: 400px; opacity: 1; }
 
 /* ── Right Panel — Inspector ── */
 .nx-right { }
@@ -1741,7 +1793,7 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
            accept=".png,.jpg,.jpeg,.gif,.webp,.py,.js,.ts,.html,.css,.txt,.md,.json,.yaml,.yml,.csv,.sh"
            onchange="handleFileUpload(this)">
     <button class="nx-cmd-attach" title="Voice input" id="nxVoiceBtn" onclick="toggleVoice()">🎤</button>
-    <button class="nx-run-btn" id="runBtn" onclick="queueTask()">
+    <button class="nx-run-btn" id="runBtn" onclick="nxRunOrStop()">
       <span class="nx-live-dot" id="nxRunDot" style="display:none"></span>
       <span id="runBtnLabel">▶ Run</span>
     </button>
@@ -1887,9 +1939,9 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       <!-- Idle hero — shown when no task is running -->
       <div class="nx-idle-hero" id="nxIdleHero">
         <div class="nx-hero-logo">A</div>
-        <div>
+        <div class="nx-hero-text">
           <div class="nx-hero-heading">What do you want to build?</div>
-          <div class="nx-hero-sub" style="margin-top:8px">Describe a task and the AI agent will plan, code, and run it — step by step.</div>
+          <div class="nx-hero-sub">Describe a task and the AI agent will plan, code, and run it — step by step.</div>
         </div>
         <div class="nx-hero-chips">
           <button class="nx-hero-chip" onclick="nxSetTask('Build a Flask REST API with CRUD endpoints')">Flask REST API</button>
@@ -1900,12 +1952,14 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           <button class="nx-hero-chip" onclick="nxSetTask('Add a REST API endpoint for file uploads')">File Upload API</button>
         </div>
         <div class="nx-hero-hint">
-          Type your task above and press <kbd>Ctrl+Enter</kbd> to start &nbsp;·&nbsp; <kbd>Ctrl+K</kbd> for commands
+          Press <kbd>Ctrl+Enter</kbd> to run &nbsp;·&nbsp; <kbd>Ctrl+K</kbd> for commands
         </div>
       </div>
 
-      <!-- Logs tab -->
-      <div class="nx-tab-content" id="nxTab-logs"></div>
+      <!-- Logs tab (position:relative for overlay banners) -->
+      <div class="nx-tab-content" id="nxTab-logs" style="position:relative">
+        <div id="nxLogsBanner" style="display:none"></div>
+      </div>
       <!-- Preview tab -->
       <div class="nx-tab-content" id="nxTab-preview"></div>
       <!-- Code/Files tab -->
@@ -1970,48 +2024,53 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           </div>
         </div>
 
-        <!-- Live Metrics -->
+        <!-- Live Metrics (collapsed when idle, expanded when running) -->
         <div class="nx-inspector-section" id="nxMetricsSection">
-          <div class="nx-insp-label">System</div>
-          <div class="nx-metrics-grid">
-            <div class="nx-metric">
-              <div class="nx-metric-label">CPU</div>
-              <div class="nx-metric-val" id="nxMetCpu">—</div>
-              <div class="nx-metric-bar"><div class="nx-metric-fill" id="nxMetCpuBar" style="width:0%"></div></div>
-            </div>
-            <div class="nx-metric">
-              <div class="nx-metric-label">Memory</div>
-              <div class="nx-metric-val" id="nxMetMem">—</div>
-              <div class="nx-metric-bar"><div class="nx-metric-fill" id="nxMetMemBar" style="width:0%;background:var(--purple)"></div></div>
-            </div>
-            <div class="nx-metric">
-              <div class="nx-metric-label">Mem Used</div>
-              <div class="nx-metric-val" id="nxMetUptime">—</div>
-            </div>
-            <div class="nx-metric">
-              <div class="nx-metric-label">Sessions</div>
-              <div class="nx-metric-val" id="nxMetSess">—</div>
+          <div class="nx-insp-label" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="nxToggleMetrics()">
+            <span>System</span>
+            <span id="nxMetricsToggleIcon" style="font-size:9px;color:var(--text-dim)">▴</span>
+          </div>
+          <div id="nxMetricsBody" class="nx-insp-section-collapsible expanded">
+            <div class="nx-metrics-grid">
+              <div class="nx-metric">
+                <div class="nx-metric-label">CPU</div>
+                <div class="nx-metric-val" id="nxMetCpu">—</div>
+                <div class="nx-metric-bar"><div class="nx-metric-fill" id="nxMetCpuBar" style="width:0%"></div></div>
+              </div>
+              <div class="nx-metric">
+                <div class="nx-metric-label">Memory</div>
+                <div class="nx-metric-val" id="nxMetMem">—</div>
+                <div class="nx-metric-bar"><div class="nx-metric-fill" id="nxMetMemBar" style="width:0%;background:var(--purple)"></div></div>
+              </div>
+              <div class="nx-metric">
+                <div class="nx-metric-label">Mem Used</div>
+                <div class="nx-metric-val" id="nxMetUptime">—</div>
+              </div>
+              <div class="nx-metric">
+                <div class="nx-metric-label">Sessions</div>
+                <div class="nx-metric-val" id="nxMetSess">—</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Error Card -->
-        <div class="nx-error-card" id="nxErrorCard">
+        <!-- Error Card (hidden when no error) -->
+        <div class="nx-error-card" id="nxErrorCard" style="display:none">
           <div class="nx-error-title">⚠ Last Error</div>
           <div class="nx-error-msg" id="nxErrorMsg"></div>
           <button class="nx-fix-btn" onclick="p57FixError()">Fix with AI</button>
         </div>
 
-        <!-- Decisions (from legacy) -->
-        <div class="nx-inspector-section">
+        <!-- Decisions (from legacy, hidden when empty) -->
+        <div class="nx-inspector-section" id="nxDecisionsSection" style="display:none">
           <div class="nx-insp-label">Decisions</div>
-          <div id="nxDecisionSlot2" style="font-size:11px;color:var(--text-muted);min-height:24px">No decisions yet.</div>
+          <div id="nxDecisionSlot2" style="font-size:11px;color:var(--text-muted);min-height:24px"></div>
         </div>
 
-        <!-- Output -->
-        <div class="nx-inspector-section">
+        <!-- Output (hidden when nothing yet) -->
+        <div class="nx-inspector-section" id="nxOutputSection" style="display:none">
           <div class="nx-insp-label">Output</div>
-          <div id="nxOutputSlot" style="font-size:11px;color:var(--text-muted);background:var(--surface);border:1px solid var(--panel-border);border-radius:6px;padding:8px;min-height:40px;word-break:break-all;font-family:'JetBrains Mono',monospace;">Nothing yet.</div>
+          <div id="nxOutputSlot" style="font-size:11px;color:var(--text-muted);background:var(--surface);border:1px solid var(--panel-border);border-radius:6px;padding:8px;min-height:40px;word-break:break-all;font-family:'JetBrains Mono',monospace;"></div>
         </div>
 
         <!-- Download -->
@@ -2202,6 +2261,18 @@ function nxInit() {
 
   // 12. Apply initial layout (left panel collapsed)
   nxApplyLayout();
+
+  // 13. Auto-focus the command bar so user can type immediately
+  setTimeout(() => {
+    const inp = document.getElementById('taskInput');
+    if (inp) inp.focus();
+  }, 120);
+
+  // 14. Start with metrics collapsed (they expand when a task runs)
+  nxSetMetricsExpanded(false);
+
+  // 15. Watch decisions/output slots and show sections when they get content
+  nxWatchInspectorSlots();
 
   console.log('[NX] Advanced UI initialized');
 }
@@ -2506,6 +2577,7 @@ function nxSetGlobalStatus(status) {
   const sb = document.getElementById('nxSbStatus');
   const sessEl = document.getElementById('nxCurStatus');
   const runBtn = document.getElementById('runBtn');
+  const runLabel = document.getElementById('runBtnLabel');
   const dot = document.getElementById('nxRunDot');
   const thinkPulse = document.getElementById('nxThinkPulse');
   const logPulse = document.getElementById('nxLogPulse');
@@ -2520,6 +2592,7 @@ function nxSetGlobalStatus(status) {
   if (thinkPulse) thinkPulse.style.display = status === 'running' ? 'block' : 'none';
   if (logPulse) logPulse.style.display = status === 'running' ? 'block' : 'none';
   if (runBtn) runBtn.classList.toggle('running', status === 'running');
+  if (runLabel) runLabel.textContent = status === 'running' ? '■ Stop' : '▶ Run';
 
   // HITL strip
   const hitlStrip = document.getElementById('nxHitlStrip');
@@ -2529,36 +2602,124 @@ function nxSetGlobalStatus(status) {
   const prev = NX.lastStatus;
   NX.lastStatus = status;
 
+  // ── RUNNING: Open left (thinking), switch to logs, clear banner ──
   if (status === 'running' && prev !== 'running') {
-    // Auto-expand left panel (thinking stream) when task starts
     if (!NX.leftOpen) {
       NX.leftOpen = true;
       NX.leftW = 240;
       nxApplyLayout();
     }
-    // Switch to Logs tab and hide idle hero
     nxHideHero();
     nxSetTab('logs');
-    // Cancel any pending collapse timer
+    nxClearLogsBanner();
     if (NX.idleCollapseTimer) { clearTimeout(NX.idleCollapseTimer); NX.idleCollapseTimer = null; }
+    // Expand system metrics while running
+    nxSetMetricsExpanded(true);
+    // Hide error card when new task starts
+    const errCard = document.getElementById('nxErrorCard');
+    if (errCard) errCard.style.display = 'none';
   }
 
+  // ── ERROR: Pulse inspector, show error bar in logs ──
   if (status === 'error' && prev !== 'error') {
-    // Focus inspector error area with a pulse
     const right = document.getElementById('nxRight');
     if (right) { right.classList.add('error-pulse'); setTimeout(() => right.classList.remove('error-pulse'), 1200); }
-    // Make sure logs tab is visible
     nxHideHero();
-    if (NX.activeTab === 'logs' || !NX.activeTab) nxSetTab('logs');
+    if (NX.activeTab !== 'logs') nxSetTab('logs');
+    // Show error banner in logs area
+    nxShowLogsBanner('error');
+    // Show error card in inspector
+    const errCard = document.getElementById('nxErrorCard');
+    if (errCard) errCard.style.display = 'block';
   }
 
+  // ── SUCCESS (idle after running): flash success, start collapse timer ──
   if (status === 'idle' && prev === 'running') {
-    // Collapse left panel after 4s when task completes
+    nxShowLogsBanner('success');
+    // Auto-dismiss after 5s
+    setTimeout(nxClearLogsBanner, 5000);
+    // Collapse left panel thinking after 4s
     NX.idleCollapseTimer = setTimeout(() => {
       NX.leftOpen = false;
       NX.leftW = 0;
       nxApplyLayout();
     }, 4000);
+    // Collapse system metrics after 6s when idle
+    setTimeout(() => {
+      if (NX.lastStatus === 'idle') nxSetMetricsExpanded(false);
+    }, 6000);
+  }
+
+  // ── IDLE (general): collapse metrics if was already idle ──
+  if (status === 'idle' && prev === 'idle') {
+    nxSetMetricsExpanded(false);
+  }
+}
+
+// ── Metrics section toggle ──
+let NX_metricsExpanded = true;
+function nxToggleMetrics() {
+  NX_metricsExpanded = !NX_metricsExpanded;
+  nxSetMetricsExpanded(NX_metricsExpanded);
+}
+function nxSetMetricsExpanded(expanded) {
+  NX_metricsExpanded = expanded;
+  const body = document.getElementById('nxMetricsBody');
+  const icon = document.getElementById('nxMetricsToggleIcon');
+  if (body) { body.classList.toggle('expanded', expanded); body.classList.toggle('collapsed', !expanded); }
+  if (icon) icon.textContent = expanded ? '▴' : '▾';
+}
+
+// ── Logs banner: success / error strip ──
+function nxShowLogsBanner(type) {
+  const wrap = document.getElementById('nxLogsBanner');
+  if (!wrap) return;
+  if (type === 'success') {
+    wrap.innerHTML = `<div class="nx-success-flash">
+      <span class="nx-sf-icon">✓</span>
+      <span>Task completed successfully</span>
+      <button class="nx-sf-close" onclick="nxClearLogsBanner()">✕</button>
+    </div>`;
+  } else if (type === 'error') {
+    wrap.innerHTML = `<div class="nx-error-highlight-bar">
+      <span>⚠ Task encountered an error — check logs below</span>
+      <button class="nx-fix-cta" onclick="p57FixError()">Fix with AI</button>
+    </div>`;
+  }
+  wrap.style.display = 'block';
+}
+function nxClearLogsBanner() {
+  const wrap = document.getElementById('nxLogsBanner');
+  if (wrap) { wrap.innerHTML = ''; wrap.style.display = 'none'; }
+}
+
+// ── Watch inspector slots for content and show/hide sections contextually ──
+function nxWatchInspectorSlots() {
+  const checkSlot = (slotId, sectionId) => {
+    const slot = document.getElementById(slotId);
+    const section = document.getElementById(sectionId);
+    if (!slot || !section) return;
+    const obs = new MutationObserver(() => {
+      const hasContent = slot.textContent.trim().length > 0 &&
+                         slot.textContent.trim() !== 'No decisions yet.' &&
+                         slot.textContent.trim() !== 'Nothing yet.';
+      section.style.display = hasContent ? 'block' : 'none';
+    });
+    obs.observe(slot, { childList: true, subtree: true, characterData: true });
+  };
+  checkSlot('nxDecisionSlot2', 'nxDecisionsSection');
+  checkSlot('nxOutputSlot', 'nxOutputSection');
+}
+
+// ── Run or Stop toggle ──
+function nxRunOrStop() {
+  if (NX.lastStatus === 'running' && NX.activeSid) {
+    // Stop the current running task
+    fetch('/api/session/' + NX.activeSid + '/stop', { method: 'POST' })
+      .then(() => { nxSetGlobalStatus('idle'); })
+      .catch(() => {});
+  } else {
+    queueTask();
   }
 }
 
@@ -8535,8 +8696,9 @@ async function ensureVenv() {
         } else {
             toast('⚠️ venv ensure failed: ' + (r.data?.error || 'unknown'), 'warn');
         }
-    } renderGovernance(gov); finally {
+    } finally {
         if (btn) { btn.disabled = false; btn.textContent = '🐍 Ensure venv'; }
+    renderGovernance(gov);
     }
 }
 
@@ -8626,8 +8788,9 @@ async function applyAiFix() {
         } else {
             toast('AI fix unavailable: ' + (r.data?.error || 'unknown'), 'warn');
         }
-    } renderGovernance(gov); finally {
+    } finally {
         if (btn) { btn.disabled = false; btn.textContent = '🤖 AI Fix'; }
+    renderGovernance(gov);
     }
 }
 
@@ -8852,8 +9015,9 @@ async function loadIntelligenceDashboard() {
         });
     } catch(e) {
         console.error('[P34] dashboard load error', e);
-    } renderGovernance(gov); finally {
+    } finally {
         if (btn) { btn.disabled = false; btn.textContent = '⟳ Refresh'; }
+    renderGovernance(gov);
     }
 }
 
@@ -9073,7 +9237,8 @@ async function loadEnterpriseDashboard() {
         _entCaps(h.capabilities || []);
         const b = $('entBadge'); if (b) b.textContent = 'P35 ✓';
     } catch(e) { console.error('[P35]', e); }
-    renderGovernance(gov); finally { if (btn) { btn.disabled = false; btn.textContent = '⟳ Refresh'; } }
+    finally { if (btn) { btn.disabled = false; btn.textContent = '⟳ Refresh'; }
+    renderGovernance(gov); }
 }
 
 function _m(label, value, unit, color) {
@@ -9184,7 +9349,8 @@ async function runEntWorkflow() {
         const codeHtml = res.code ? `<div style="margin-top:8px;background:#0d1117;border-radius:4px;padding:6px;font-family:monospace;font-size:0.7rem;max-height:120px;overflow-y:auto;color:#e6edf3">${escapeHtml(res.code.slice(0,800))}</div>` : '';
         if (resEl) resEl.innerHTML = `<div style="color:${ok?'#3fb950':'#f85149'};font-weight:700;margin-bottom:6px">${ok?'✅ PASSED':'❌ FAILED'} — ${res.elapsed_s}s</div>${rows}${codeHtml}`;
     } catch(e) { if (resEl) resEl.innerHTML=`<span style="color:#f85149">Error: ${escapeHtml(String(e))}</span>`; }
-    renderGovernance(gov); finally { if (btn) { btn.disabled=false; btn.textContent='▶ Run'; } }
+    finally { if (btn) { btn.disabled=false; btn.textContent='▶ Run'; } }
+    renderGovernance(gov);
 }
 
 setInterval(()=>{
@@ -9253,7 +9419,8 @@ async function loadEvolutionDashboard() {
             ).join('') || '<div style="color:var(--muted)">No pending proposals.</div>';
         }
     } catch(e) { console.error(e); }
-    renderGovernance(gov); finally { if (btn) { btn.disabled = false; btn.textContent = '⟳ Refresh'; } }
+    finally { if (btn) { btn.disabled = false; btn.textContent = '⟳ Refresh'; }
+    renderGovernance(gov); }
 }
 
 window.applySystemPatch = async function(pid) {
