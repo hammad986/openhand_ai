@@ -1,0 +1,184 @@
+You have successfully completed Phase 10 (Memory) and Phase 11 (Multi-Agent System).
+
+Before implementing any further intelligence upgrades, we must fix a critical product gap.
+
+---
+
+# 🚀 PHASE 12 — CONVERSATIONAL CONTEXT + EDITABLE PROMPT SYSTEM
+
+This phase transforms the system into a real conversational AI (ChatGPT-style interaction).
+
+---
+
+# 🎯 OBJECTIVE
+
+Enable:
+
+* multi-turn conversations
+* context-aware modifications
+* prompt editing
+* persistent chat memory
+
+---
+
+# 🧠 STEP 1 — SESSION-BASED CHAT SYSTEM
+
+Create a conversation system:
+
+Each session should store:
+
+* user prompts (history)
+* system outputs
+* timestamps
+* linked artifacts
+
+Use:
+
+session_id (already exists)
+
+---
+
+# 🧠 STEP 2 — CONTEXT INJECTION
+
+Modify workflow_engine:
+
+Before every new task:
+
+Inject:
+
+* last N prompts (at least 5)
+* previous outputs
+* current artifact context
+
+Goal:
+System understands what user is building.
+
+---
+
+# 🧠 STEP 3 — EDITABLE LAST PROMPT
+
+UI requirement:
+
+* Last prompt should be editable
+* user can modify and re-run
+
+Like ChatGPT:
+
+* click edit
+* update prompt
+* re-execute
+
+---
+
+# 🧠 STEP 4 — CONTINUE / MODIFY MODE
+
+Add new execution mode:
+
+* "Continue Task"
+* "Modify Existing Output"
+
+Example:
+
+User:
+"create login page"
+
+Next:
+"change color to blue"
+
+System should:
+
+* NOT restart
+* modify previous result
+
+---
+
+# 🧠 STEP 5 — ARTIFACT CONTEXT LINKING
+
+Each generated output must be linked to session:
+
+* files
+* code
+* preview
+
+When user modifies:
+system updates same artifact
+
+---
+
+# 🧠 STEP 6 — UI CHAT INTERFACE
+
+Enhance UI:
+
+* show chat history (left or center)
+* user + AI messages
+* scrollable conversation
+
+---
+
+# 🧠 STEP 7 — CONTEXT SIZE CONTROL
+
+* keep last 5–10 messages
+* summarize older messages if needed
+
+---
+
+# 🧠 STEP 8 — MEMORY + CHAT MERGE
+
+Integrate:
+
+* Phase 10 memory
+* Phase 12 conversation
+
+So system knows:
+
+* past tasks
+* current session flow
+
+---
+
+# 🎨 STEP 9 — UX IMPROVEMENTS
+
+Add:
+
+* edit icon on last prompt
+* "continue" button
+* smooth chat UI
+
+---
+
+# ⚠️ RULES
+
+* DO NOT break Phase 11 agents
+* DO NOT remove existing workflow
+* ADD layer on top
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. Chat system architecture
+2. Updated workflow logic
+3. UI chat integration
+4. Prompt editing system
+5. Context handling
+
+---
+
+# 🚀 FINAL GOAL
+
+System should behave like:
+
+"ChatGPT + Autonomous AI builder combined"
+
+User can:
+
+* build
+* modify
+* refine
+* continue
+
+in one continuous conversation.
+
+---
+
+This is a CRITICAL product feature. Implement carefully.
