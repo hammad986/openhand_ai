@@ -42,3 +42,5 @@ run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "-w", "4", "--threads"
 [userenv]
 
 [userenv.shared]
+SECRET_KEY = "e219c43d4d2b34ad3ad919cb52617d39b0fbd3f2f631739c3b733141b9f0d321"
+JWT_SECRET = "36c562cd320f008dea24c17370ac64ae8779479d1e1e8d6a01971d7fd32a98b1"
