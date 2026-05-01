@@ -21,8 +21,15 @@ A Multi-Agent Collaboration System (Phase 11) orchestrates a 4-agent pipeline (M
 
 Security and production hardening (Phase 19) include rate limiting, input sanitization, enhanced authentication, structured logging, and administrative controls.
 
+A real SaaS billing system (Phase 36) is integrated via Razorpay. It includes:
+- `payments.py` — order creation, HMAC signature verification, webhook processing, subscription activation/expiry, invoice HTML generation, and Resend email delivery.
+- Routes: `/api/payments/create-order`, `/api/payments/verify`, `/api/payments/webhook`, `/api/invoice/<id>`, `/api/billing/info`, `/api/billing/invoices`, `/api/billing/cancel`, `/api/payments/plans`.
+- Billing DB: `billing.db` (SQLite, auto-created) with `subscriptions`, `invoices`, `payment_events` tables.
+- UI: billing cycle toggle (Monthly/Yearly), INR plan pricing (₹20/₹50 per month), real Razorpay checkout popup, subscription status chip, invoice history with download links, billing mini-block in inspector panel.
+- **Secrets required to activate**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` (from Razorpay dashboard), and optionally `EMAIL_API_KEY` (Resend for invoice emails).
+
 ## External Dependencies
-- **Core Packages**: Flask, gunicorn, requests, psutil, bcrypt, PyJWT, python-dotenv, tiktoken.
+- **Core Packages**: Flask, gunicorn, requests, psutil, bcrypt, PyJWT, python-dotenv, tiktoken, razorpay.
 - **Optional/Lazy-loaded Packages**: chromadb, sentence-transformers, playwright.
-- **Third-party Services**: OpenAI, Gemini, Anthropic, Groq, OpenRouter, xAI/Grok, AWS Bedrock, Azure OpenAI, Together AI, Fireworks AI, NVIDIA NIM, DeepSeek, Mistral, Cohere, HuggingFace, Replicate, ElevenLabs, Deepgram (for various LLM and multimodal capabilities).
-- **Database**: SQLite (for session data, scheduler data, and chat summaries).
+- **Third-party Services**: OpenAI, Gemini, Anthropic, Groq, OpenRouter, xAI/Grok, AWS Bedrock, Azure OpenAI, Together AI, Fireworks AI, NVIDIA NIM, DeepSeek, Mistral, Cohere, HuggingFace, Replicate, ElevenLabs, Deepgram (for various LLM and multimodal capabilities). Razorpay (payments), Resend (invoice emails).
+- **Database**: SQLite — `sessions.db` (sessions, settings, scheduler), `billing.db` (subscriptions, invoices, payment events).

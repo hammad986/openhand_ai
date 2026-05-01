@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Agent Control Platform</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         :root {
             --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#30363d;
@@ -2445,6 +2446,38 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
 .p8-coupon-ok  { color: #4caf50; }
 .p8-coupon-err { color: #bf4c4c; }
 
+/* Phase 36 — Billing cycle toggle */
+.p36-cycle-toggle { display:flex; gap:6px; margin-bottom:16px; }
+.p36-cycle-btn { flex:1; padding:6px 10px; border-radius:6px; font-size:12px; font-weight:600;
+  border:1px solid var(--panel-border); background:var(--surface); color:var(--text-muted);
+  cursor:pointer; transition:all .15s; text-align:center; }
+.p36-cycle-btn.active { background:rgba(188,140,255,.15); color:#bc8cff; border-color:rgba(188,140,255,.4); }
+.p36-cycle-save { font-size:10px; color:#3fb950; font-weight:700; margin-left:4px; }
+
+/* Phase 36 — Invoice list */
+.p36-inv-row { display:flex; align-items:center; justify-content:space-between;
+  padding:8px 0; border-bottom:1px solid var(--panel-border); font-size:12px; }
+.p36-inv-row:last-child { border-bottom:none; }
+.p36-inv-plan { font-weight:700; color:var(--text); }
+.p36-inv-date { color:var(--text-muted); font-size:11px; }
+.p36-inv-dl   { background:rgba(188,140,255,.1); color:#bc8cff; border:1px solid rgba(188,140,255,.3);
+  border-radius:5px; padding:3px 9px; font-size:11px; font-weight:600; cursor:pointer;
+  text-decoration:none; }
+.p36-inv-dl:hover { background:rgba(188,140,255,.2); }
+
+/* Phase 36 — Pay button */
+.p36-pay-btn { width:100%; padding:10px; border-radius:8px; font-size:13px; font-weight:700;
+  border:none; cursor:pointer; transition:opacity .15s; }
+.p36-pay-btn:hover { opacity:.85; }
+.p36-pay-btn:disabled { opacity:.5; cursor:default; }
+
+/* Phase 36 — Subscription status chip */
+.p36-sub-chip { display:inline-flex; align-items:center; gap:5px;
+  font-size:10px; font-weight:700; border-radius:12px; padding:2px 8px; }
+.p36-sub-chip.active  { background:rgba(63,185,80,.12); color:#3fb950; border:1px solid rgba(63,185,80,.3); }
+.p36-sub-chip.expired { background:rgba(248,81,73,.12); color:#f85149; border:1px solid rgba(248,81,73,.3); }
+.p36-sub-chip.free    { background:rgba(139,148,158,.12); color:#8b949e; border:1px solid rgba(139,148,158,.3); }
+
 /* Usage section in Plan settings tab */
 .p8-usage-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -2961,6 +2994,7 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <div class="p8-sub-badge p8-free" id="p8SubBadge" onclick="p8OpenUpgradeModal()" title="Your subscription plan — click to upgrade">
       <span id="p8SubIcon">🆓</span>
       <span id="p8SubName">Free</span>
+      <span id="p8SubExpiry" style="font-size:9px;opacity:.7;display:none"></span>
     </div>
     <button class="nx-icon-btn" title="Settings" onclick="openSettings()">⚙</button>
   </div>
@@ -3015,13 +3049,32 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     </div>
     <div class="p8-modal-sub" id="p8ModalSub">Unlock the full power of Antigravity AI</div>
 
+    <!-- Phase 36: Billing cycle toggle -->
+    <div class="p36-cycle-toggle" id="p36CycleToggle">
+      <button class="p36-cycle-btn active" id="p36CycleMonthly" onclick="p36SetCycle('monthly')">
+        Monthly
+      </button>
+      <button class="p36-cycle-btn" id="p36CycleYearly" onclick="p36SetCycle('yearly')">
+        Yearly <span class="p36-cycle-save">Save 17%</span>
+      </button>
+    </div>
+
     <!-- Plan cards -->
     <div class="p8-plans-grid" id="p8PlansGrid">
       <!-- Rendered by JS -->
     </div>
 
+    <!-- Phase 36: Subscription status -->
+    <div id="p36SubStatus" style="display:none;margin-top:12px;padding:10px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--panel-border)">
+      <div style="font-size:11px;font-weight:700;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Active Subscription</div>
+      <div id="p36SubStatusContent"></div>
+    </div>
+
+    <!-- Phase 36: Payment status message -->
+    <div id="p36PayMsg" style="display:none;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;text-align:center"></div>
+
     <!-- Coupon section -->
-    <div style="border-top:1px solid var(--panel-border);padding-top:16px">
+    <div style="border-top:1px solid var(--panel-border);padding-top:16px;margin-top:14px">
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">🎟 Have a Coupon?</div>
       <div class="p8-coupon-wrap">
         <input class="p8-coupon-input" id="p8CouponInput" placeholder="ENTER CODE"
@@ -3035,6 +3088,12 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
     <div style="margin-top:14px;padding:12px;background:var(--surface);border-radius:8px;border:1px solid var(--panel-border)">
       <div style="font-size:11px;font-weight:700;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Current Usage</div>
       <div id="p8ModalUsage">Loading…</div>
+    </div>
+
+    <!-- Phase 36: Invoice history -->
+    <div style="margin-top:14px;padding:12px;background:var(--surface);border-radius:8px;border:1px solid var(--panel-border)">
+      <div style="font-size:11px;font-weight:700;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">📄 Invoice History</div>
+      <div id="p36InvoiceList"><span style="font-size:12px;color:var(--text-muted)">No invoices yet.</span></div>
     </div>
   </div>
 </div>
@@ -3650,6 +3709,12 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           <!-- Phase 8: Usage mini-block -->
           <div class="p8-insp-usage" id="p8InspUsage" style="display:none">
             <div id="p8InspUsageContent"></div>
+          </div>
+
+          <!-- Phase 36: Billing Status in Inspector -->
+          <div id="p36InspBilling" style="display:none;margin-top:8px;padding:8px;background:var(--surface);border-radius:6px;border:1px solid var(--panel-border)">
+            <div style="font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">💳 Billing</div>
+            <div id="p36InspBillingContent" style="font-size:10px;color:var(--text-muted)">—</div>
           </div>
 
           <!-- Phase 10: Memory Context + Intelligence Score -->
@@ -13775,20 +13840,46 @@ async function p8Load() {
         p8UpdateBadge(d);
         p8UpdateInspectorUsage(d);
         p8UpdateSettingsPanel(d);
+        p36UpdateInspectorBilling(d);
     } catch(e) {}
+}
+
+function p36UpdateInspectorBilling(d) {
+    const wrap = p8El('p36InspBilling');
+    const cont = p8El('p36InspBillingContent');
+    if (!wrap || !cont) return;
+    const plan = d.plan || 'free';
+    if (plan === 'free') {
+        wrap.style.display = 'block';
+        cont.innerHTML = `<span class="p36-sub-chip free">Free</span> <a onclick="p8OpenUpgradeModal()" style="cursor:pointer;color:#bc8cff;font-size:10px;margin-left:4px">Upgrade ↗</a>`;
+    } else {
+        wrap.style.display = 'block';
+        const planName = d.meta?.name || plan;
+        const expiry   = d.expires ? d.expires : 'Lifetime';
+        const chipCls  = 'active';
+        cont.innerHTML = `<div><span class="p36-sub-chip ${chipCls}">${p8Esc(planName)}</span></div><div style="margin-top:3px;color:var(--text-muted)">Expires: ${p8Esc(expiry)}</div><div style="margin-top:3px"><a onclick="p8OpenUpgradeModal()" style="cursor:pointer;color:#bc8cff;font-size:10px">Manage ↗</a></div>`;
+    }
 }
 
 /* ── Update header badge ─────────────────────────────────────────── */
 function p8UpdateBadge(d) {
-    const badge = p8El('p8SubBadge');
-    const icon  = p8El('p8SubIcon');
-    const name  = p8El('p8SubName');
+    const badge   = p8El('p8SubBadge');
+    const icon    = p8El('p8SubIcon');
+    const name    = p8El('p8SubName');
+    const expEl   = p8El('p8SubExpiry');
     if (!badge) return;
     const plan = d.plan;
     badge.className = `p8-sub-badge p8-${plan}`;
     if (icon) icon.textContent = P8_ICONS[plan] || '';
     if (name) name.textContent = d.meta?.name || plan.charAt(0).toUpperCase()+plan.slice(1);
-    // Add expiry tooltip
+    if (expEl) {
+        if (d.expires && plan !== 'free') {
+            expEl.style.display = 'inline';
+            expEl.textContent   = `· ${d.expires}`;
+        } else {
+            expEl.style.display = 'none';
+        }
+    }
     if (d.expires) {
         badge.title = `${d.meta?.name} plan — expires ${d.expires}. Click to manage.`;
     } else {
@@ -13908,9 +13999,12 @@ window.p8OpenUpgradeModal = async function() {
     modal.classList.add('open');
     p8El('p8CouponMsg') && (p8El('p8CouponMsg').textContent = '');
     p8El('p8CouponInput') && (p8El('p8CouponInput').value = '');
+    p36ShowPayMsg('', true);
     await p8Load();
+    await p36LoadBillingPlans();
     p8RenderPlanCards();
     p8RenderModalUsage();
+    await p36LoadBillingInfo();
 };
 
 window.p8CloseUpgradeModal = function(e) {
@@ -13920,6 +14014,172 @@ window.p8CloseUpgradeModal = function(e) {
 };
 
 /* ── Render plan cards in modal ──────────────────────────────────── */
+/* ── Phase 36: Billing cycle state ────────────────────────────────── */
+let p36Cycle     = 'monthly';
+let p36Plans     = {};   // from /api/payments/plans
+let p36RazKey    = '';
+
+const P36_PRICING = {
+    pro:   { monthly: '₹20/month', yearly: '₹200/year' },
+    elite: { monthly: '₹50/month', yearly: '₹500/year' },
+    free:  { monthly: 'Free',      yearly: 'Free' },
+};
+
+window.p36SetCycle = function(cycle) {
+    p36Cycle = cycle;
+    ['monthly','yearly'].forEach(c => {
+        const el = p8El('p36Cycle' + c.charAt(0).toUpperCase() + c.slice(1));
+        if (el) el.classList.toggle('active', c === cycle);
+    });
+    p8RenderPlanCards();
+};
+
+async function p36LoadBillingPlans() {
+    try {
+        const r = await fetch('/api/payments/plans');
+        const d = await r.json();
+        if (d.ok) {
+            p36Plans  = d.plans  || {};
+            p36RazKey = d.razorpay_key_id || '';
+        }
+    } catch(e) {}
+}
+
+async function p36LoadBillingInfo() {
+    try {
+        const r = await fetch('/api/billing/info');
+        const d = await r.json();
+        if (!d.ok) return;
+        p36RenderSubStatus(d.subscription);
+        p36RenderInvoices(d.invoices || []);
+    } catch(e) {}
+}
+
+function p36RenderSubStatus(sub) {
+    const wrap = p8El('p36SubStatus');
+    const cont = p8El('p36SubStatusContent');
+    if (!wrap || !cont) return;
+    if (!sub || sub.status !== 'active') { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    const expiry = sub.expiry_date ? sub.expiry_date.slice(0,10) : '—';
+    const planName = sub.plan ? (sub.plan.charAt(0).toUpperCase()+sub.plan.slice(1)) : '—';
+    cont.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="p36-sub-chip active">● ACTIVE</span>
+          <span style="font-size:12px;font-weight:700;color:var(--text)">${p8Esc(planName)} · ${p8Esc(sub.billing_cycle||'monthly')}</span>
+          <span style="font-size:11px;color:var(--text-muted)">Expires: ${p8Esc(expiry)}</span>
+        </div>`;
+}
+
+function p36RenderInvoices(invoices) {
+    const el = p8El('p36InvoiceList');
+    if (!el) return;
+    if (!invoices || invoices.length === 0) {
+        el.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">No invoices yet.</span>';
+        return;
+    }
+    el.innerHTML = invoices.map(inv => {
+        const plan  = inv.plan ? (inv.plan.charAt(0).toUpperCase()+inv.plan.slice(1)) : '—';
+        const date  = inv.issued_at ? inv.issued_at.slice(0,10) : '—';
+        const amt   = inv.amount ? `₹${Math.round(inv.amount/100)}` : '—';
+        return `<div class="p36-inv-row">
+          <div>
+            <div class="p36-inv-plan">${p8Esc(plan)} · ${p8Esc(amt)}</div>
+            <div class="p36-inv-date">${p8Esc(date)}</div>
+          </div>
+          <a class="p36-inv-dl" href="/api/invoice/${p8Esc(inv.id)}" target="_blank" title="Download Invoice">⬇ Download</a>
+        </div>`;
+    }).join('');
+}
+
+function p36ShowPayMsg(msg, ok) {
+    const el = p8El('p36PayMsg');
+    if (!el) return;
+    el.style.display = msg ? 'block' : 'none';
+    el.style.background = ok ? 'rgba(63,185,80,.15)' : 'rgba(248,81,73,.15)';
+    el.style.color       = ok ? '#3fb950' : '#f85149';
+    el.style.border      = `1px solid ${ok ? 'rgba(63,185,80,.3)' : 'rgba(248,81,73,.3)'}`;
+    el.textContent = msg;
+}
+
+/* ── Phase 36: Real Razorpay payment ─────────────────────────────── */
+window.p36StartPayment = async function(plan, cycle) {
+    if (!p36RazKey) {
+        p36ShowPayMsg('⚠ Payment gateway not configured yet. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Secrets.', false);
+        return;
+    }
+    p36ShowPayMsg('Creating order…', null);
+    let order;
+    try {
+        const r = await fetch('/api/payments/create-order', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({plan, billing_cycle: cycle}),
+        });
+        order = await r.json();
+        if (!order.ok) {
+            p36ShowPayMsg(`⚠ ${order.error || 'Order creation failed'}`, false);
+            return;
+        }
+    } catch(e) {
+        p36ShowPayMsg('⚠ Network error. Try again.', false);
+        return;
+    }
+
+    p36ShowPayMsg('Opening payment…', null);
+
+    const options = {
+        key:         p36RazKey,
+        amount:      order.amount,
+        currency:    order.currency,
+        name:        'Antigravity AI',
+        description: `${order.plan_name} Plan (${order.billing_cycle})`,
+        order_id:    order.razorpay_order_id,
+        theme:       { color: '#bc8cff' },
+        handler: async function(resp) {
+            p36ShowPayMsg('Verifying payment…', null);
+            try {
+                const vr = await fetch('/api/payments/verify', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        razorpay_order_id:   resp.razorpay_order_id,
+                        razorpay_payment_id: resp.razorpay_payment_id,
+                        razorpay_signature:  resp.razorpay_signature,
+                        plan,
+                        billing_cycle: cycle,
+                        amount: order.amount,
+                    }),
+                });
+                const vd = await vr.json();
+                if (vd.ok) {
+                    p36ShowPayMsg(`✓ ${vd.message || 'Plan activated!'}`, true);
+                    await p8Load();
+                    p8RenderPlanCards();
+                    p8RenderModalUsage();
+                    await p36LoadBillingInfo();
+                    setTimeout(() => p36ShowPayMsg('', true), 5000);
+                } else {
+                    p36ShowPayMsg(`⚠ Verification failed: ${vd.error}`, false);
+                }
+            } catch(e) {
+                p36ShowPayMsg('⚠ Verification error. Contact support.', false);
+            }
+        },
+        modal: {
+            ondismiss: () => p36ShowPayMsg('', true),
+        },
+    };
+
+    if (window.Razorpay) {
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', e => p36ShowPayMsg(`⚠ Payment failed: ${e.error?.description || 'Unknown error'}`, false));
+        rzp.open();
+    } else {
+        p36ShowPayMsg('⚠ Razorpay checkout not loaded. Check your internet connection.', false);
+    }
+};
+
 function p8RenderPlanCards() {
     if (!p8State) return;
     const grid    = p8El('p8PlansGrid');
@@ -13934,20 +14194,28 @@ function p8RenderPlanCards() {
         const color    = P8_COLORS[pid] || '#888';
         const features = (p.features || []).map(f =>
             `<li>${p8Esc(f)}</li>`).join('');
-        const btnLabel = isActive ? 'Current Plan' :
-                         pid === 'free' ? 'Downgrade' : '🚀 Activate';
-        const btnClass = `p8-plan-btn ${isActive ? 'p8-current' : ''}`;
-        const btnStyle = `color:${color};border-color:${color};${!isActive?`background:${color}1a`:''}`
         const activeCls = isActive ? 'p8-active' : '';
+
+        // INR pricing for paid plans
+        const priceLine = pid === 'free'
+            ? p8Esc(p.price || '$0 / month')
+            : (P36_PRICING[pid]?.[p36Cycle] || p8Esc(p.price || ''));
+
+        let btnHtml;
+        if (isActive) {
+            btnHtml = `<button class="p8-plan-btn p8-current" style="color:${color};border-color:${color}" disabled>Current Plan</button>`;
+        } else if (pid === 'free') {
+            btnHtml = `<button class="p8-plan-btn" style="color:${color};border-color:${color};background:${color}1a" onclick="p8SelectPlan('free')">Downgrade to Free</button>`;
+        } else {
+            btnHtml = `<button class="p36-pay-btn" style="background:${color};color:#fff" onclick="p36StartPayment('${pid}','${p36Cycle}')">💳 Pay ${P36_PRICING[pid]?.[p36Cycle] || ''}</button>`;
+        }
 
         return `<div class="p8-plan-card ${activeCls}" style="border-color:${isActive?color:''};${isActive?`box-shadow:0 0 0 1px ${color}33`:''}" >
             <div class="p8-plan-icon">${p.icon||''}</div>
             <div class="p8-plan-name" style="color:${color}">${p8Esc(p.name||pid)}</div>
-            <div class="p8-plan-price" style="color:${color}">${p8Esc(p.price||'')}</div>
+            <div class="p8-plan-price" style="color:${color}">${priceLine}</div>
             <ul class="p8-plan-features">${features}</ul>
-            <button class="${btnClass}" style="${btnStyle}"
-                onclick="${isActive ? '' : `p8SelectPlan('${pid}')`}"
-                ${isActive ? 'disabled' : ''}>${btnLabel}</button>
+            ${btnHtml}
         </div>`;
     }).join('');
 }

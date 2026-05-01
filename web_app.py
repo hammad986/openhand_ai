@@ -9773,6 +9773,204 @@ def api_p11_team_memory():
     return jsonify({"ok": True, "memory": team.team_memory})
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE 36 — RAZORPAY BILLING INTEGRATION
+# Real SaaS payment system: orders, verification, webhooks, invoices, email.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+try:
+    import payments as _pay
+    _BILLING_AVAILABLE = True
+except Exception as _pay_err:
+    _BILLING_AVAILABLE = False
+    _logging.getLogger(__name__).warning("[Billing] payments module load error: %s", _pay_err)
+
+
+@app.route("/api/payments/create-order", methods=["POST"])
+def api_payments_create_order():
+    """Create a Razorpay order for plan upgrade."""
+    if not _BILLING_AVAILABLE:
+        return jsonify({"ok": False, "error": "Billing module unavailable"}), 503
+
+    d             = request.get_json() or {}
+    plan          = (d.get("plan") or "").lower().strip()
+    billing_cycle = (d.get("billing_cycle") or "monthly").lower().strip()
+
+    if plan not in ("pro", "elite"):
+        return jsonify({"ok": False, "error": "plan must be 'pro' or 'elite'"}), 400
+    if billing_cycle not in ("monthly", "yearly"):
+        return jsonify({"ok": False, "error": "billing_cycle must be 'monthly' or 'yearly'"}), 400
+
+    if not os.getenv("RAZORPAY_KEY_ID") or not os.getenv("RAZORPAY_KEY_SECRET"):
+        return jsonify({
+            "ok":    False,
+            "error": "Razorpay keys not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Secrets.",
+            "setup_required": True,
+        }), 503
+
+    try:
+        order = _pay.create_razorpay_order(plan, billing_cycle)
+        return jsonify({"ok": True, **order})
+    except Exception as e:
+        _logging.getLogger(__name__).error("[Billing] create-order error: %s", e)
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/payments/verify", methods=["POST"])
+def api_payments_verify():
+    """Verify Razorpay payment signature and activate subscription."""
+    if not _BILLING_AVAILABLE:
+        return jsonify({"ok": False, "error": "Billing module unavailable"}), 503
+
+    d          = request.get_json() or {}
+    order_id   = (d.get("razorpay_order_id") or "").strip()
+    payment_id = (d.get("razorpay_payment_id") or "").strip()
+    signature  = (d.get("razorpay_signature") or "").strip()
+    plan       = (d.get("plan") or "").lower().strip()
+    billing_cycle = (d.get("billing_cycle") or "monthly").lower().strip()
+    user_email = (d.get("user_email") or "").strip()
+    user_name  = (d.get("user_name") or "").strip()
+    amount     = int(d.get("amount") or 0)
+
+    if not all([order_id, payment_id, signature, plan]):
+        return jsonify({"ok": False, "error": "Missing required payment fields"}), 400
+
+    if not _pay.verify_razorpay_signature(order_id, payment_id, signature):
+        _logging.getLogger(__name__).warning("[Billing] Invalid signature for order %s", order_id)
+        return jsonify({"ok": False, "error": "Payment verification failed — invalid signature"}), 400
+
+    try:
+        result = _pay.activate_subscription(
+            plan=plan,
+            billing_cycle=billing_cycle,
+            payment_id=payment_id,
+            order_id=order_id,
+            amount=amount,
+            user_email=user_email,
+            user_name=user_name,
+        )
+        return jsonify({"ok": True, "message": f"{plan.title()} plan activated!", **result})
+    except Exception as e:
+        _logging.getLogger(__name__).error("[Billing] verify error: %s", e)
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/payments/webhook", methods=["POST"])
+def api_payments_webhook():
+    """Razorpay webhook endpoint — source of truth for payment events."""
+    if not _BILLING_AVAILABLE:
+        return jsonify({"ok": False}), 200  # Always 200 to Razorpay
+
+    body      = request.get_data()
+    signature = request.headers.get("X-Razorpay-Signature", "")
+
+    if signature and not _pay.verify_webhook_signature(body, signature):
+        _logging.getLogger(__name__).warning("[Billing] Webhook signature mismatch")
+        return jsonify({"ok": False, "error": "Invalid webhook signature"}), 400
+
+    try:
+        payload    = json.loads(body)
+        event_type = payload.get("event", "unknown")
+        entity     = payload.get("payload", {}).get("payment", {}).get("entity", {})
+        payment_id = entity.get("id", "")
+        order_id   = entity.get("order_id", "")
+        amount     = entity.get("amount", 0)
+        notes      = entity.get("notes", {})
+        plan       = notes.get("plan", "")
+        billing_cycle = notes.get("billing_cycle", "monthly")
+        user_email = entity.get("email", "")
+        user_name  = entity.get("contact", "")
+
+        _pay.log_webhook_event(event_type, payment_id, order_id, payload)
+        logger = _logging.getLogger(__name__)
+
+        if event_type == "payment.captured":
+            logger.info("[Billing] Webhook payment.captured — %s plan=%s", payment_id, plan)
+            if plan in ("pro", "elite"):
+                _pay.activate_subscription(
+                    plan=plan,
+                    billing_cycle=billing_cycle,
+                    payment_id=payment_id,
+                    order_id=order_id,
+                    amount=amount,
+                    user_email=user_email,
+                    user_name=user_name,
+                )
+        elif event_type == "payment.failed":
+            logger.warning("[Billing] Webhook payment.failed — %s", payment_id)
+
+    except Exception as e:
+        _logging.getLogger(__name__).error("[Billing] Webhook processing error: %s", e)
+
+    return jsonify({"ok": True}), 200
+
+
+@app.route("/api/invoice/<invoice_id>")
+def api_get_invoice(invoice_id):
+    """Return invoice HTML or JSON."""
+    if not _BILLING_AVAILABLE:
+        return jsonify({"ok": False, "error": "Billing unavailable"}), 503
+
+    inv = _pay.get_invoice(invoice_id)
+    if not inv:
+        return jsonify({"ok": False, "error": "Invoice not found"}), 404
+
+    fmt = request.args.get("format", "html")
+    if fmt == "json":
+        inv_copy = dict(inv)
+        inv_copy.pop("html", None)
+        return jsonify({"ok": True, "invoice": inv_copy})
+
+    return inv.get("html", "<p>Invoice HTML unavailable</p>"), 200, {
+        "Content-Type": "text/html; charset=utf-8"
+    }
+
+
+@app.route("/api/billing/info")
+def api_billing_info():
+    """Return subscription + invoice info for current user."""
+    if not _BILLING_AVAILABLE:
+        return jsonify({"ok": False, "error": "Billing unavailable"}), 503
+
+    _pay.check_and_expire_subscriptions()
+    info = _pay.get_billing_info()
+    return jsonify({"ok": True, **info})
+
+
+@app.route("/api/billing/invoices")
+def api_billing_invoices():
+    """Return list of invoices for current user."""
+    if not _BILLING_AVAILABLE:
+        return jsonify({"ok": False, "error": "Billing unavailable"}), 503
+
+    invoices = _pay.get_invoices()
+    return jsonify({"ok": True, "invoices": invoices})
+
+
+@app.route("/api/billing/cancel", methods=["POST"])
+def api_billing_cancel():
+    """Cancel the active subscription."""
+    if not _BILLING_AVAILABLE:
+        return jsonify({"ok": False, "error": "Billing unavailable"}), 503
+
+    _pay.cancel_subscription()
+    return jsonify({"ok": True, "message": "Subscription cancelled. Plan reverted to Free."})
+
+
+@app.route("/api/payments/plans")
+def api_payments_plans():
+    """Return available plans with pricing."""
+    if not _BILLING_AVAILABLE:
+        return jsonify({"ok": False, "error": "Billing unavailable"}), 503
+
+    return jsonify({
+        "ok":              True,
+        "plans":           _pay.PLANS,
+        "razorpay_key_id": os.getenv("RAZORPAY_KEY_ID", ""),
+        "enabled":         _pay.RAZORPAY_ENABLED,
+    })
+
+
 if __name__ == "__main__":
     # Phase 19: debug mode controlled by env var — never True in production
     _debug = os.getenv("FLASK_DEBUG", "0").strip() == "1"
