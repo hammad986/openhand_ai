@@ -2458,6 +2458,101 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
   margin-top: 8px; padding-top: 8px;
   border-top: 1px solid var(--panel-border);
 }
+
+/* ── Phase 9 — Active Routing Panel ─────────────────────────────── */
+.p9-routing-section {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+}
+.p9-routing-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.p9-routing-title .p9-status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #4caf50;
+  flex-shrink: 0;
+}
+.p9-role-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 10.5px;
+  border-radius: 4px;
+  transition: background .15s;
+}
+.p9-role-row:hover { background: var(--hover); }
+.p9-role-label {
+  color: var(--text-dim);
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.p9-model-tag {
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+.p9-provider-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.p9-fallback-badge {
+  font-size: 9px;
+  background: #f59e0b22;
+  color: #f59e0b;
+  border: 1px solid #f59e0b44;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: 2px;
+}
+.p9-fallback-log-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9.5px;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--text-dim);
+}
+.p9-fallback-log-row:last-child { border-bottom: none; }
+.p9-fallback-ts { color: var(--muted); font-size: 9px; min-width: 44px; }
+.p9-ctx-bar-wrap {
+  height: 2px;
+  background: var(--panel-border);
+  border-radius: 2px;
+  margin-top: 5px;
+  overflow: hidden;
+}
+.p9-ctx-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width .4s ease;
+}
 </style>
 </head>
 <body>
@@ -2922,6 +3017,24 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           <!-- Phase 8: Usage mini-block -->
           <div class="p8-insp-usage" id="p8InspUsage" style="display:none">
             <div id="p8InspUsageContent"></div>
+          </div>
+
+          <!-- Phase 9: Active Model Routing -->
+          <div class="p9-routing-section" id="p9RoutingSection">
+            <div class="p9-routing-title">
+              <span class="p9-status-dot" id="p9StatusDot"></span>
+              Active Routing
+              <span id="p9PlanModeTag" style="margin-left:auto;font-size:9px;font-weight:400;text-transform:none;opacity:.7"></span>
+            </div>
+            <div id="p9RouteRows">
+              <div class="p9-role-row">
+                <span class="p9-role-label">Plan</span>
+                <span class="p9-model-tag" style="color:#888">Loading…</span>
+              </div>
+            </div>
+            <div class="p9-ctx-bar-wrap" id="p9CtxBarWrap" style="display:none">
+              <div class="p9-ctx-bar-fill" id="p9CtxBarFill" style="width:0%"></div>
+            </div>
           </div>
         </div>
 
@@ -13245,6 +13358,146 @@ document.addEventListener('DOMContentLoaded', function() {
     p8Load();
     p8StartPoll();
     console.log('[Phase 8] Monetization & Access Control Layer active.');
+});
+
+})();
+
+/* ================================================================
+   PHASE 9 — MODEL INTELLIGENCE ROUTING SYSTEM
+   Role-based routing · Live Inspector · Fallback log · Plan sync
+   ================================================================ */
+(function () {
+'use strict';
+
+/* ── State ──────────────────────────────────────────────────────── */
+let p9State      = null;   // last /api/p9/routing response
+let p9PollTimer  = null;
+let p9PlanMode   = 'lite'; // mirrors current plan/exec mode
+
+const P9_ROLE_LABELS = { planning: 'Plan', coding: 'Code', debug: 'Debug' };
+const P9_ROLE_ORDER  = ['planning', 'coding', 'debug'];
+
+/* ── Helpers ────────────────────────────────────────────────────── */
+function p9El(id) { return document.getElementById(id); }
+
+function p9Esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function p9CurrentPlan() {
+    // Read plan selector value or fall back to p8State
+    const sel = document.getElementById('nxPlanSelect') ||
+                document.getElementById('nxExecMode')   ||
+                document.querySelector('[data-plan-selector]');
+    if (sel && sel.value) return sel.value.toLowerCase();
+    if (window.p8State) return window.p8State.plan || 'lite';
+    return 'lite';
+}
+
+/* ── Load routing from API ──────────────────────────────────────── */
+async function p9Load(planMode) {
+    try {
+        const plan = planMode || p9CurrentPlan();
+        const r    = await fetch(`/api/p9/routing?plan_mode=${encodeURIComponent(plan)}`);
+        const d    = await r.json();
+        if (!d.ok) return;
+        p9State    = d;
+        p9PlanMode = d.plan_mode;
+        p9RenderInspector(d);
+    } catch(e) {}
+}
+
+/* ── Render inspector routing rows ─────────────────────────────── */
+function p9RenderInspector(d) {
+    const rowsEl   = p9El('p9RouteRows');
+    const modeTag  = p9El('p9PlanModeTag');
+    const dot      = p9El('p9StatusDot');
+    if (!rowsEl) return;
+
+    if (modeTag) modeTag.textContent = d.plan_mode.toUpperCase();
+
+    const routes = d.routes || {};
+    const anyFallback = P9_ROLE_ORDER.some(r => routes[r]?.fallback_used);
+    if (dot) {
+        dot.style.background = anyFallback ? '#f59e0b' : '#4caf50';
+        dot.title = anyFallback ? 'Some providers using fallback' : 'All primary providers active';
+    }
+
+    let html = '';
+    P9_ROLE_ORDER.forEach(role => {
+        const info  = routes[role];
+        if (!info) return;
+        const label = P9_ROLE_LABELS[role] || role;
+        const color = d.provider_meta?.[info.provider]?.color || '#888';
+        const fbBadge = info.fallback_used
+            ? `<span class="p9-fallback-badge" title="Using fallback — primary provider unavailable">FB</span>`
+            : '';
+        const modelShort = info.model_label || (info.model || '').split('/').pop() || '—';
+        const title = `${info.provider_name} · ${info.model}\nContext: ${(info.context_limit||0).toLocaleString()} tokens`;
+
+        html += `<div class="p9-role-row" title="${p9Esc(title)}">
+            <span class="p9-role-label">${p9Esc(label)}</span>
+            <span class="p9-model-tag" style="color:${color}">${p9Esc(modelShort)}</span>
+            <span style="display:flex;align-items:center;gap:3px">
+                ${fbBadge}
+                <span class="p9-provider-dot" style="background:${color}" title="${p9Esc(info.provider_name)}"></span>
+            </span>
+        </div>`;
+    });
+    rowsEl.innerHTML = html || '<div style="color:var(--muted);font-size:10px;padding:4px 0">No routing data</div>';
+}
+
+/* ── React to plan/exec-mode changes ────────────────────────────── */
+function p9HookPlanSelector() {
+    const selectors = [
+        document.getElementById('nxPlanSelect'),
+        document.getElementById('nxExecMode'),
+        document.querySelector('select[name="plan_mode"]'),
+        document.querySelector('[data-plan-selector]'),
+    ].filter(Boolean);
+
+    selectors.forEach(el => {
+        el.addEventListener('change', () => {
+            const val = el.value?.toLowerCase() || 'lite';
+            if (val !== p9PlanMode) {
+                p9PlanMode = val;
+                p9Load(val);
+            }
+        });
+    });
+}
+
+/* ── Hook into task start events to log "which model was used" ──── */
+// The task start event is dispatched by the main app; we listen and
+// append a routing note to the output log.
+function p9HookTaskEvents() {
+    document.addEventListener('nxTaskStart', function(e) {
+        const plan = e?.detail?.plan_mode || p9CurrentPlan();
+        p9Load(plan);
+    });
+    document.addEventListener('nxTaskDone', function(e) {
+        p9Load();
+    });
+}
+
+/* ── Expose routing state for other phases / console ─────────────── */
+window.p9GetRoutes    = () => p9State?.routes || {};
+window.p9LoadRouting  = p9Load;
+window.p9GetPlanMode  = () => p9PlanMode;
+
+/* ── Poll every 30s ─────────────────────────────────────────────── */
+function p9StartPoll() {
+    if (p9PollTimer) clearInterval(p9PollTimer);
+    p9PollTimer = setInterval(() => p9Load(p9CurrentPlan()), 30000);
+}
+
+/* ── Init ───────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function () {
+    p9Load(p9CurrentPlan());
+    p9StartPoll();
+    p9HookPlanSelector();
+    p9HookTaskEvents();
+    console.log('[Phase 9] Model Intelligence Routing System active.');
 });
 
 })();

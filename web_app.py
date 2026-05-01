@@ -7978,5 +7978,142 @@ def api_plan_check():
     return jsonify({"ok": True, "allowed": allowed, "reason": reason, "plan": plan})
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE 9 — MODEL INTELLIGENCE ROUTING SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _p9_get_router():
+    """Return the shared LLMRouter instance (lazy-init)."""
+    return _get_editor_llm()
+
+def _p9_get_byok_keys(sid: str | None = None) -> dict:
+    """Collect BYOK keys from session settings for availability checks."""
+    keys = {}
+    try:
+        all_keys = get_setting("p5_byok_keys") or {}
+        if isinstance(all_keys, dict):
+            keys.update(all_keys)
+        if sid:
+            sess_keys = get_setting(f"p5_byok_{sid}") or {}
+            if isinstance(sess_keys, dict):
+                keys.update(sess_keys)
+    except Exception:
+        pass
+    return keys
+
+
+@app.route("/api/p9/routing")
+def api_p9_routing():
+    """Return the resolved role→model routing table for the current plan mode."""
+    from config import Config as _Cfg9
+    plan_mode = request.args.get("plan_mode", "lite").lower()
+    sid       = request.args.get("sid", "")
+    if plan_mode not in ("lite", "pro", "elite"):
+        plan_mode = "lite"
+
+    router    = _p9_get_router()
+    byok_keys = _p9_get_byok_keys(sid)
+
+    try:
+        routes = router.p9_get_active_routes(plan_mode, byok_keys)
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+    meta      = _Cfg9.P9_PROVIDER_META
+    role_cfg  = _Cfg9.P9_ROLE_MODELS.get(plan_mode, {})
+    out       = {}
+
+    for role, r in routes.items():
+        prov   = r["provider"]
+        model  = r["model"] or ""
+        pm     = meta.get(prov, {})
+        mm     = pm.get("models", {}).get(model, {})
+        out[role] = {
+            "provider":       prov,
+            "provider_name":  pm.get("name", prov.title()),
+            "provider_color": pm.get("color", "#888"),
+            "model":          model,
+            "model_label":    mm.get("label", model.split("/")[-1] if "/" in model else model),
+            "context_limit":  r["context_limit"],
+            "fallback_used":  r["fallback_used"],
+            "fallback_chain": [{"provider": f[0], "model": f[1]}
+                               for f in role_cfg.get(role, {}).get("fallback", [])],
+        }
+
+    return jsonify({
+        "ok":        True,
+        "plan_mode": plan_mode,
+        "routes":    out,
+        "provider_meta": {
+            k: {"name": v["name"], "color": v["color"]}
+            for k, v in _Cfg9.P9_PROVIDER_META.items()
+        },
+    })
+
+
+@app.route("/api/p9/fallback-log")
+def api_p9_fallback_log():
+    """Return the recent fallback events log."""
+    from router import LLMRouter
+    limit = min(int(request.args.get("limit", 20)), 50)
+    log   = LLMRouter.p9_get_fallback_log()[:limit]
+    return jsonify({"ok": True, "log": log, "count": len(log)})
+
+
+@app.route("/api/p9/route-for-role", methods=["POST"])
+def api_p9_route_for_role():
+    """Resolve a single role's routing.  Body: {plan_mode, role, sid?}"""
+    from config import Config as _Cfg9
+    d         = request.get_json() or {}
+    plan_mode = (d.get("plan_mode") or "lite").lower()
+    role      = (d.get("role") or "coding").lower()
+    sid       = d.get("sid", "")
+
+    if plan_mode not in ("lite", "pro", "elite"):
+        plan_mode = "lite"
+    if role not in ("planning", "coding", "debug"):
+        role = "coding"
+
+    router    = _p9_get_router()
+    byok_keys = _p9_get_byok_keys(sid)
+
+    try:
+        r      = router.get_model_for_role(plan_mode, role, byok_keys)
+        meta   = _Cfg9.P9_PROVIDER_META
+        pm     = meta.get(r["provider"], {})
+        mm     = pm.get("models", {}).get(r["model"] or "", {})
+        return jsonify({
+            "ok":             True,
+            "plan_mode":      plan_mode,
+            "role":           role,
+            "provider":       r["provider"],
+            "provider_name":  pm.get("name", r["provider"].title()),
+            "provider_color": pm.get("color", "#888"),
+            "model":          r["model"],
+            "model_label":    mm.get("label", (r["model"] or "").split("/")[-1]),
+            "context_limit":  r["context_limit"],
+            "fallback_used":  r["fallback_used"],
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/p9/providers")
+def api_p9_providers():
+    """Return Phase 9 provider catalogue."""
+    from config import Config as _Cfg9
+    return jsonify({
+        "ok":        True,
+        "providers": _Cfg9.P9_PROVIDER_META,
+        "plan_models": {
+            plan: {
+                role: {k: v for k, v in cfg.items() if k != "fallback"}
+                for role, cfg in roles.items()
+            }
+            for plan, roles in _Cfg9.P9_ROLE_MODELS.items()
+        },
+    })
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)

@@ -1,0 +1,165 @@
+You have successfully completed Phase 8 (Monetization + Access Control).
+
+Now implement **PHASE 9 — Model Intelligence Routing System (Production-Grade)**.
+
+This phase is CRITICAL. Do not add random code. Follow structured implementation.
+
+---
+
+# 🎯 OBJECTIVE
+
+Design a **role-based intelligent model routing system** using ONLY the following providers as DEFAULT SYSTEM MODELS:
+
+### ✅ REQUIRED PROVIDERS
+
+1. DeepSeek (DeepSeek-R1, DeepSeek-V3)
+2. Alibaba Cloud (Qwen3-Max-Thinking, Qwen3-Coder)
+3. Zhipu AI (GLM-5 / GLM-5.1 / GLM-4.5-Air)
+4. Google Gemini (Gemini Pro)
+5. Aggregators:
+
+   * OpenRouter (already present)
+   * SiliconFlow (optional integration layer)
+   * SambaNova (optional fallback compute)
+
+⚠️ DO NOT add any other providers for default routing.
+
+---
+
+# 🧠 STEP 1 — MODEL ROLE CLASSIFICATION
+
+Create a structured mapping system:
+
+Each task must use 3 roles:
+
+* PLANNING_MODEL
+* CODING_MODEL
+* DEBUG_MODEL
+
+---
+
+# 🧠 STEP 2 — ROLE → MODEL MAPPING
+
+Implement exact mapping:
+
+## 🟢 LITE MODE (fast, low cost)
+
+PLANNING → Groq / DeepSeek-V3 (via OpenRouter)
+CODING → DeepSeek-V3
+DEBUG → Groq / lightweight fallback
+
+---
+
+## 🔵 PRO MODE (balanced)
+
+PLANNING → Gemini Pro
+CODING → Qwen3-Coder
+DEBUG → Gemini Pro
+
+---
+
+## 🟣 ELITE MODE (high intelligence)
+
+PLANNING → DeepSeek-R1
+CODING → DeepSeek-R1
+DEBUG → DeepSeek-R1
+
+Fallback order:
+DeepSeek → Gemini → OpenRouter
+
+---
+
+# 🧠 STEP 3 — DYNAMIC ROUTER ENGINE
+
+Update ModelRouter:
+
+* Add role-based routing instead of single model selection
+
+* Add function:
+  get_model_for_role(plan_mode, role)
+
+* Inject into workflow_engine:
+  planning → uses PLANNING_MODEL
+  execution → uses CODING_MODEL
+  verification → uses DEBUG_MODEL
+
+---
+
+# ⚡ STEP 4 — TOKEN-AWARE OPTIMIZATION
+
+Add constraints:
+
+* Avoid high-token models unless Elite mode
+* Prefer cheaper models in Lite/Pro
+* Limit context size automatically
+
+---
+
+# 📊 STEP 5 — PROVIDER PRIORITY LAYER
+
+Create priority system:
+
+Example:
+
+DeepSeek available → use
+Else → Gemini
+Else → OpenRouter
+
+---
+
+# 🎨 STEP 6 — UI INTEGRATION
+
+Add to Inspector panel:
+
+* "Active Model Routing"
+
+  * Planning → [model]
+  * Coding → [model]
+  * Debug → [model]
+
+Add to logs:
+
+* show which model was used per step
+
+---
+
+# 🧠 STEP 7 — FAILOVER INTELLIGENCE
+
+If model fails:
+
+* retry once
+* switch provider automatically
+* log fallback event
+
+---
+
+# ⚠️ RULES
+
+* DO NOT break existing Phase 5/6 routing
+* DO NOT remove BYOK system
+* DO NOT hardcode models globally
+* EVERYTHING must be dynamic
+
+---
+
+# 📊 OUTPUT REQUIRED
+
+1. Model routing architecture
+2. Updated ModelRouter logic
+3. Workflow integration
+4. UI updates
+5. Fallback system
+
+---
+
+# 🚀 FINAL GOAL
+
+System should behave like:
+
+"An AI that automatically selects the best model for planning, coding, and debugging without user intervention"
+
+---
+
+This is NOT a UI task. This is CORE INTELLIGENCE ENGINE.
+
+Implement carefully and verify each layer.

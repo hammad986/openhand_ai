@@ -299,6 +299,225 @@ class LLMRouter:
 
         raise RuntimeError(f"All APIs failed for role={role}.\n{json.dumps(self.stats(), indent=2)}")
 
+    # ═══════════════════════════════════════════════════════════════════════
+    # Phase 9 — Intelligent Role-Based Model Routing Engine
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # Fallback log: list of dicts {ts, plan, role, tried, used, reason}
+    _p9_fallback_log: list = []
+    _P9_MAX_FALLBACK_LOG    = 50
+
+    def _p9_log_fallback(self, plan: str, role: str, tried: str, used: str, reason: str):
+        entry = {
+            "ts":     time.strftime("%H:%M:%S"),
+            "plan":   plan,
+            "role":   role,
+            "tried":  tried,
+            "used":   used,
+            "reason": reason,
+        }
+        LLMRouter._p9_fallback_log.append(entry)
+        if len(LLMRouter._p9_fallback_log) > self._P9_MAX_FALLBACK_LOG:
+            LLMRouter._p9_fallback_log.pop(0)
+        logger.info(f"[P9-Fallback] {plan}/{role}: {tried} → {used} ({reason})")
+
+    def _p9_provider_available(self, provider: str) -> bool:
+        """Return True if the provider has a key configured and isn't auth-failed."""
+        c  = self.config
+        h  = self.health.get(provider)
+        if h and h.auth_failed:
+            return False
+        key_map = {
+            "deepseek":   c.DEEPSEEK_API_KEY,
+            "gemini":     c.GEMINI_API_KEY,
+            "groq":       c.GROQ_API_KEY,
+            "openrouter": c.OPENROUTER_API_KEY,
+            "together":   c.TOGETHER_API_KEY,
+            "nvidia":     c.NVIDIA_API_KEY,
+            "openai":     c.OPENAI_API_KEY,
+            "anthropic":  c.ANTHROPIC_API_KEY,
+            "xai":        c.XAI_API_KEY,
+            "fireworks":  c.FIREWORKS_API_KEY,
+            "mistral":    c.MISTRAL_API_KEY,
+        }
+        if provider in ("local", "ollama"):
+            return self.config.ALLOW_LOCAL_FALLBACK
+        return bool(key_map.get(provider, ""))
+
+    def get_model_for_role(self, plan_mode: str, role: str,
+                           byok_keys: dict | None = None) -> dict:
+        """Phase 9: Return the best {provider, model, context_limit, fallback_used}
+        for the given plan_mode + role, respecting provider availability.
+
+        Args:
+            plan_mode:  "lite" | "pro" | "elite"
+            role:       "planning" | "coding" | "debug"
+            byok_keys:  dict of {provider_id: api_key} from BYOK session (optional)
+
+        Returns:
+            {
+              "provider": str,
+              "model":    str,
+              "context_limit": int,
+              "fallback_used": bool,
+              "fallback_chain": [...],
+            }
+        """
+        c      = self.config
+        plan   = plan_mode if plan_mode in c.P9_ROLE_MODELS else "lite"
+        role_k = role if role in ("planning", "coding", "debug") else "coding"
+        cfg    = c.P9_ROLE_MODELS[plan][role_k]
+
+        primary_prov  = cfg["provider"]
+        primary_model = cfg["model"]
+        fallback_chain = cfg["fallback"]
+        ctx_limit      = cfg["context_limit"]
+
+        def _has_key(prov: str) -> bool:
+            # Check BYOK first, then env keys
+            if byok_keys and byok_keys.get(prov):
+                return True
+            return self._p9_provider_available(prov)
+
+        # Try primary
+        if _has_key(primary_prov) and not (self.health.get(primary_prov, APIHealth(primary_prov)).is_rate_limited):
+            return {
+                "provider":      primary_prov,
+                "model":         primary_model,
+                "context_limit": ctx_limit,
+                "fallback_used": False,
+                "fallback_chain": fallback_chain,
+            }
+
+        # Walk fallback chain
+        for fb_prov, fb_model in fallback_chain:
+            if _has_key(fb_prov) and not (self.health.get(fb_prov, APIHealth(fb_prov)).is_rate_limited):
+                self._p9_log_fallback(plan, role_k, primary_prov, fb_prov,
+                                      "key unavailable or rate-limited")
+                return {
+                    "provider":      fb_prov,
+                    "model":         fb_model,
+                    "context_limit": ctx_limit // 2,
+                    "fallback_used": True,
+                    "fallback_chain": fallback_chain,
+                }
+
+        # Last resort: any available provider
+        for prov in self._ranked_priority():
+            if prov not in (primary_prov, *(f[0] for f in fallback_chain)):
+                self._p9_log_fallback(plan, role_k, primary_prov, prov,
+                                      "all preferred providers unavailable")
+                return {
+                    "provider":      prov,
+                    "model":         c.MODELS.get(prov),
+                    "context_limit": 4096,
+                    "fallback_used": True,
+                    "fallback_chain": fallback_chain,
+                }
+
+        # Nothing available — return primary spec so callers can raise properly
+        return {
+            "provider":      primary_prov,
+            "model":         primary_model,
+            "context_limit": ctx_limit,
+            "fallback_used": False,
+            "fallback_chain": fallback_chain,
+        }
+
+    def chat_role_p9(self, plan_mode: str, role: str, messages: list,
+                     system: str | None = None,
+                     byok_keys: dict | None = None,
+                     max_tokens: int | None = None) -> tuple[str, dict]:
+        """Phase 9 entry point: route by plan+role, enforce context limits,
+        retry on failure, log fallbacks.
+
+        Returns:
+            (response_text, route_info_dict)
+        """
+        route = self.get_model_for_role(plan_mode, role, byok_keys)
+        prov  = route["provider"]
+        model = route["model"]
+        limit = route["context_limit"]
+
+        # Token-aware: cap max_tokens to context_limit / 4 (headroom for prompt)
+        effective_max = max_tokens or min(limit // 4, 4096)
+        effective_max = min(effective_max, limit)
+
+        if system:
+            messages = [{"role": "system", "content": system}] + messages
+
+        logger.info(f"[P9] plan={plan_mode} role={role} → {prov}/{model} "
+                    f"(ctx={limit}, max_tok={effective_max}, fallback={route['fallback_used']})")
+
+        def _attempt(provider, mdl, mtok):
+            h = self.health.get(provider) or APIHealth(provider)
+            if provider not in self.health:
+                self.health[provider] = h
+            t0       = time.time()
+            response = self._call_with_retry(provider, messages, mtok, model=mdl)
+            elapsed  = time.time() - t0
+            tokens   = self._estimate_tokens(messages, response)
+            cost     = tokens * self.config.COST_PER_1K.get(provider, 0) / 1000
+            h.calls        += 1
+            h.total_tokens += tokens
+            h.total_cost   += cost
+            h.latencies.append(elapsed)
+            self.last_used_api     = provider
+            self.last_role         = role
+            self.last_role_model   = mdl
+            self.last_role_provider = provider
+            logger.info(f"[P9] OK {provider}/{mdl} | {elapsed:.1f}s | ~{tokens}tok")
+            return response
+
+        # Attempt primary route
+        try:
+            resp = _attempt(prov, model, effective_max)
+            return resp, {**route, "status": "ok"}
+        except _RateLimitError as e:
+            h = self.health.get(prov)
+            if h:
+                h.errors             += 1
+                h.rate_limited_until  = time.time() + e.retry_after
+            self._p9_log_fallback(plan_mode, role, prov, "fallback", f"rate limited {e.retry_after}s")
+        except Exception as e:
+            h = self.health.get(prov)
+            if h:
+                h.errors += 1
+            logger.warning(f"[P9] FAIL {prov}/{model}: {e}")
+
+        # Retry with first fallback
+        for fb_prov, fb_model in route["fallback_chain"]:
+            if not self._p9_provider_available(fb_prov):
+                continue
+            fh = self.health.get(fb_prov) or APIHealth(fb_prov)
+            if fb_prov not in self.health:
+                self.health[fb_prov] = fh
+            if fh.is_rate_limited or fh.auth_failed:
+                continue
+            try:
+                self._p9_log_fallback(plan_mode, role, prov, fb_prov, "primary failed")
+                resp = _attempt(fb_prov, fb_model, min(effective_max, 2048))
+                return resp, {**route, "provider": fb_prov, "model": fb_model,
+                              "fallback_used": True, "status": "fallback"}
+            except Exception as e2:
+                logger.warning(f"[P9] FAIL fallback {fb_prov}/{fb_model}: {e2}")
+
+        raise RuntimeError(f"[P9] All providers failed for plan={plan_mode} role={role}")
+
+    def p9_get_active_routes(self, plan_mode: str,
+                             byok_keys: dict | None = None) -> dict:
+        """Return the resolved routing table for all 3 roles in one shot.
+        Used by /api/p9/routing endpoint.
+        """
+        return {
+            role: self.get_model_for_role(plan_mode, role, byok_keys)
+            for role in ("planning", "coding", "debug")
+        }
+
+    @classmethod
+    def p9_get_fallback_log(cls) -> list:
+        return list(reversed(cls._p9_fallback_log))
+
     def stats(self) -> dict:
         return {name: h.summary() for name, h in self.health.items()}
 
@@ -328,6 +547,8 @@ class LLMRouter:
         if self._gemini_keys:    available.append("gemini")
         if c.OPENROUTER_API_KEY: available.append("openrouter")
         if c.TOGETHER_API_KEY:   available.append("together")
+        # Phase 9: DeepSeek direct (also available via OpenRouter as fallback)
+        if c.DEEPSEEK_API_KEY:   available.append("deepseek")
         return available
 
     def _normalize_model_name(self, name: str | None) -> str | None:
@@ -375,6 +596,11 @@ class LLMRouter:
             return self._call_ollama_chat(model or c.MODELS["local"], messages, max_tokens)
         if name == "local":
             return self._ollama(messages, max_tokens) if not model else self._call_ollama_chat(model, messages, max_tokens)
+        # Phase 9: DeepSeek direct endpoint (OpenAI-compatible)
+        if name == "deepseek":
+            return self._compat(c.DEEPSEEK_URL, c.DEEPSEEK_API_KEY,
+                                model or c.MODELS.get("deepseek", "deepseek-chat"),
+                                messages, max_tokens)
         raise ValueError(f"Unknown API: {name}")
 
     def _compat(self, url, key, model, messages, max_tokens, extra=None) -> str:

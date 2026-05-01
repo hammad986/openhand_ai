@@ -186,6 +186,123 @@ class Config:
     REVIEW_HYBRID_MAX_HUNKS    = int(os.getenv("REVIEW_HYBRID_MAX_HUNKS", "2"))
     REVIEW_HYBRID_AUTO_ACTIONS = ("optimize", "explain")
 
+    # ── Phase 9 — Intelligent Role-Based Model Routing ─────────────────────
+    # Maps plan_mode → role → { provider, model, fallback, context_limit }
+    # Roles: planning · coding · debug
+    # Providers used: deepseek, gemini, groq, openrouter (Qwen/GLM via OR)
+    P9_ROLE_MODELS = {
+        "lite": {
+            "planning": {
+                "provider": "groq",
+                "model":    "llama-3.3-70b-versatile",
+                "fallback": [("deepseek", "deepseek-chat"),
+                             ("openrouter", "deepseek/deepseek-chat")],
+                "context_limit": 8192,
+            },
+            "coding": {
+                "provider": "deepseek",
+                "model":    "deepseek-chat",
+                "fallback": [("groq", "llama-3.3-70b-versatile"),
+                             ("openrouter", "deepseek/deepseek-chat")],
+                "context_limit": 8192,
+            },
+            "debug": {
+                "provider": "groq",
+                "model":    "llama-3.3-70b-versatile",
+                "fallback": [("deepseek", "deepseek-chat"),
+                             ("openrouter", "deepseek/deepseek-chat")],
+                "context_limit": 4096,
+            },
+        },
+        "pro": {
+            "planning": {
+                "provider": "gemini",
+                "model":    "gemini-1.5-pro",
+                "fallback": [("openrouter", "qwen/qwen2.5-coder-32b-instruct"),
+                             ("deepseek", "deepseek-chat")],
+                "context_limit": 32768,
+            },
+            "coding": {
+                "provider": "openrouter",
+                "model":    "qwen/qwen2.5-coder-32b-instruct",
+                "fallback": [("deepseek", "deepseek-chat"),
+                             ("gemini", "gemini-1.5-pro")],
+                "context_limit": 32768,
+            },
+            "debug": {
+                "provider": "gemini",
+                "model":    "gemini-1.5-pro",
+                "fallback": [("deepseek", "deepseek-chat"),
+                             ("openrouter", "deepseek/deepseek-chat")],
+                "context_limit": 16384,
+            },
+        },
+        "elite": {
+            "planning": {
+                "provider": "deepseek",
+                "model":    "deepseek-reasoner",
+                "fallback": [("gemini", "gemini-1.5-pro"),
+                             ("openrouter", "deepseek/deepseek-r1")],
+                "context_limit": 65536,
+            },
+            "coding": {
+                "provider": "deepseek",
+                "model":    "deepseek-reasoner",
+                "fallback": [("gemini", "gemini-1.5-pro"),
+                             ("openrouter", "deepseek/deepseek-r1")],
+                "context_limit": 65536,
+            },
+            "debug": {
+                "provider": "deepseek",
+                "model":    "deepseek-reasoner",
+                "fallback": [("gemini", "gemini-1.5-pro"),
+                             ("openrouter", "deepseek/deepseek-r1")],
+                "context_limit": 32768,
+            },
+        },
+    }
+
+    # Phase 9 — provider priority override per plan
+    PLAN_PROVIDER_PREFERENCE = {
+        "lite":  ["groq", "deepseek", "gemini", "openrouter", "together", "mistral"],
+        "pro":   ["gemini", "openrouter", "deepseek", "groq", "together", "openai"],
+        "elite": ["deepseek", "gemini", "openrouter", "groq", "together"],
+    }
+
+    # ── Phase 9 — Provider display names + model catalogue ──────────────────
+    P9_PROVIDER_META = {
+        "deepseek": {
+            "name": "DeepSeek", "color": "#4dc2f9",
+            "models": {
+                "deepseek-chat":     {"label": "DeepSeek-V3",     "roles": ["coding","planning","debug"]},
+                "deepseek-reasoner": {"label": "DeepSeek-R1",     "roles": ["planning","coding","debug"]},
+            },
+        },
+        "gemini": {
+            "name": "Google Gemini", "color": "#4285f4",
+            "models": {
+                "gemini-1.5-flash": {"label": "Gemini 1.5 Flash", "roles": ["debug","planning"]},
+                "gemini-1.5-pro":   {"label": "Gemini 1.5 Pro",   "roles": ["planning","debug","coding"]},
+            },
+        },
+        "groq": {
+            "name": "Groq", "color": "#f55036",
+            "models": {
+                "llama-3.3-70b-versatile": {"label": "Llama 3.3-70B", "roles": ["planning","debug"]},
+                "llama3-8b-8192":          {"label": "Llama 3-8B",    "roles": ["debug"]},
+            },
+        },
+        "openrouter": {
+            "name": "OpenRouter", "color": "#6e5af0",
+            "models": {
+                "qwen/qwen2.5-coder-32b-instruct": {"label": "Qwen2.5-Coder-32B",    "roles": ["coding"]},
+                "deepseek/deepseek-chat":           {"label": "DeepSeek-V3 (OR)",     "roles": ["coding","planning"]},
+                "deepseek/deepseek-r1":             {"label": "DeepSeek-R1 (OR)",     "roles": ["planning","coding","debug"]},
+                "zhipuai/glm-4-flash":              {"label": "GLM-4-Flash (OR)",     "roles": ["debug"]},
+            },
+        },
+    }
+
     # ── Phase 22 — Model routing roles ─────────────────────────────────────
     ROUTING_ROLES               = ("planner", "coding", "reasoning")
     ROUTING_PROVIDERS           = ("auto", "gemini", "openrouter", "groq",

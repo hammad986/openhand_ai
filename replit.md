@@ -86,6 +86,21 @@ The UI was upgraded from the basic "Phase 57" bridge to a full feature-complete 
 - **BYOK Priority mode**: Toggle stored in settings; forces fastest provider routing when using personal API keys
 - **New Endpoints**: `GET /api/plan/info`, `POST /api/plan/set`, `POST /api/plan/apply-coupon`, `POST /api/plan/check`, `POST /api/plan/byok-priority`
 
+### Phase 9: Model Intelligence Routing System
+- **Three Roles**: `planning` (task decomposition) · `coding` (code generation) · `debug` (error analysis)
+- **Plan-tier routing**:
+  - Lite → Groq/Llama-3.3-70B for planning+debug, DeepSeek-V3 for coding (8K/4K ctx)
+  - Pro → Gemini-1.5-Pro for planning+debug, Qwen2.5-Coder-32B (via OpenRouter) for coding (32K/16K ctx)
+  - Elite → DeepSeek-R1 for all three roles (65K/32K ctx)
+- **Fallback chain**: Each role has 2 fallbacks; system walks chain automatically on key-missing or rate-limit
+- **Fallback log**: In-memory ring buffer of last 50 fallback events; queryable via `/api/p9/fallback-log`
+- **Provider availability check**: `_p9_provider_available()` checks env keys + BYOK + health.auth_failed before selecting
+- **Token-aware limits**: `context_limit` per role/plan; `chat_role_p9()` caps `max_tokens` to `context_limit/4` for prompt headroom
+- **DeepSeek direct**: Added to `_available_apis()` + `_dispatch()` using OpenAI-compatible API
+- **Inspector panel**: Live "Active Routing" section shows Planning/Coding/Debug model per plan mode, colour-coded provider dots, fallback indicator (amber dot + "FB" badge)
+- **Auto-sync**: JS polls every 30s; re-fetches on plan-selector change and task events
+- **New Endpoints**: `GET /api/p9/routing?plan_mode=`, `POST /api/p9/route-for-role`, `GET /api/p9/fallback-log`, `GET /api/p9/providers`
+
 ## Running the App
 - **Workflow**: "Start application" — runs `python web_app.py`
 - **Port**: 5000
