@@ -85,6 +85,10 @@ _scheduler_limiter = RateLimiter(
     max_calls=int(os.getenv("RATE_LIMIT_SCHEDULER", "30")),
     window_seconds=60,
 )
+_forgot_pw_limiter = RateLimiter(
+    max_calls=int(os.getenv("RATE_LIMIT_FORGOT_PW", "5")),
+    window_seconds=3600,  # 5 requests per hour per IP
+)
 
 
 def get_client_ip(request) -> str:

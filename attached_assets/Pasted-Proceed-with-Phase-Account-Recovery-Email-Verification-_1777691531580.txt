@@ -1,0 +1,153 @@
+Proceed with Phase: Account Recovery & Email Verification System (Enterprise Grade).
+
+This is a critical security + user retention layer. Build with production-grade safety.
+
+---
+
+# 🎯 OBJECTIVE
+
+Enable secure account recovery and verification:
+
+* Forgot password flow
+* Reset password via secure token
+* Email verification on signup
+* Protection against token abuse
+
+---
+
+# 🧱 PART 1 — DATABASE
+
+Create table: password_resets
+
+* id (UUID)
+* user_id
+* token_hash (NOT plaintext)
+* expires_at
+* used (boolean)
+* created_at
+
+Create table: email_verifications
+
+* id
+* user_id
+* token_hash
+* expires_at
+* verified (boolean)
+
+---
+
+# 🔐 PART 2 — TOKEN SECURITY
+
+* Generate random token (32–64 bytes)
+* Store only HASH (SHA256 or bcrypt)
+* Expiry: 15–30 minutes
+* Single-use only
+* Invalidate all previous tokens on new request
+
+---
+
+# 📩 PART 3 — EMAIL FLOW
+
+Use existing email system (Resend/SMTP):
+
+Forgot Password:
+
+* send email with reset link:
+  https://your-domain/reset-password?token=...
+
+Email Verification:
+
+* send verification link after signup
+
+---
+
+# ⚙️ PART 4 — API ENDPOINTS
+
+Implement:
+
+POST /api/auth/forgot-password
+
+* input: email
+* always return 200 (prevent email enumeration)
+
+POST /api/auth/reset-password
+
+* input: token, new_password
+* validate token → update password → invalidate token
+
+POST /api/auth/send-verification
+GET /api/auth/verify-email?token=...
+
+---
+
+# 🛡️ PART 5 — SECURITY HARDENING
+
+* Rate limit forgot-password (3–5 per hour per email/IP)
+* Do NOT reveal if email exists
+* Strong password validation (min length, etc.)
+* Invalidate all active sessions on password reset
+
+---
+
+# 🎨 PART 6 — UI
+
+Add:
+
+1. Login screen:
+
+   * "Forgot Password?" link
+
+2. Reset page:
+
+   * new password + confirm
+   * token validation
+
+3. Verification success page
+
+---
+
+# 🔁 PART 7 — SESSION SAFETY
+
+On password reset:
+
+* revoke all refresh tokens
+* logout all devices
+
+---
+
+# 🧪 PART 8 — TESTING
+
+Test:
+
+* valid reset flow
+* expired token
+* reused token
+* wrong token
+* rate limit
+* session invalidation
+
+---
+
+# 📬 PART 9 — EMAIL CONTENT
+
+Include:
+
+* clear subject
+* expiry warning
+* "If you didn’t request this, ignore"
+
+---
+
+# 🚀 FINAL RESULT
+
+System must confirm:
+
+"ACCOUNT RECOVERY & EMAIL VERIFICATION FULLY SECURE AND OPERATIONAL"
+
+---
+
+# 🔥 NOTE
+
+No plaintext tokens. No weak validation. No user enumeration.
+
+This must match real SaaS standards.

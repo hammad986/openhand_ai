@@ -3010,7 +3010,92 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
 }
 .nx-auth-err.show { display: block; }
 
-.nx-auth-footer {
+/* Account Recovery UI */
+.nx-auth-forgot-link {
+  display: block;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--accent, #58a6ff);
+  cursor: pointer;
+  margin-top: -8px;
+  margin-bottom: 14px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  text-decoration: none;
+}
+.nx-auth-forgot-link:hover { text-decoration: underline; }
+.nx-auth-back-link {
+  display: block;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted, #8b949e);
+  cursor: pointer;
+  margin-top: 12px;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+.nx-auth-back-link:hover { color: var(--accent, #58a6ff); }
+.nx-auth-ok {
+  display: none;
+  background: rgba(63,185,80,0.12);
+  border: 1px solid rgba(63,185,80,0.3);
+  color: #3fb950;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.nx-auth-ok.show { display: block; }
+/* Email verification banner */
+#nx-verify-banner {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #161b22;
+  border: 1px solid #d29922;
+  border-radius: 10px;
+  padding: 12px 18px;
+  z-index: 99990;
+  font-size: 0.82rem;
+  color: #e6edf3;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  max-width: 480px;
+  width: calc(100% - 32px);
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+#nx-verify-banner.show { display: flex; }
+#nx-verify-banner .nx-verify-msg { flex: 1; line-height: 1.4; }
+#nx-verify-banner .nx-verify-send {
+  background: #d29922;
+  color: #0d1117;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+#nx-verify-banner .nx-verify-send:disabled { opacity: 0.6; cursor: not-allowed; }
+#nx-verify-banner .nx-verify-close {
+  background: none;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 2px;
+  line-height: 1;
+}
+.nx-footer {
   margin-top: 18px; text-align: center;
   font-size: 0.75rem; color: var(--muted,#8b949e);
 }
@@ -3082,6 +3167,19 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
                onkeydown="if(event.key==='Enter') nxDoLogin()">
       </div>
       <button class="nx-auth-btn-primary" id="nx-btn-login" onclick="nxDoLogin()">Sign In</button>
+      <button class="nx-auth-forgot-link" onclick="nxShowForgotPw()">Forgot Password?</button>
+    </div>
+
+    <!-- Forgot Password form -->
+    <div id="nx-form-forgot" style="display:none">
+      <div id="nx-auth-ok" class="nx-auth-ok"></div>
+      <div class="nx-auth-field">
+        <label>Email Address</label>
+        <input type="email" id="nx-forgot-email" placeholder="you@example.com" autocomplete="email"
+               onkeydown="if(event.key==='Enter') nxDoForgotPw()">
+      </div>
+      <button class="nx-auth-btn-primary" id="nx-btn-forgot" onclick="nxDoForgotPw()">Send Reset Link</button>
+      <button class="nx-auth-back-link" onclick="nxShowForgotPw(false)">← Back to Sign In</button>
     </div>
 
     <!-- Signup form -->
@@ -3127,6 +3225,16 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       <a href="/docs#billing" target="_blank">Terms of Service</a>
     </div>
   </div>
+</div>
+
+<!-- ── Email Verification Banner ── -->
+<div id="nx-verify-banner">
+  <div class="nx-verify-msg">
+    <strong style="color:#d29922">⚠ Verify your email</strong><br>
+    <span id="nx-verify-banner-msg" style="color:#8b949e;font-size:0.78rem">Verify your email address to secure your account.</span>
+  </div>
+  <button class="nx-verify-send" id="nx-verify-send-btn" onclick="nxSendVerificationEmail()">Send Link</button>
+  <button class="nx-verify-close" onclick="document.getElementById('nx-verify-banner').classList.remove('show')">✕</button>
 </div>
 
 <!-- ── Error Banner ── -->
@@ -17358,6 +17466,166 @@ window.fetch = async function(url, opts = {}) {
     return resp;
 };
 
+// ── Account Recovery: Forgot Password ─────────────────────────────
+window.nxShowForgotPw = function(show = true) {
+    const loginForm  = document.getElementById('nx-form-login');
+    const forgotForm = document.getElementById('nx-form-forgot');
+    const tabs       = document.querySelector('.nx-auth-tabs');
+    const oauthDiv   = document.querySelector('.nx-auth-divider');
+    const oauthBtns  = document.querySelector('.nx-auth-oauth');
+    const errEl      = document.getElementById('nx-auth-err');
+    const okEl       = document.getElementById('nx-auth-ok');
+    if (!loginForm || !forgotForm) return;
+
+    if (show) {
+        loginForm.style.display  = 'none';
+        forgotForm.style.display = '';
+        if (tabs)     tabs.style.display    = 'none';
+        if (oauthDiv) oauthDiv.style.display = 'none';
+        if (oauthBtns) oauthBtns.style.display = 'none';
+        if (errEl) errEl.classList.remove('show');
+        if (okEl)  okEl.classList.remove('show');
+        setTimeout(() => {
+            const em = document.getElementById('nx-forgot-email');
+            if (em) em.focus();
+        }, 50);
+    } else {
+        forgotForm.style.display = 'none';
+        loginForm.style.display  = '';
+        if (tabs)     tabs.style.display    = '';
+        if (oauthDiv) oauthDiv.style.display = '';
+        if (oauthBtns) oauthBtns.style.display = 'flex';
+        if (errEl) errEl.classList.remove('show');
+        if (okEl)  okEl.classList.remove('show');
+    }
+};
+
+window.nxDoForgotPw = async function() {
+    const email = (document.getElementById('nx-forgot-email')?.value || '').trim();
+    const btn   = document.getElementById('nx-btn-forgot');
+    const errEl = document.getElementById('nx-auth-err');
+    const okEl  = document.getElementById('nx-auth-ok');
+
+    if (!email || !email.includes('@')) {
+        if (errEl) { errEl.textContent = 'Enter a valid email address.'; errEl.classList.add('show'); }
+        return;
+    }
+    if (errEl) errEl.classList.remove('show');
+    if (okEl)  okEl.classList.remove('show');
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    try {
+        await _origFetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        // Always show success message — prevents enumeration
+        if (okEl) {
+            okEl.textContent = '✓ If that email is registered, a reset link has been sent. Check your inbox (and spam folder).';
+            okEl.classList.add('show');
+        }
+        if (btn) { btn.disabled = false; btn.textContent = 'Send Reset Link'; }
+        const inp = document.getElementById('nx-forgot-email');
+        if (inp) inp.value = '';
+    } catch(e) {
+        if (errEl) { errEl.textContent = 'Network error. Please try again.'; errEl.classList.add('show'); }
+        if (btn) { btn.disabled = false; btn.textContent = 'Send Reset Link'; }
+    }
+};
+
+// ── Email Verification ──────────────────────────────────────────────
+window.nxCheckVerification = async function() {
+    const token = localStorage.getItem('nx_access_token');
+    if (!token) return;
+    try {
+        const r = await fetch('/api/auth/verification-status', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const d = await r.json();
+        if (d.ok && !d.verified) {
+            const banner = document.getElementById('nx-verify-banner');
+            if (banner) banner.classList.add('show');
+        }
+    } catch(e) {}
+};
+
+window.nxSendVerificationEmail = async function() {
+    const btn   = document.getElementById('nx-verify-send-btn');
+    const msgEl = document.getElementById('nx-verify-banner-msg');
+    const token = localStorage.getItem('nx_access_token');
+    if (!token || !btn) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try {
+        const r = await fetch('/api/auth/send-verification', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        const d = await r.json();
+        if (d.ok) {
+            if (msgEl) msgEl.textContent = d.already_verified
+                ? 'Your email is already verified!'
+                : 'Verification email sent! Check your inbox.';
+            btn.textContent = 'Sent ✓';
+            if (d.already_verified) {
+                setTimeout(() => {
+                    const banner = document.getElementById('nx-verify-banner');
+                    if (banner) banner.classList.remove('show');
+                }, 3000);
+            }
+        } else {
+            if (msgEl) msgEl.textContent = d.error || 'Failed to send. Try again.';
+            btn.disabled = false;
+            btn.textContent = 'Resend';
+        }
+    } catch(e) {
+        if (msgEl) msgEl.textContent = 'Network error. Try again.';
+        btn.disabled = false;
+        btn.textContent = 'Retry';
+    }
+};
+
+// Handle URL params from OAuth callbacks / verification redirects
+(function nxHandleUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+
+    // Email verified successfully
+    if (params.get('verified') === '1') {
+        // Show a toast/notification
+        setTimeout(() => {
+            const banner = document.getElementById('nx-verify-banner');
+            if (banner) banner.classList.remove('show');
+            // Show toast
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#161b22;border:1px solid #3fb950;border-radius:10px;padding:12px 20px;color:#3fb950;font-size:0.85rem;z-index:99999;font-family:Inter,sans-serif;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,0.5)';
+            toast.textContent = '✓ Email verified successfully!';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }, 1000);
+        // Clean URL
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete('verified');
+        window.history.replaceState({}, '', clean.toString());
+    }
+
+    // Verification error
+    const verifyErr = params.get('verify_error');
+    if (verifyErr) {
+        setTimeout(() => {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#161b22;border:1px solid #f85149;border-radius:10px;padding:12px 20px;color:#f85149;font-size:0.85rem;z-index:99999;font-family:Inter,sans-serif;box-shadow:0 8px 32px rgba(0,0,0,0.5)';
+            toast.textContent = '✕ ' + decodeURIComponent(verifyErr);
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 6000);
+        }, 800);
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete('verify_error');
+        window.history.replaceState({}, '', clean.toString());
+    }
+})();
+
 // ── Auth gate UI ───────────────────────────────────────────────────
 function nxShowAuthGate() {
     const gate = document.getElementById('nx-auth-gate');
@@ -17408,6 +17676,7 @@ window.nxDoLogin = async function() {
             nxHideAuthGate();
             nxRenderUserBadge();
             console.log('[Auth] Signed in successfully');
+            setTimeout(nxCheckVerification, 2000);
         } else {
             nxAuthErr(d.error || 'Login failed');
         }
@@ -17444,6 +17713,7 @@ window.nxDoSignup = async function() {
             nxHideAuthGate();
             nxRenderUserBadge();
             console.log('[Auth] Account created and signed in');
+            setTimeout(nxCheckVerification, 2000);
         } else {
             nxAuthErr(d.error || 'Signup failed');
         }

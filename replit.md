@@ -21,6 +21,44 @@ A comprehensive real SaaS billing system is integrated, including `payments.py` 
 
 The authentication system is multi-tenant, managing `users` and `auth_sessions` in `saas_platform.db`. It supports email/password and OAuth (Google, GitHub) logins, JWT access tokens, refresh token rotation, and session management. An Idempotency + Billing Safety Layer (`idempotency.py`) provides transaction safety, daily token usage tracking, payment deduplication, provider failure logging, and protected routes with caching and replay mechanisms. A Real-Time Notification & Event System (`notifications.py`) offers persistent, prioritized, SSE-pushed notifications with email fallbacks, storing data in `saas_platform.db`. A Customer Support System (`support.py`) manages support tickets in `support.db`, featuring AI auto-tagging, billing info auto-attachment, and email notifications.
 
+## Account Recovery & Email Verification (`account_recovery.py`)
+
+Production-grade account security layer added on top of the auth system.
+
+**DB Tables** (in `saas_platform.db`):
+- `password_resets` — id (UUID), user_id, token_hash (SHA-256, never plaintext), expires_at, used (boolean), created_at
+- `email_verifications` — id, user_id, token_hash, expires_at, verified (boolean), created_at
+- `users.email_verified` — new column (INTEGER DEFAULT 0)
+
+**Security design**:
+- Tokens are 48-byte `secrets.token_urlsafe()` — only SHA-256 hash stored in DB
+- 30-minute expiry on reset tokens, 24-hour expiry on verification tokens
+- Single-use tokens — invalidated immediately on use
+- All previous tokens invalidated on new request
+- All active refresh token sessions revoked on password reset
+- Forgot-password always returns 200 (prevents email enumeration)
+- Rate-limited: 5 forgot-password requests per IP per hour
+
+**API Endpoints**:
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/auth/forgot-password` | — | Send reset email (always 200) |
+| POST | `/api/auth/validate-reset-token` | — | Check if reset token is valid |
+| POST | `/api/auth/reset-password` | — | Reset password + revoke all sessions |
+| POST | `/api/auth/send-verification` | ✓ | Send verification email to current user |
+| GET | `/api/auth/verify-email?token=...` | — | Verify email, redirect to `/?verified=1` |
+| GET | `/api/auth/verification-status` | ✓ | Check if current user's email is verified |
+| GET | `/reset-password` | — | Standalone reset-password page |
+
+**UI**:
+- "Forgot Password?" link on the Sign In form (opens inline forgot-password view)
+- Forgot-password form with success/error feedback, no email enumeration
+- Standalone `/reset-password` page with password strength meter, confirm password, success state
+- Email verification banner (bottom of screen) shown after login for unverified users with "Send Link" button
+- Toast notifications for successful verification and verification errors
+
+**Email** (via Resend `EMAIL_API_KEY`): password reset email with expiry warning + ignore notice; verification email with branded HTML template.
+
 ## External Dependencies
 - **Core Packages**: Flask, gunicorn, requests, psutil, bcrypt, PyJWT, python-dotenv, tiktoken, razorpay.
 - **Optional/Lazy-loaded Packages**: chromadb, sentence-transformers, playwright.
