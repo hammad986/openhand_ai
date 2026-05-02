@@ -42,3 +42,7 @@ run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "-w", "4", "--threads"
 [userenv]
 
 [userenv.shared]
+SECRET_KEY = "588ea26d8ea896e8c28517dcb2bd54b1640eab3d289d5fdd4ba27a2ff6a3cca1"
+JWT_SECRET = "cb5eb37edc9edb8215f839ad2338bc7d671a4df18858f28c0e5fbb048093bc5f"
+FLASK_DEBUG = "0"
+NO_BROWSER = "1"
