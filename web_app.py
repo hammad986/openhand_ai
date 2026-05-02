@@ -488,6 +488,16 @@ from security import (
 )
 app.secret_key = get_app_secret_key()
 
+# ── Admin Control Panel ───────────────────────────────────────────────────────
+try:
+    from admin_routes import admin_bp
+    app.register_blueprint(admin_bp)
+    import logging as _adm_log
+    _adm_log.getLogger(__name__).info("[Admin] Control panel registered at /admin")
+except Exception as _adm_err:
+    import logging as _adm_log
+    _adm_log.getLogger(__name__).warning("[Admin] Could not load admin panel: %s", _adm_err)
+
 # ── Logging ────────────────────────────────────────────────────────────────
 import logging as _logging
 _log_level = _logging.DEBUG if not is_production() else _logging.INFO

@@ -29,6 +29,57 @@ A real SaaS billing system (Phase 36) is integrated via Razorpay. It includes:
 - **Secrets required to activate**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` (from Razorpay dashboard), `RAZORPAY_WEBHOOK_SECRET` (for webhook validation), and optionally `EMAIL_API_KEY` (Resend for invoice emails), `EMAIL_FROM`.
 - **Billing Setup Guide**: Settings → 💳 Billing Setup — shows webhook URL, connection status (Connected/Partial/Not Configured), and step-by-step Razorpay setup instructions.
 
+## Admin Control Panel (`/admin`)
+
+Enterprise-grade admin system built on top of the existing platform. Accessible at `/admin`.
+
+### Files
+- `admin_config.py` — Config engine: DB-backed, in-memory cached, versioned, rollback-capable
+- `admin_routes.py` — Flask Blueprint registered at `/admin` with all API routes
+- `templates/admin.html` — Full single-page admin dashboard UI
+- `promote_admin.py` — CLI script to grant admin role to a user
+
+### First-Time Setup
+Register a user via `/` (the main app), then run:
+```bash
+python promote_admin.py <email_or_username> super_admin
+```
+That user can then sign in at `/admin` with their existing password.
+
+### Role Hierarchy
+| Role | Access |
+|------|--------|
+| `super_admin` | Full access including kill switch and user role management |
+| `admin` | All controls except role assignment and kill switch |
+| `support` | Read-only: metrics, user list, config view |
+| `user` | No admin access |
+
+### DB Tables (in `saas_platform.db`)
+- `system_config` — key/value config store with version tracking
+- `config_history` — full audit trail of all config changes
+- `api_providers` — dynamically added API providers
+- `users.role` — new column (TEXT DEFAULT 'user')
+- `users.is_banned` — new column (INTEGER DEFAULT 0)
+
+### Admin Panels
+| Panel | Type | Description |
+|-------|------|-------------|
+| Dashboard | Read | System metrics, user stats, billing overview |
+| Users | Read/Write | Search, ban/unban, set role, set plan, adjust usage |
+| Feature Flags | Instant | Toggle signup, billing, OAuth, memory, terminal, scheduler |
+| Pricing | Instant | Update INR paise pricing per plan/cycle |
+| Token & Rate Limits | Instant | Per-plan daily token limits, per-endpoint rate limits |
+| Coupons | Instant | Add/toggle/delete discount coupons |
+| Provider Flags | Instant | Enable/disable any AI provider |
+| Model Routing | Restart | Per-plan planning/coding/debug model assignment |
+| Concurrency | Restart | Agent loops, planner steps, terminal timeout, queue size |
+| API Providers | Restart | Add custom providers with URL, auth type, priority |
+| Config History | Read | Full audit log with diff view and one-click rollback |
+| Kill Switch | Super Admin | Emergency block on all new agent tasks |
+
+### JWT Changes
+Access tokens now include `role` field. The `token_required` decorator sets `g.user_role`. Banned users get a `403 BANNED` response on every authenticated request.
+
 ## Authentication System (Enterprise, Phase 50 v2)
 Complete multi-tenant auth rebuilt from scratch. Key files: `auth_system.py`, `web_app.py`.
 

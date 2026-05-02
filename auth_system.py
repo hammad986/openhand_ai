@@ -100,6 +100,8 @@ def init_db():
     _add_col(c, 'users', 'provider',   "TEXT DEFAULT 'local'")
     _add_col(c, 'users', 'created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP')
     _add_col(c, 'users', 'updated_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP')
+    _add_col(c, 'users', 'role',       "TEXT DEFAULT 'user'")
+    _add_col(c, 'users', 'is_banned',  'INTEGER DEFAULT 0')
 
     try:
         c.execute(
@@ -138,11 +140,12 @@ init_db()
 
 # ─── Token helpers ────────────────────────────────────────────────────────────
 
-def _make_access_token(user_id: int, email: str = "", name: str = "") -> str:
+def _make_access_token(user_id: int, email: str = "", name: str = "", role: str = "user") -> str:
     payload = {
         "user_id": user_id,
         "email":   email or "",
         "name":    name or "",
+        "role":    role or "user",
         "type":    "access",
         "iat":     datetime.datetime.utcnow(),
         "exp":     datetime.datetime.utcnow() + datetime.timedelta(minutes=ACCESS_TOKEN_MINUTES),
@@ -155,7 +158,7 @@ def _make_refresh_token() -> str:
 
 
 def _get_user_info(cursor, user_id: int):
-    cursor.execute("SELECT id, email, name, provider FROM users WHERE id = ?", (user_id,))
+    cursor.execute("SELECT id, email, name, provider, role, is_banned FROM users WHERE id = ?", (user_id,))
     return cursor.fetchone()
 
 
@@ -182,7 +185,8 @@ def create_session(user_id: int, device_info: str = "", ip_address: str = "") ->
 
     email = user[1] if user else ""
     name  = user[2] if user else ""
-    access = _make_access_token(user_id, email or "", name or "")
+    role  = user[4] if user and len(user) > 4 else "user"
+    access = _make_access_token(user_id, email or "", name or "", role or "user")
     return {
         "access_token":  access,
         "refresh_token": refresh,
@@ -231,7 +235,8 @@ def refresh_access_token(refresh_token: str, ip_address: str = ""):
 
     email = user[1] if user else ""
     name  = user[2] if user else ""
-    access = _make_access_token(user_id, email or "", name or "")
+    role  = user[4] if user and len(user) > 4 else "user"
+    access = _make_access_token(user_id, email or "", name or "", role or "user")
     return True, {
         "access_token":  access,
         "refresh_token": new_refresh,
@@ -416,12 +421,25 @@ def token_required(f):
             g.user_id    = data["user_id"]
             g.user_email = data.get("email", "")
             g.user_name  = data.get("name",  "")
+            g.user_role  = data.get("role",  "user")
         except jwt.ExpiredSignatureError:
             return jsonify({"ok": False, "error": "Token has expired", "code": "TOKEN_EXPIRED"}), 401
         except jwt.InvalidTokenError:
             return jsonify({"ok": False, "error": "Token is invalid"}), 401
         except Exception:
             return jsonify({"ok": False, "error": "Authentication failed"}), 401
+
+        # Ban check — live DB lookup so bans take effect without token expiry
+        try:
+            _conn = sqlite3.connect(DB_PATH)
+            _c = _conn.cursor()
+            _c.execute("SELECT is_banned FROM users WHERE id = ?", (g.user_id,))
+            _row = _c.fetchone()
+            _conn.close()
+            if _row and _row[0]:
+                return jsonify({"ok": False, "error": "Account suspended", "code": "BANNED"}), 403
+        except Exception:
+            pass
 
         return f(*args, **kwargs)
     return decorated

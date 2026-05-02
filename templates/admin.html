@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexora — Admin Control Panel</title>
+<style>
+:root {
+  --bg: #0d0d0f;
+  --bg2: #141417;
+  --bg3: #1a1a1f;
+  --bg4: #202026;
+  --border: #2a2a32;
+  --border2: #33333d;
+  --text: #e8e8f0;
+  --text2: #9090a8;
+  --text3: #5a5a72;
+  --accent: #7c5af0;
+  --accent2: #9b7fff;
+  --green: #2ecc71;
+  --red: #e74c3c;
+  --yellow: #f39c12;
+  --blue: #3498db;
+  --cyan: #00bcd4;
+  --sidebar-w: 240px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; display: flex; min-height: 100vh; }
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sidebar-w); min-height: 100vh; background: var(--bg2);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; z-index: 100;
+}
+.sidebar-logo { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.sidebar-logo .star { font-size: 20px; }
+.sidebar-logo .brand { font-size: 16px; font-weight: 700; }
+.sidebar-logo .brand span { color: var(--accent2); }
+.sidebar-logo .badge { background: #2d1f6e; color: var(--accent2); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+.nav-section { padding: 12px 10px 4px; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; margin: 1px 6px; border-radius: 7px; cursor: pointer; color: var(--text2); transition: all .15s; font-size: 13.5px; }
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: rgba(124,90,240,.15); color: var(--accent2); }
+.nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer { margin-top: auto; padding: 14px; border-top: 1px solid var(--border); }
+.role-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.role-badge.super_admin { background: #3d1f1f; color: #e74c3c; }
+.role-badge.admin { background: #1f2d3d; color: #3498db; }
+.role-badge.support { background: #1f3a1f; color: #2ecc71; }
+
+/* ── Main area ── */
+#main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+.topbar h1 { font-size: 18px; font-weight: 600; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); display: inline-block; }
+.status-dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.content { padding: 24px; flex: 1; }
+
+/* ── Cards ── */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title .restart-badge { font-size: 11px; background: rgba(243,156,18,.15); color: var(--yellow); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(243,156,18,.3); }
+.card-title .instant-badge { font-size: 11px; background: rgba(46,204,113,.12); color: var(--green); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(46,204,113,.25); }
+
+/* ── Grid ── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+/* ── Stat cards ── */
+.stat { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+.stat-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-weight: 700; }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+.stat-value.blue { color: var(--blue); }
+.stat-value.yellow { color: var(--yellow); }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ── Form controls ── */
+.form-row { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
+.form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 120px; }
+.form-group label { font-size: 12px; color: var(--text2); font-weight: 500; }
+input, select, textarea {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+  color: var(--text); padding: 8px 11px; font-size: 13px; width: 100%;
+  transition: border-color .15s; outline: none; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+input[type="checkbox"] { width: auto; }
+
+/* ── Buttons ── */
+.btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #6a49d9; }
+.btn-success { background: rgba(46,204,113,.15); color: var(--green); border: 1px solid rgba(46,204,113,.3); }
+.btn-success:hover { background: rgba(46,204,113,.25); }
+.btn-danger { background: rgba(231,76,60,.12); color: var(--red); border: 1px solid rgba(231,76,60,.25); }
+.btn-danger:hover { background: rgba(231,76,60,.22); }
+.btn-warning { background: rgba(243,156,18,.12); color: var(--yellow); border: 1px solid rgba(243,156,18,.25); }
+.btn-warning:hover { background: rgba(243,156,18,.22); }
+.btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
+.btn-ghost:hover { color: var(--text); border-color: var(--border); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* ── Toggle switch ── */
+.toggle-wrap { display: flex; align-items: center; gap: 10px; }
+.toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--bg4); border-radius: 22px; cursor: pointer; transition: .2s; }
+.toggle-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: var(--text3); border-radius: 50%; transition: .2s; }
+input:checked + .toggle-slider { background: var(--accent); }
+input:checked + .toggle-slider:before { transform: translateX(18px); background: #fff; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--bg3); padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); }
+td { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.badge-green { background: rgba(46,204,113,.15); color: var(--green); }
+.badge-red { background: rgba(231,76,60,.15); color: var(--red); }
+.badge-yellow { background: rgba(243,156,18,.15); color: var(--yellow); }
+.badge-blue { background: rgba(52,152,219,.15); color: var(--blue); }
+.badge-purple { background: rgba(124,90,240,.15); color: var(--accent2); }
+.badge-gray { background: var(--bg4); color: var(--text2); }
+
+/* ── Progress bar ── */
+.progress { height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+.progress-fill.green { background: var(--green); }
+.progress-fill.red { background: var(--red); }
+.progress-fill.yellow { background: var(--yellow); }
+.progress-fill.blue { background: var(--blue); }
+
+/* ── Alert ── */
+.alert { padding: 12px 16px; border-radius: 7px; margin-bottom: 14px; font-size: 13px; display: none; }
+.alert.show { display: block; }
+.alert-success { background: rgba(46,204,113,.12); border: 1px solid rgba(46,204,113,.25); color: var(--green); }
+.alert-error { background: rgba(231,76,60,.12); border: 1px solid rgba(231,76,60,.25); color: var(--red); }
+.alert-warning { background: rgba(243,156,18,.12); border: 1px solid rgba(243,156,18,.25); color: var(--yellow); }
+
+/* ── Panels ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── History list ── */
+.history-item { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
+.history-item:last-child { border-bottom: none; }
+.history-time { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.history-key { font-size: 12px; font-weight: 600; color: var(--accent2); }
+.history-by { font-size: 11px; color: var(--text2); }
+
+/* ── Model routing table ── */
+.routing-cell select { min-width: 120px; }
+
+/* ── Login overlay ── */
+#login-overlay {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.login-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 36px 32px; width: 360px; }
+.login-logo { text-align: center; margin-bottom: 24px; }
+.login-logo .star { font-size: 32px; }
+.login-logo h2 { font-size: 20px; font-weight: 700; margin-top: 8px; }
+.login-logo p { color: var(--text2); font-size: 13px; margin-top: 4px; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── Loading spinner ── */
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="star">⭐</div>
+      <h2>Nexora <span style="color:var(--accent2)">Admin</span></h2>
+      <p>Control Panel — Authorized Access Only</p>
+    </div>
+    <div id="login-alert" class="alert alert-error"></div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>EMAIL OR USERNAME</label>
+      <input id="login-email" type="text" placeholder="admin@example.com" />
+    </div>
+    <div class="form-group" style="margin-bottom:20px">
+      <label>PASSWORD</label>
+      <input id="login-password" type="password" placeholder="••••••••" />
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">Sign In to Admin</button>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="star">⭐</div>
+    <div>
+      <div class="brand">Nexora <span>Admin</span></div>
+    </div>
+    <div class="badge">CTRL</div>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="showPanel('dashboard')"><span class="icon">📊</span> Dashboard</div>
+  <div class="nav-item" onclick="showPanel('users')"><span class="icon">👥</span> Users</div>
+
+  <div class="nav-section">Instant Controls</div>
+  <div class="nav-item" onclick="showPanel('features')"><span class="icon">⚡</span> Feature Flags</div>
+  <div class="nav-item" onclick="showPanel('pricing')"><span class="icon">💰</span> Pricing</div>
+  <div class="nav-item" onclick="showPanel('limits')"><span class="icon">🔢</span> Token & Rate Limits</div>
+  <div class="nav-item" onclick="showPanel('coupons')"><span class="icon">🎟️</span> Coupons</div>
+  <div class="nav-item" onclick="showPanel('providers')"><span class="icon">🔌</span> Provider Flags</div>
+
+  <div class="nav-section">⚠ Restart Required</div>
+  <div class="nav-item" onclick="showPanel('routing')"><span class="icon">🤖</span> Model Routing</div>
+  <div class="nav-item" onclick="showPanel('concurrency')"><span class="icon">⚙️</span> Concurrency</div>
+  <div class="nav-item" onclick="showPanel('dynamic-providers')"><span class="icon">🌐</span> API Providers</div>
+
+  <div class="nav-section">System</div>
+  <div class="nav-item" onclick="showPanel('history')"><span class="icon">📜</span> Config History</div>
+  <div class="nav-item" onclick="showPanel('killswitch')"><span class="icon">🛑</span> Kill Switch</div>
+
+  <div class="sidebar-footer">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div class="status-dot" id="sidebar-status-dot"></div>
+      <span style="font-size:12px;color:var(--text2)" id="sidebar-status-text">Connected</span>
+    </div>
+    <div id="sidebar-user" style="font-size:12px;color:var(--text3)">—</div>
+    <div id="sidebar-role" style="margin-top:4px"></div>
+    <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px;justify-content:center" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div class="topbar">
+    <h1 id="panel-title">Dashboard</h1>
+    <div class="topbar-right">
+      <div class="status-dot" id="ks-status" title="Kill Switch"></div>
+      <span style="font-size:12px;color:var(--text2)" id="ks-label">System Active</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="global-alert" class="alert"></div>
+
+    <!-- ── Dashboard ── -->
+    <div id="panel-dashboard" class="panel active">
+      <div class="grid4" style="margin-bottom:16px" id="stat-cards">
+        <div class="stat"><div class="stat-label">Total Users</div><div class="stat-value blue" id="stat-users">—</div></div>
+        <div class="stat"><div class="stat-label">Active Subscriptions</div><div class="stat-value green" id="stat-subs">—</div></div>
+        <div class="stat"><div class="stat-label">Tasks (24h)</div><div class="stat-value" id="stat-tasks">—</div></div>
+        <div class="stat"><div class="stat-label">Banned Users</div><div class="stat-value red" id="stat-banned">—</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">System Resources</div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text2)">CPU</span><span id="cpu-val" style="font-size:12px">—</span></div>
+            <div class="progress"><div class="progress-fill blue" id="cpu-bar" style="width:0%"></div></div>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text2)">RAM</span><span id="ram-val" style="font-size:12px">—</span></div>
+            <div class="progress"><div class="progress-fill green" id="ram-bar" style="width:0%"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text2)">Disk</span><span id="disk-val" style="font-size:12px">—</span></div>
+            <div class="progress"><div class="progress-fill yellow" id="disk-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Subscriptions by Plan</div>
+          <div id="plan-breakdown" style="display:flex;flex-direction:column;gap:10px"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Workflow Activity (24h)</div>
+        <div id="workflow-breakdown" style="display:flex;gap:24px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+
+    <!-- ── Users ── -->
+    <div id="panel-users" class="panel">
+      <div class="card">
+        <div class="card-title">User Management</div>
+        <div class="form-row" style="margin-bottom:16px">
+          <div class="form-group" style="max-width:300px">
+            <input id="user-search" placeholder="Search by name, email, username…" oninput="loadUsers()" />
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadUsers()">🔄 Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>ID</th><th>User</th><th>Email</th><th>Provider</th>
+              <th>Role</th><th>Plan</th><th>Tasks</th><th>Banned</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="9" style="text-align:center;color:var(--text2)">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div id="users-pagination" style="margin-top:12px;display:flex;gap:8px;align-items:center"></div>
+      </div>
+      <div class="card" id="user-edit-card" style="display:none">
+        <div class="card-title">Edit User</div>
+        <div class="grid2">
+          <div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>Role</label>
+              <select id="edit-role">
+                <option value="user">user</option>
+                <option value="support">support</option>
+                <option value="admin">admin</option>
+                <option value="super_admin">super_admin</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>Plan Override</label>
+              <select id="edit-plan">
+                <option value="">— no change —</option>
+                <option value="lite">Lite</option>
+                <option value="pro">Pro</option>
+                <option value="elite">Elite</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>Total Tokens (override)</label>
+              <input id="edit-tokens" type="number" min="0" />
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>Total Tasks (override)</label>
+              <input id="edit-tasks-count" type="number" min="0" />
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-primary btn-sm" onclick="saveUserEdit()">Save Changes</button>
+          <button class="btn btn-danger btn-sm" id="edit-ban-btn" onclick="toggleBan()">Ban User</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('user-edit-card').style.display='none'">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Feature Flags ── -->
+    <div id="panel-features" class="panel">
+      <div class="card">
+        <div class="card-title">Feature Flags <span class="instant-badge">⚡ Instant</span></div>
+        <div id="features-list" style="display:flex;flex-direction:column;gap:14px"></div>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary" onclick="saveFeatures()">Save Feature Flags</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Pricing ── -->
+    <div id="panel-pricing" class="panel">
+      <div class="card">
+        <div class="card-title">Pricing Configuration <span class="instant-badge">⚡ Instant</span></div>
+        <p style="color:var(--text2);font-size:12px;margin-bottom:16px">Prices are in INR paise (100 paise = ₹1)</p>
+        <div class="grid2" id="pricing-fields"></div>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary" onclick="savePricing()">Save Pricing</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Token & Rate Limits ── -->
+    <div id="panel-limits" class="panel">
+      <div class="card">
+        <div class="card-title">Token Limits (per day) <span class="instant-badge">⚡ Instant</span></div>
+        <div class="grid3" id="token-limit-fields"></div>
+        <div style="margin-top:20px"><button class="btn btn-primary" onclick="saveTokenLimits()">Save Token Limits</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Rate Limits (req/min) <span class="instant-badge">⚡ Instant</span></div>
+        <div class="grid3" id="rate-limit-fields"></div>
+        <div style="margin-top:20px"><button class="btn btn-primary" onclick="saveRateLimits()">Save Rate Limits</button></div>
+      </div>
+    </div>
+
+    <!-- ── Coupons ── -->
+    <div id="panel-coupons" class="panel">
+      <div class="card">
+        <div class="card-title">Add Coupon <span class="instant-badge">⚡ Instant</span></div>
+        <div class="form-row">
+          <div class="form-group"><label>Code</label><input id="coupon-code" placeholder="SAVE20" /></div>
+          <div class="form-group"><label>Discount %</label><input id="coupon-discount" type="number" min="1" max="100" placeholder="20" /></div>
+          <div class="form-group"><label>Max Uses (0 = unlimited)</label><input id="coupon-max" type="number" min="0" placeholder="0" /></div>
+          <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addCoupon()">Add Coupon</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Active Coupons</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Discount</th><th>Uses</th><th>Max Uses</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="coupons-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Provider Flags ── -->
+    <div id="panel-providers" class="panel">
+      <div class="card">
+        <div class="card-title">Provider Enable/Disable <span class="instant-badge">⚡ Instant</span></div>
+        <p style="color:var(--text2);font-size:12px;margin-bottom:16px">Disable a provider to prevent it from being selected for any task.</p>
+        <div id="provider-flags-list" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+        <div style="margin-top:20px"><button class="btn btn-primary" onclick="saveProviderFlags()">Save Provider Flags</button></div>
+      </div>
+    </div>
+
+    <!-- ── Model Routing ── -->
+    <div id="panel-routing" class="panel">
+      <div class="card">
+        <div class="card-title">Model Routing per Plan <span class="restart-badge">⚠ Restart Required</span></div>
+        <p style="color:var(--text2);font-size:12px;margin-bottom:16px">Changes will be saved and applied on the next server restart.</p>
+        <div id="routing-table-wrap"></div>
+        <div style="margin-top:20px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" onclick="saveRouting()">Save (Apply on Restart)</button>
+          <span id="routing-saved-msg" style="font-size:12px;color:var(--yellow);display:none">⚠ Saved — restart server to apply</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Concurrency ── -->
+    <div id="panel-concurrency" class="panel">
+      <div class="card">
+        <div class="card-title">Concurrency Settings <span class="restart-badge">⚠ Restart Required</span></div>
+        <div class="grid2" id="concurrency-fields"></div>
+        <div style="margin-top:20px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" onclick="saveConcurrency()">Save (Apply on Restart)</button>
+          <span id="concurrency-saved-msg" style="font-size:12px;color:var(--yellow);display:none">⚠ Saved — restart server to apply</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Dynamic Providers ── -->
+    <div id="panel-dynamic-providers" class="panel">
+      <div class="card">
+        <div class="card-title">Add API Provider <span class="restart-badge">⚠ Restart Required</span></div>
+        <div class="form-row">
+          <div class="form-group"><label>ID (slug)</label><input id="dp-id" placeholder="my-provider" /></div>
+          <div class="form-group"><label>Display Name</label><input id="dp-name" placeholder="My Provider" /></div>
+          <div class="form-group"><label>Base URL</label><input id="dp-url" placeholder="https://api.example.com/v1" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Auth Type</label>
+            <select id="dp-auth"><option value="bearer">Bearer Token</option><option value="api-key">API-Key Header</option><option value="none">None</option></select>
+          </div>
+          <div class="form-group"><label>API Key</label><input id="dp-key" type="password" placeholder="sk-…" /></div>
+          <div class="form-group"><label>Priority (lower = higher priority)</label><input id="dp-priority" type="number" value="50" min="1" max="100" /></div>
+          <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addDynamicProvider()">Add Provider</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Registered Providers</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Name</th><th>Base URL</th><th>Auth</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="dp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Config History ── -->
+    <div id="panel-history" class="panel">
+      <div class="card">
+        <div class="card-title">Configuration Change History</div>
+        <div style="margin-bottom:12px;display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="loadHistory()">🔄 Refresh</button>
+        </div>
+        <div class="table-wrap" style="max-height:600px;overflow-y:auto">
+          <table>
+            <thead><tr><th>Time</th><th>Key</th><th>Version</th><th>Changed By</th><th>Action</th></tr></thead>
+            <tbody id="history-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text2)">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" id="history-diff-card" style="display:none">
+        <div class="card-title">Change Details</div>
+        <div class="grid2" style="gap:16px">
+          <div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px">OLD VALUE</div>
+            <pre id="diff-old" style="background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.2);border-radius:6px;padding:10px;font-size:11px;overflow-x:auto;color:#e8e8f0"></pre>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px">NEW VALUE</div>
+            <pre id="diff-new" style="background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.2);border-radius:6px;padding:10px;font-size:11px;overflow-x:auto;color:#e8e8f0"></pre>
+          </div>
+        </div>
+        <button class="btn btn-warning btn-sm" id="rollback-btn" style="margin-top:12px" onclick="doRollback()">↩ Rollback to This Version</button>
+      </div>
+    </div>
+
+    <!-- ── Kill Switch ── -->
+    <div id="panel-killswitch" class="panel">
+      <div class="card" style="border-color:rgba(231,76,60,.3)">
+        <div class="card-title">🛑 Emergency Kill Switch</div>
+        <p style="color:var(--text2);margin-bottom:20px">When enabled, all new AI agent tasks are immediately blocked. Running tasks complete safely. Only <strong>super_admin</strong> can toggle.</p>
+        <div id="ks-panel-status" style="font-size:22px;font-weight:700;margin-bottom:20px">—</div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-danger" onclick="setKillSwitch('enable')">⛔ Enable Kill Switch</button>
+          <button class="btn btn-success" onclick="setKillSwitch('disable')">✅ Disable Kill Switch</button>
+        </div>
+        <p style="color:var(--text3);font-size:12px;margin-top:16px">Changes take effect immediately for all new requests.</p>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let token = localStorage.getItem('nx_admin_token');
+let adminRole = '';
+let currentPanel = 'dashboard';
+let editingUserId = null;
+let selectedHistoryId = null;
+let selectedHistoryKey = null;
+let usersPage = 1;
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  if (token) tryAutoLogin();
+};
+
+async function tryAutoLogin() {
+  const r = await adminFetch('/admin/api/me');
+  if (r && r.ok) {
+    hideLoginOverlay(r);
+    bootDashboard();
+  } else {
+    localStorage.removeItem('nx_admin_token');
+    token = null;
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd   = document.getElementById('login-password').value;
+  if (!email || !pwd) { showLoginAlert('Email and password required'); return; }
+
+  const r = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: pwd }),
+  });
+  const data = await r.json();
+  if (!data.ok) { showLoginAlert(data.error || 'Login failed'); return; }
+
+  token = data.access_token;
+  localStorage.setItem('nx_admin_token', token);
+
+  // Verify admin role
+  const me = await adminFetch('/admin/api/me');
+  if (!me || !me.ok) { showLoginAlert('Access denied: not an admin account'); token = null; localStorage.removeItem('nx_admin_token'); return; }
+  hideLoginOverlay(me);
+  bootDashboard();
+}
+
+function doLogout() {
+  localStorage.removeItem('nx_admin_token');
+  token = null;
+  location.reload();
+}
+
+function showLoginAlert(msg) {
+  const el = document.getElementById('login-alert');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hideLoginOverlay(me) {
+  document.getElementById('login-overlay').style.display = 'none';
+  adminRole = me.role;
+  document.getElementById('sidebar-user').textContent = me.email || `User #${me.user_id}`;
+  document.getElementById('sidebar-role').innerHTML = `<span class="role-badge ${me.role}">${me.role}</span>`;
+}
+
+function bootDashboard() {
+  loadDashboard();
+  startPolling();
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+const PANEL_TITLES = {
+  dashboard: 'Dashboard', users: 'User Management',
+  features: 'Feature Flags', pricing: 'Pricing', limits: 'Token & Rate Limits',
+  coupons: 'Coupons', providers: 'Provider Flags',
+  routing: 'Model Routing', concurrency: 'Concurrency',
+  'dynamic-providers': 'API Providers', history: 'Config History',
+  killswitch: 'Kill Switch',
+};
+
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(i => {
+    if (i.textContent.toLowerCase().includes(PANEL_TITLES[name]?.toLowerCase()?.split(' ')[0] || ''))
+      i.classList.add('active');
+  });
+  document.getElementById('panel-title').textContent = PANEL_TITLES[name] || name;
+  currentPanel = name;
+  const loaders = {
+    dashboard: loadDashboard, users: loadUsers, features: loadFeatures,
+    pricing: loadPricing, limits: loadLimits, coupons: loadCoupons,
+    providers: loadProviderFlags, routing: loadRouting, concurrency: loadConcurrency,
+    'dynamic-providers': loadDynamicProviders, history: loadHistory,
+    killswitch: loadKillSwitch,
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+// ── API helper ────────────────────────────────────────────────────────────────
+async function adminFetch(url, opts = {}) {
+  opts.headers = { ...(opts.headers || {}), Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  try {
+    const r = await fetch(url, opts);
+    return await r.json();
+  } catch { return null; }
+}
+
+function showAlert(msg, type = 'success', duration = 3000) {
+  const el = document.getElementById('global-alert');
+  el.textContent = msg;
+  el.className = `alert alert-${type} show`;
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [sys, users, wf, billing] = await Promise.all([
+    adminFetch('/admin/api/metrics/system'),
+    adminFetch('/admin/api/metrics/users'),
+    adminFetch('/admin/api/metrics/workflows'),
+    adminFetch('/admin/api/metrics/billing'),
+  ]);
+
+  if (sys?.ok) {
+    setText('cpu-val', `${sys.cpu_percent}% (CPU)`);
+    setBar('cpu-bar', sys.cpu_percent);
+    setText('ram-val', `${sys.ram_percent}% (${sys.ram_used_mb} / ${sys.ram_total_mb} MB)`);
+    setBar('ram-bar', sys.ram_percent, sys.ram_percent > 80 ? 'red' : 'green');
+    setText('disk-val', `${sys.disk_percent}% (${sys.disk_used_gb} / ${sys.disk_total_gb} GB)`);
+    setBar('disk-bar', sys.disk_percent, sys.disk_percent > 80 ? 'red' : 'yellow');
+  }
+
+  if (users?.ok) {
+    setText('stat-users', users.total_users);
+    setText('stat-banned', users.banned);
+  }
+
+  if (billing?.ok) {
+    setText('stat-subs', billing.active_subscriptions);
+    const bp = document.getElementById('plan-breakdown');
+    bp.innerHTML = '';
+    ['lite','pro','elite'].forEach(p => {
+      const cnt = billing.by_plan?.[p] || 0;
+      const total = billing.active_subscriptions || 1;
+      bp.innerHTML += `<div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:13px;text-transform:capitalize">${p}</span>
+          <span style="font-size:12px;color:var(--text2)">${cnt} users</span>
+        </div>
+        <div class="progress"><div class="progress-fill ${p==='elite'?'green':p==='pro'?'blue':'yellow'}" style="width:${Math.round(cnt/total*100)}%"></div></div>
+      </div>`;
+    });
+  }
+
+  if (wf?.ok) {
+    setText('stat-tasks', wf.total_workflows);
+    const wb = document.getElementById('workflow-breakdown');
+    wb.innerHTML = '';
+    Object.entries(wf.by_status || {}).forEach(([status, count]) => {
+      wb.innerHTML += `<div class="stat" style="flex:1;min-width:120px">
+        <div class="stat-label">${status}</div>
+        <div class="stat-value" style="font-size:20px">${count}</div>
+      </div>`;
+    });
+    if (!Object.keys(wf.by_status || {}).length) wb.innerHTML = '<span style="color:var(--text2)">No workflows in last 24h</span>';
+  }
+}
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+async function loadUsers() {
+  const search = document.getElementById('user-search')?.value || '';
+  const data = await adminFetch(`/admin/api/users?page=${usersPage}&limit=20&search=${encodeURIComponent(search)}`);
+  if (!data?.ok) return;
+
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = data.users.map(u => `
+    <tr>
+      <td style="color:var(--text3)">#${u.id}</td>
+      <td><strong>${esc(u.username || u.name || '—')}</strong></td>
+      <td style="color:var(--text2)">${esc(u.email || '—')}</td>
+      <td><span class="badge badge-gray">${esc(u.provider)}</span></td>
+      <td><span class="role-badge ${u.role}">${u.role}</span></td>
+      <td>—</td>
+      <td>${u.total_tasks}</td>
+      <td>${u.is_banned ? '<span class="badge badge-red">Banned</span>' : '<span class="badge badge-green">Active</span>'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openUserEdit(${JSON.stringify(u).replace(/"/g,'&quot;')})">Edit</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text2)">No users found</td></tr>';
+
+  const pg = document.getElementById('users-pagination');
+  const totalPages = Math.ceil(data.total / 20);
+  pg.innerHTML = `
+    <button class="btn btn-ghost btn-sm" onclick="usersPage=Math.max(1,usersPage-1);loadUsers()" ${usersPage<=1?'disabled':''}>← Prev</button>
+    <span style="font-size:12px;color:var(--text2)">Page ${usersPage} of ${totalPages} (${data.total} total)</span>
+    <button class="btn btn-ghost btn-sm" onclick="usersPage=Math.min(${totalPages},usersPage+1);loadUsers()" ${usersPage>=totalPages?'disabled':''}>Next →</button>
+  `;
+}
+
+function openUserEdit(u) {
+  editingUserId = u.id;
+  document.getElementById('user-edit-card').style.display = 'block';
+  document.getElementById('edit-role').value = u.role;
+  document.getElementById('edit-plan').value = '';
+  document.getElementById('edit-tokens').value = u.total_tokens;
+  document.getElementById('edit-tasks-count').value = u.total_tasks;
+  const banBtn = document.getElementById('edit-ban-btn');
+  banBtn.textContent = u.is_banned ? 'Unban User' : 'Ban User';
+  banBtn.className = `btn btn-sm ${u.is_banned ? 'btn-success' : 'btn-danger'}`;
+  document.getElementById('user-edit-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function saveUserEdit() {
+  if (!editingUserId) return;
+  const role = document.getElementById('edit-role').value;
+  const plan = document.getElementById('edit-plan').value;
+  const tokens = document.getElementById('edit-tokens').value;
+  const tasks = document.getElementById('edit-tasks-count').value;
+
+  const calls = [];
+  calls.push(adminFetch(`/admin/api/users/${editingUserId}/role`, { method: 'POST', body: JSON.stringify({ role }) }));
+  calls.push(adminFetch(`/admin/api/users/${editingUserId}/adjust-usage`, { method: 'POST', body: JSON.stringify({ total_tokens: parseInt(tokens), total_tasks: parseInt(tasks) }) }));
+  if (plan) calls.push(adminFetch(`/admin/api/users/${editingUserId}/set-plan`, { method: 'POST', body: JSON.stringify({ plan }) }));
+
+  await Promise.all(calls);
+  showAlert('User updated successfully');
+  loadUsers();
+}
+
+async function toggleBan() {
+  if (!editingUserId) return;
+  const banBtn = document.getElementById('edit-ban-btn');
+  const isBanning = banBtn.textContent.includes('Ban User');
+  const url = `/admin/api/users/${editingUserId}/${isBanning ? 'ban' : 'unban'}`;
+  const r = await adminFetch(url, { method: 'POST' });
+  if (r?.ok) { showAlert(isBanning ? 'User banned' : 'User unbanned'); loadUsers(); document.getElementById('user-edit-card').style.display = 'none'; }
+  else showAlert(r?.error || 'Failed', 'error');
+}
+
+// ── Feature Flags ─────────────────────────────────────────────────────────────
+const FEATURE_LABELS = {
+  signup_enabled: 'Allow New Signups',
+  billing_enabled: 'Enable Billing / Payments',
+  support_enabled: 'Enable Support System',
+  oauth_google_enabled: 'Google OAuth Login',
+  oauth_github_enabled: 'GitHub OAuth Login',
+  memory_enabled: 'Agent Memory System',
+  terminal_enabled: 'Terminal Sandbox',
+  scheduler_enabled: 'Task Scheduler',
+};
+
+async function loadFeatures() {
+  const data = await adminFetch('/admin/api/features');
+  if (!data?.ok) return;
+  const el = document.getElementById('features-list');
+  el.innerHTML = '';
+  Object.entries(data.features).forEach(([key, val]) => {
+    el.innerHTML += `<div class="toggle-wrap">
+      <label class="toggle"><input type="checkbox" id="feat-${key}" ${val?'checked':''}/><span class="toggle-slider"></span></label>
+      <span style="font-size:13px">${FEATURE_LABELS[key] || key}</span>
+    </div>`;
+  });
+}
+
+async function saveFeatures() {
+  const features = {};
+  document.querySelectorAll('[id^="feat-"]').forEach(cb => {
+    features[cb.id.replace('feat-', '')] = cb.checked;
+  });
+  const r = await adminFetch('/admin/api/features', { method: 'POST', body: JSON.stringify(features) });
+  if (r?.ok) showAlert('Feature flags saved');
+  else showAlert(r?.error || 'Failed to save', 'error');
+}
+
+// ── Pricing ───────────────────────────────────────────────────────────────────
+const PRICING_LABELS = {
+  pro_monthly: 'Pro — Monthly (paise)', pro_yearly: 'Pro — Yearly (paise)',
+  elite_monthly: 'Elite — Monthly (paise)', elite_yearly: 'Elite — Yearly (paise)',
+};
+
+async function loadPricing() {
+  const data = await adminFetch('/admin/api/pricing');
+  if (!data?.ok) return;
+  const el = document.getElementById('pricing-fields');
+  el.innerHTML = Object.entries(data.pricing).map(([k, v]) => `
+    <div class="form-group">
+      <label>${PRICING_LABELS[k] || k}</label>
+      <input id="price-${k}" type="number" value="${v}" min="0" />
+      <span style="font-size:11px;color:var(--text3)">= ₹${(v/100).toFixed(2)}</span>
+    </div>
+  `).join('');
+}
+
+async function savePricing() {
+  const pricing = {};
+  document.querySelectorAll('[id^="price-"]').forEach(inp => {
+    pricing[inp.id.replace('price-', '')] = parseInt(inp.value);
+  });
+  const r = await adminFetch('/admin/api/pricing', { method: 'POST', body: JSON.stringify(pricing) });
+  if (r?.ok) showAlert('Pricing saved');
+  else showAlert(r?.error || 'Failed', 'error');
+}
+
+// ── Limits ────────────────────────────────────────────────────────────────────
+async function loadLimits() {
+  const [tok, rate] = await Promise.all([
+    adminFetch('/admin/api/token-limits'),
+    adminFetch('/admin/api/rate-limits'),
+  ]);
+  if (tok?.ok) {
+    document.getElementById('token-limit-fields').innerHTML = Object.entries(tok.token_limits).map(([k, v]) => `
+      <div class="form-group"><label>Plan: ${k}</label><input id="tlim-${k}" type="number" value="${v}" min="0" /></div>
+    `).join('');
+  }
+  if (rate?.ok) {
+    document.getElementById('rate-limit-fields').innerHTML = Object.entries(rate.rate_limits).map(([k, v]) => `
+      <div class="form-group"><label>${k.replace(/_/g,' ')}</label><input id="rlim-${k}" type="number" value="${v}" min="1" /></div>
+    `).join('');
+  }
+}
+
+async function saveTokenLimits() {
+  const limits = {};
+  document.querySelectorAll('[id^="tlim-"]').forEach(inp => { limits[inp.id.replace('tlim-', '')] = parseInt(inp.value); });
+  const r = await adminFetch('/admin/api/token-limits', { method: 'POST', body: JSON.stringify(limits) });
+  if (r?.ok) showAlert('Token limits saved');
+  else showAlert(r?.error || 'Failed', 'error');
+}
+
+async function saveRateLimits() {
+  const limits = {};
+  document.querySelectorAll('[id^="rlim-"]').forEach(inp => { limits[inp.id.replace('rlim-', '')] = parseInt(inp.value); });
+  const r = await adminFetch('/admin/api/rate-limits', { method: 'POST', body: JSON.stringify(limits) });
+  if (r?.ok) showAlert('Rate limits saved');
+  else showAlert(r?.error || 'Failed', 'error');
+}
+
+// ── Coupons ───────────────────────────────────────────────────────────────────
+async function loadCoupons() {
+  const data = await adminFetch('/admin/api/coupons');
+  if (!data?.ok) return;
+  const tbody = document.getElementById('coupons-tbody');
+  const entries = Object.entries(data.coupons);
+  if (!entries.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2)">No coupons</td></tr>'; return; }
+  tbody.innerHTML = entries.map(([code, c]) => `
+    <tr>
+      <td><strong>${esc(code)}</strong></td>
+      <td>${c.discount_pct}%</td>
+      <td>${c.used || 0}</td>
+      <td>${c.max_uses || '∞'}</td>
+      <td>${c.active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Disabled</span>'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="toggleCoupon('${esc(code)}')">Toggle</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCoupon('${esc(code)}')">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function addCoupon() {
+  const code = document.getElementById('coupon-code').value.trim();
+  const discount = parseFloat(document.getElementById('coupon-discount').value);
+  const max_uses = parseInt(document.getElementById('coupon-max').value) || 0;
+  if (!code || !discount) { showAlert('Code and discount required', 'error'); return; }
+  const r = await adminFetch('/admin/api/coupons', { method: 'POST', body: JSON.stringify({ code, discount_pct: discount, max_uses }) });
+  if (r?.ok) { showAlert('Coupon added'); loadCoupons(); }
+  else showAlert(r?.error || 'Failed', 'error');
+}
+
+async function deleteCoupon(code) {
+  if (!confirm(`Delete coupon ${code}?`)) return;
+  const r = await adminFetch(`/admin/api/coupons/${code}`, { method: 'DELETE' });
+  if (r?.ok) { showAlert('Coupon deleted'); loadCoupons(); }
+}
+
+async function toggleCoupon(code) {
+  await adminFetch(`/admin/api/coupons/${code}/toggle`, { method: 'POST' });
+  loadCoupons();
+}
+
+// ── Provider flags ────────────────────────────────────────────────────────────
+async function loadProviderFlags() {
+  const data = await adminFetch('/admin/api/providers/flags');
+  if (!data?.ok) return;
+  const el = document.getElementById('provider-flags-list');
+  el.innerHTML = Object.entries(data.provider_flags).map(([k, v]) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 14px">
+      <span style="font-weight:500;text-transform:capitalize">${k}</span>
+      <label class="toggle"><input type="checkbox" id="pflag-${k}" ${v?'checked':''}/><span class="toggle-slider"></span></label>
+    </div>
+  `).join('');
+}
+
+async function saveProviderFlags() {
+  const flags = {};
+  document.querySelectorAll('[id^="pflag-"]').forEach(cb => { flags[cb.id.replace('pflag-', '')] = cb.checked; });
+  const r = await adminFetch('/admin/api/providers/flags', { method: 'POST', body: JSON.stringify(flags) });
+  if (r?.ok) showAlert('Provider flags saved');
+  else showAlert(r?.error || 'Failed', 'error');
+}
+
+// ── Model Routing ─────────────────────────────────────────────────────────────
+let routingData = {};
+async function loadRouting() {
+  const data = await adminFetch('/admin/api/model-routing');
+  if (!data?.ok) return;
+  routingData = data.model_routing;
+  const wrap = document.getElementById('routing-table-wrap');
+  wrap.innerHTML = '';
+
+  ['lite', 'pro', 'elite'].forEach(plan => {
+    const planData = routingData[plan] || {};
+    wrap.innerHTML += `
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;font-weight:600;text-transform:uppercase;color:var(--accent2);margin-bottom:10px;letter-spacing:.5px">Plan: ${plan}</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Role</th><th>Provider</th><th>Model</th><th>Context Limit</th></tr></thead>
+            <tbody>
+              ${['planning','coding','debug'].map(role => {
+                const rc = planData[role] || {};
+                return `<tr>
+                  <td style="font-weight:500;color:var(--text2)">${role}</td>
+                  <td class="routing-cell"><input class="routing-provider" data-plan="${plan}" data-role="${role}" value="${esc(rc.provider||'')}" style="width:120px"/></td>
+                  <td class="routing-cell"><input class="routing-model" data-plan="${plan}" data-role="${role}" value="${esc(rc.model||'')}" style="width:220px"/></td>
+                  <td class="routing-cell"><input class="routing-ctx" data-plan="${plan}" data-role="${role}" type="number" value="${rc.context_limit||8192}" style="width:100px"/></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  });
+}
+
+async function saveRouting() {
+  const payload = {};
+  document.querySelectorAll('.routing-provider').forEach(inp => {
+    const plan = inp.dataset.plan; const role = inp.dataset.role;
+    if (!payload[plan]) payload[plan] = {};
+    if (!payload[plan][role]) payload[plan][role] = {};
+    payload[plan][role].provider = inp.value;
+  });
+  document.querySelectorAll('.routing-model').forEach(inp => {
+    payload[inp.dataset.plan][inp.dataset.role].model = inp.value;
+  });
+  document.querySelectorAll('.routing-ctx').forEach(inp => {
+    payload[inp.dataset.plan][inp.dataset.role].context_limit = parseInt(inp.value);
+  });
+  const r = await adminFetch('/admin/api/model-routing', { method: 'POST', body: JSON.stringify(payload) });
+  if (r?.ok) { showAlert('Routing saved — restart to apply', 'warning'); document.getElementById('routing-saved-msg').style.display = 'inline'; }
+  else showAlert(r?.error || 'Failed', 'error');
+}
+
+// ── Concurrency ───────────────────────────────────────────────────────────────
+const CONCURRENCY_LABELS = {
+  max_agent_loops: 'Max Agent Loops', planner_max_steps: 'Planner Max Steps',
+  terminal_timeout: 'Terminal Timeout (s)', max_queue_size: 'Max Queue Size',
+};
+
+async function loadConcurrency() {
+  const data = await adminFetch('/admin/api/concurrency');
+  if (!data?.ok) return;
+  document.getElementById('concurrency-fields').innerHTML = Object.entries(data.concurrency).map(([k, v]) => `
+    <div class="form-group"><label>${CONCURRENCY_LABELS[k] || k}</label><input id="conc-${k}" type="number" value="${v}" min="1" /></div>
+  `).join('');
+}
+
+async function saveConcurrency() {
+  const payload = {};
+  document.querySelectorAll('[id^="conc-"]').forEach(inp => { payload[inp.id.replace('conc-', '')] = parseInt(inp.value); });
+  const r = await adminFetch('/admin/api/concurrency', { method: 'POST', body: JSON.stringify(payload) });
+  if (r?.ok) { showAlert('Concurrency saved — restart to apply', 'warning'); document.getElementById('concurrency-saved-msg').style.display = 'inline'; }
+  else showAlert(r?.error || 'Failed', 'error');
+}
+
+// ── Dynamic Providers ─────────────────────────────────────────────────────────
+async function loadDynamicProviders() {
+  const data = await adminFetch('/admin/api/dynamic-providers');
+  if (!data?.ok) return;
+  const tbody = document.getElementById('dp-tbody');
+  if (!data.providers.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2)">No custom providers added</td></tr>'; return; }
+  tbody.innerHTML = data.providers.map(p => `
+    <tr>
+      <td><code style="color:var(--accent2)">${esc(p.id)}</code></td>
+      <td>${esc(p.name)}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(p.base_url)}</td>
+      <td><span class="badge badge-gray">${p.auth_type}</span></td>
+      <td>${p.priority}</td>
+      <td>${p.enabled ? '<span class="badge badge-green">Enabled</span>' : '<span class="badge badge-gray">Disabled</span>'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="toggleDp('${esc(p.id)}')">Toggle</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDp('${esc(p.id)}')">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function addDynamicProvider() {
+  const pid = document.getElementById('dp-id').value.trim();
+  const name = document.getElementById('dp-name').value.trim();
+  const base_url = document.getElementById('dp-url').value.trim();
+  if (!pid || !name || !base_url) { showAlert('ID, name, and base URL required', 'error'); return; }
+  const r = await adminFetch('/admin/api/dynamic-providers', { method: 'POST', body: JSON.stringify({
+    id: pid, name, base_url,
+    auth_type: document.getElementById('dp-auth').value,
+    api_key: document.getElementById('dp-key').value,
+    priority: parseInt(document.getElementById('dp-priority').value),
+  })});
+  if (r?.ok) { showAlert('Provider added'); loadDynamicProviders(); }
+  else showAlert(r?.error || 'Failed', 'error');
+}
+
+async function toggleDp(pid) {
+  await adminFetch(`/admin/api/dynamic-providers/${pid}/toggle`, { method: 'POST' });
+  loadDynamicProviders();
+}
+
+async function deleteDp(pid) {
+  if (!confirm(`Delete provider "${pid}"?`)) return;
+  const r = await adminFetch(`/admin/api/dynamic-providers/${pid}`, { method: 'DELETE' });
+  if (r?.ok) { showAlert('Provider deleted'); loadDynamicProviders(); }
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+async function loadHistory() {
+  const data = await adminFetch('/admin/api/config/history/all?limit=100');
+  if (!data?.ok) return;
+  const tbody = document.getElementById('history-tbody');
+  if (!data.history.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text2)">No changes yet</td></tr>'; return; }
+  tbody.innerHTML = data.history.map(h => `
+    <tr style="cursor:pointer" onclick="showDiff(${h.id}, '${esc(h.key)}', ${JSON.stringify(h).replace(/</g,'&lt;')})">
+      <td style="font-size:11px;color:var(--text3)">${fmtTime(h.timestamp)}</td>
+      <td><span style="color:var(--accent2);font-weight:600">${esc(h.key)}</span></td>
+      <td><span class="badge badge-purple">v${h.version}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${esc(h.changed_by)}</td>
+      <td><button class="btn btn-ghost btn-sm">View →</button></td>
+    </tr>
+  `).join('');
+}
+
+function showDiff(id, key, h) {
+  selectedHistoryId = id;
+  selectedHistoryKey = key;
+  document.getElementById('diff-old').textContent = JSON.stringify(h.old_value, null, 2) || 'null';
+  document.getElementById('diff-new').textContent = JSON.stringify(h.new_value, null, 2);
+  document.getElementById('history-diff-card').style.display = 'block';
+  document.getElementById('history-diff-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function doRollback() {
+  if (!selectedHistoryId || !selectedHistoryKey) return;
+  if (!confirm(`Roll back "${selectedHistoryKey}" to this version?`)) return;
+  const r = await adminFetch(`/admin/api/config/${selectedHistoryKey}/rollback`, {
+    method: 'POST', body: JSON.stringify({ history_id: selectedHistoryId })
+  });
+  if (r?.ok) { showAlert('Rolled back successfully'); loadHistory(); document.getElementById('history-diff-card').style.display = 'none'; }
+  else showAlert(r?.error || 'Rollback failed', 'error');
+}
+
+// ── Kill Switch ───────────────────────────────────────────────────────────────
+async function loadKillSwitch() {
+  const data = await adminFetch('/admin/api/kill-switch');
+  if (!data?.ok) return;
+  updateKsUI(data.active);
+}
+
+async function setKillSwitch(action) {
+  const label = action === 'enable' ? 'ENABLE the kill switch (blocks all new tasks)' : 'DISABLE the kill switch';
+  if (!confirm(`Are you sure you want to ${label}?`)) return;
+  const r = await adminFetch('/admin/api/kill-switch', { method: 'POST', body: JSON.stringify({ action }) });
+  if (r?.ok) { showAlert(action === 'enable' ? '⛔ Kill switch enabled' : '✅ Kill switch disabled', action === 'enable' ? 'error' : 'success'); updateKsUI(r.active); }
+  else showAlert(r?.error || 'Forbidden', 'error');
+}
+
+function updateKsUI(active) {
+  const dot = document.getElementById('ks-status');
+  const label = document.getElementById('ks-label');
+  const panel = document.getElementById('ks-panel-status');
+  const sidebarDot = document.getElementById('sidebar-status-dot');
+  const sidebarTxt = document.getElementById('sidebar-status-text');
+
+  if (active) {
+    dot.className = 'status-dot red';
+    label.textContent = 'Kill Switch ACTIVE';
+    if (panel) { panel.textContent = '⛔ Kill Switch is ENABLED — All new tasks blocked'; panel.style.color = 'var(--red)'; }
+    sidebarDot.className = 'status-dot red';
+    sidebarTxt.textContent = 'Kill Switch Active';
+  } else {
+    dot.className = 'status-dot';
+    label.textContent = 'System Active';
+    if (panel) { panel.textContent = '✅ Kill Switch is DISABLED — System running normally'; panel.style.color = 'var(--green)'; }
+    sidebarDot.className = 'status-dot';
+    sidebarTxt.textContent = 'Connected';
+  }
+}
+
+// ── Polling ───────────────────────────────────────────────────────────────────
+function startPolling() {
+  setInterval(async () => {
+    const ks = await adminFetch('/admin/api/kill-switch');
+    if (ks?.ok) updateKsUI(ks.active);
+    if (currentPanel === 'dashboard') loadDashboard();
+  }, 15000);
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function setBar(id, pct, colorClass) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.width = `${Math.min(100, pct)}%`;
+  if (colorClass) { el.className = `progress-fill ${colorClass}`; }
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtTime(iso) {
+  try { return new Date(iso).toLocaleString(); } catch { return iso; }
+}
+
+// ── Enter key for login ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-overlay').style.display !== 'none') doLogin();
+});
+</script>
+</body>
+</html>
