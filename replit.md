@@ -21,6 +21,26 @@ A comprehensive real SaaS billing system is integrated, including `payments.py` 
 
 The authentication system is multi-tenant, managing `users` and `auth_sessions` in `saas_platform.db`. It supports email/password and OAuth (Google, GitHub) logins, JWT access tokens, refresh token rotation, and session management. An Idempotency + Billing Safety Layer (`idempotency.py`) provides transaction safety, daily token usage tracking, payment deduplication, provider failure logging, and protected routes with caching and replay mechanisms. A Real-Time Notification & Event System (`notifications.py`) offers persistent, prioritized, SSE-pushed notifications with email fallbacks, storing data in `saas_platform.db`. A Customer Support System (`support.py`) manages support tickets in `support.db`, featuring AI auto-tagging, billing info auto-attachment, and email notifications.
 
+## Legal & Compliance Layer
+
+Standalone legal pages + full UI integration added for payment/data compliance.
+
+**Pages** (Flask routes + standalone HTML templates):
+| Route | Template | Description |
+|-------|----------|-------------|
+| `/privacy-policy` | `templates/privacy-policy.html` | GDPR-aligned, 10 sections covering data collection, third parties, retention, rights |
+| `/terms-of-service` | `templates/terms-of-service.html` | Acceptable use, AI disclaimer, liability limits, termination rights |
+| `/refund-policy` | `templates/refund-policy.html` | 7-day guarantee, eligibility grid, 4-step refund process |
+
+**UI Integration**:
+- **Auth footer** — "By signing in you agree to our Terms of Service & Privacy Policy" with real links
+- **Signup form** — Mandatory "I agree to Terms & Privacy Policy" checkbox; blocks form submit if unchecked
+- **Settings → Account tab** — Legal links, support@nexora.ai contact, Data Export request, Delete Account (double-confirm + mailto pre-filled)
+- **Cookie notice banner** — localStorage-gated, shown once per browser, links to Privacy Policy
+- **Legal footer** — on all 3 standalone pages, cross-links to each other + support email
+
+**Contact**: support@nexora.ai (displayed on all legal pages and in Settings → Account)
+
 ## Account Recovery & Email Verification (`account_recovery.py`)
 
 Production-grade account security layer added on top of the auth system.

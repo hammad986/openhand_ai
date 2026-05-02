@@ -10815,6 +10815,19 @@ def api_delete_notification(nid):
     return jsonify({"ok": changed})
 
 
+# ── Legal & Compliance Pages ──────────────────────────────────────────────────
+@app.route("/privacy-policy")
+def privacy_policy():
+    return render_template("privacy-policy.html")
+
+@app.route("/terms-of-service")
+def terms_of_service():
+    return render_template("terms-of-service.html")
+
+@app.route("/refund-policy")
+def refund_policy():
+    return render_template("refund-policy.html")
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     # Phase 19: debug mode controlled by env var — never True in production

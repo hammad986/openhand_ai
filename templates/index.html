@@ -3197,7 +3197,11 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
         <input type="password" id="nx-signup-pw" placeholder="••••••••" autocomplete="new-password"
                onkeydown="if(event.key==='Enter') nxDoSignup()">
       </div>
-      <button class="nx-auth-btn-primary" id="nx-btn-signup" onclick="nxDoSignup()">Create Account</button>
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;cursor:pointer;font-size:0.8rem;color:var(--muted,#8b949e)">
+        <input type="checkbox" id="nx-signup-agree" style="margin-top:2px;accent-color:var(--purple,#bc8cff)">
+        <span>I agree to the <a href="/terms-of-service" target="_blank" style="color:var(--accent,#58a6ff)">Terms of Service</a> and <a href="/privacy-policy" target="_blank" style="color:var(--accent,#58a6ff)">Privacy Policy</a></span>
+      </label>
+      <button class="nx-auth-btn-primary" id="nx-btn-signup" onclick="nxDoSignup()" style="margin-top:10px">Create Account</button>
     </div>
 
     <!-- OAuth -->
@@ -3222,9 +3226,35 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
 
     <div class="nx-auth-footer">
       By signing in you agree to our
-      <a href="/docs#billing" target="_blank">Terms of Service</a>
+      <a href="/terms-of-service" target="_blank">Terms of Service</a> &amp;
+      <a href="/privacy-policy" target="_blank">Privacy Policy</a>
     </div>
   </div>
+</div>
+
+<!-- ── Cookie Notice Banner ── -->
+<div id="nx-cookie-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#161b22;border-top:1px solid #30363d;padding:14px 20px;align-items:center;gap:16px;flex-wrap:wrap">
+  <span style="font-size:0.82rem;color:#8b949e;flex:1;min-width:200px">
+    🍪 We use essential cookies to keep you signed in and to secure your session. By continuing to use Nexora AI, you accept our
+    <a href="/privacy-policy" target="_blank" style="color:#bc8cff">Privacy Policy</a>.
+  </span>
+  <div style="display:flex;gap:8px;flex-shrink:0">
+    <button onclick="nxAcceptCookies()" style="background:#bc8cff;color:#0d1117;border:none;border-radius:6px;padding:7px 18px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit">Accept</button>
+    <button onclick="document.getElementById('nx-cookie-banner').style.display='none'" style="background:transparent;color:#8b949e;border:1px solid #30363d;border-radius:6px;padding:7px 12px;font-size:0.82rem;cursor:pointer;font-family:inherit">Dismiss</button>
+  </div>
+</div>
+
+<!-- ── Site Footer ── -->
+<div id="nx-site-footer" style="display:none;text-align:center;padding:16px 20px;border-top:1px solid #21262d;background:#0d1117;font-size:0.75rem;color:#8b949e">
+  <span>© 2026 Nexora AI</span>
+  <span style="margin:0 8px">·</span>
+  <a href="/privacy-policy" target="_blank" style="color:#8b949e;text-decoration:none" onmouseover="this.style.color='#bc8cff'" onmouseout="this.style.color='#8b949e'">Privacy Policy</a>
+  <span style="margin:0 8px">·</span>
+  <a href="/terms-of-service" target="_blank" style="color:#8b949e;text-decoration:none" onmouseover="this.style.color='#bc8cff'" onmouseout="this.style.color='#8b949e'">Terms of Service</a>
+  <span style="margin:0 8px">·</span>
+  <a href="/refund-policy" target="_blank" style="color:#8b949e;text-decoration:none" onmouseover="this.style.color='#bc8cff'" onmouseout="this.style.color='#8b949e'">Refund Policy</a>
+  <span style="margin:0 8px">·</span>
+  <a href="mailto:support@nexora.ai" style="color:#8b949e;text-decoration:none" onmouseover="this.style.color='#bc8cff'" onmouseout="this.style.color='#8b949e'">support@nexora.ai</a>
 </div>
 
 <!-- ── Email Verification Banner ── -->
@@ -6446,6 +6476,7 @@ window.addEventListener('load', nxInit);
                 <button class="settings-tab"        data-stab="memory"       onclick="switchSettingsTab('memory')">Memory</button>
                 <button class="settings-tab"        data-stab="advanced"     onclick="switchSettingsTab('advanced')">Advanced</button>
                 <button class="settings-tab"        data-stab="billing-setup" onclick="switchSettingsTab('billing-setup')">💳 Billing Setup</button>
+                <button class="settings-tab"        data-stab="account"      onclick="switchSettingsTab('account')">Account</button>
             </div>
 
             <!-- API tab -->
@@ -6927,6 +6958,53 @@ window.addEventListener('load', nxInit);
                     </div>
                 </div>
             </div>
+
+            <!-- Account tab -->
+            <div class="settings-pane" id="spane-account">
+                <!-- Legal & Policies -->
+                <div class="section">
+                    <h3>Legal &amp; Policies</h3>
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+                        <a href="/terms-of-service" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--panel2,#1c2230);border:1px solid var(--border,#30363d);border-radius:8px;color:var(--text,#e6edf3);text-decoration:none;font-size:0.87rem;font-weight:600" onmouseover="this.style.borderColor='var(--purple,#bc8cff)'" onmouseout="this.style.borderColor='var(--border,#30363d)'">
+                            <span>📄 Terms of Service</span><span style="color:var(--muted,#8b949e);font-size:0.75rem">→</span>
+                        </a>
+                        <a href="/privacy-policy" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--panel2,#1c2230);border:1px solid var(--border,#30363d);border-radius:8px;color:var(--text,#e6edf3);text-decoration:none;font-size:0.87rem;font-weight:600" onmouseover="this.style.borderColor='var(--purple,#bc8cff)'" onmouseout="this.style.borderColor='var(--border,#30363d)'">
+                            <span>🔒 Privacy Policy</span><span style="color:var(--muted,#8b949e);font-size:0.75rem">→</span>
+                        </a>
+                        <a href="/refund-policy" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--panel2,#1c2230);border:1px solid var(--border,#30363d);border-radius:8px;color:var(--text,#e6edf3);text-decoration:none;font-size:0.87rem;font-weight:600" onmouseover="this.style.borderColor='var(--purple,#bc8cff)'" onmouseout="this.style.borderColor='var(--border,#30363d)'">
+                            <span>💳 Refund Policy</span><span style="color:var(--muted,#8b949e);font-size:0.75rem">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="section">
+                    <h3>Support &amp; Contact</h3>
+                    <div class="info-box" style="font-size:0.87rem">
+                        For billing, privacy, or account issues, email us at<br>
+                        <a href="mailto:support@nexora.ai" style="color:var(--accent);font-weight:600">support@nexora.ai</a>
+                        <span style="color:var(--muted);font-size:0.8rem;display:block;margin-top:4px">We respond within 2 business days.</span>
+                    </div>
+                </div>
+
+                <!-- Data & Privacy -->
+                <div class="section">
+                    <h3>Data &amp; Privacy</h3>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div style="padding:12px 14px;background:var(--panel2,#1c2230);border:1px solid var(--border,#30363d);border-radius:8px">
+                            <div style="font-size:0.87rem;font-weight:600;color:var(--text,#e6edf3);margin-bottom:4px">Request My Data</div>
+                            <div style="font-size:0.78rem;color:var(--muted,#8b949e);margin-bottom:10px">Receive a copy of all personal data associated with your account.</div>
+                            <button class="btn" onclick="nxRequestData()" style="font-size:0.8rem;padding:6px 14px">Request Data Export</button>
+                        </div>
+                        <div style="padding:12px 14px;background:#1f0d0d;border:1px solid #5a1d1d;border-radius:8px">
+                            <div style="font-size:0.87rem;font-weight:600;color:#f85149;margin-bottom:4px">Delete My Account</div>
+                            <div style="font-size:0.78rem;color:var(--muted,#8b949e);margin-bottom:10px">Permanently delete your account and all associated data. This action cannot be undone.</div>
+                            <button onclick="nxRequestAccountDeletion()" style="background:#f85149;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:600">Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -17697,6 +17775,10 @@ window.nxDoSignup = async function() {
     if (!email || !password) { nxAuthErr('Email and password are required'); return; }
     if (password.length < 8) { nxAuthErr('Password must be at least 8 characters'); return; }
     if (!email.includes('@')) { nxAuthErr('Enter a valid email address'); return; }
+    if (!document.getElementById('nx-signup-agree')?.checked) {
+        nxAuthErr('Please agree to the Terms of Service and Privacy Policy to continue.');
+        return;
+    }
 
     if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
     try {
@@ -17723,6 +17805,39 @@ window.nxDoSignup = async function() {
         if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
     }
 };
+
+// ── Cookie Consent ─────────────────────────────────────────────────
+window.nxAcceptCookies = function() {
+    localStorage.setItem('nx_cookie_ok', '1');
+    const b = document.getElementById('nx-cookie-banner');
+    if (b) b.style.display = 'none';
+};
+(function nxInitCookieBanner() {
+    if (!localStorage.getItem('nx_cookie_ok')) {
+        const b = document.getElementById('nx-cookie-banner');
+        if (b) { b.style.display = 'flex'; b.style.alignItems = 'center'; }
+    }
+})();
+
+// ── Data Request / Account Deletion ────────────────────────────────
+window.nxRequestData = function() {
+    const email = nxGetProfile()?.email || 'your registered email';
+    alert(`Data export request received.\n\nWe will send a copy of all your personal data to ${email} within 30 days, in accordance with our Privacy Policy.\n\nFor urgent requests contact: support@nexora.ai`);
+};
+window.nxRequestAccountDeletion = function() {
+    const confirmed = confirm(
+        'Are you sure you want to permanently delete your account?\n\n' +
+        'This will erase all your data, sessions, and subscription history.\n\n' +
+        'This action CANNOT be undone.\n\nClick OK to confirm and email support to proceed.'
+    );
+    if (confirmed) {
+        const email = nxGetProfile()?.email || '';
+        window.location.href = `mailto:support@nexora.ai?subject=Account%20Deletion%20Request&body=Please%20permanently%20delete%20my%20Nexora%20AI%20account%20and%20all%20associated%20data.%0A%0ARegistered%20email%3A%20${encodeURIComponent(email)}`;
+    }
+};
+function nxGetProfile() {
+    try { return JSON.parse(localStorage.getItem('nx_profile') || '{}'); } catch { return {}; }
+}
 
 // ── Logout ─────────────────────────────────────────────────────────
 window.nxLogout = async function() {

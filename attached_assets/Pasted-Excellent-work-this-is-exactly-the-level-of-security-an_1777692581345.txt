@@ -1,0 +1,113 @@
+Excellent work — this is exactly the level of security and completeness I wanted.
+
+The Account Recovery & Email Verification system is production-grade and aligns with real SaaS standards.
+
+Proceed to the next critical phase:
+
+PHASE — LEGAL, TRUST & COMPLIANCE LAYER
+
+This is mandatory because the platform includes payments and user data.
+
+---
+
+# 🎯 OBJECTIVE
+
+Add all required legal and trust pages + integrate them into the UI and user flow.
+
+---
+
+# 🧱 PART 1 — REQUIRED PAGES
+
+Create 3 standalone pages:
+
+1. /privacy-policy
+2. /terms-of-service
+3. /refund-policy
+
+---
+
+# 📄 PART 2 — CONTENT STRUCTURE
+
+Each page must include:
+
+Privacy Policy:
+
+* Data collected (email, usage, AI inputs)
+* How data is used
+* Third-party services (AI providers, payment gateway)
+* Data retention & deletion
+* Contact email
+
+Terms of Service:
+
+* User responsibilities
+* Acceptable use (no abuse, no illegal use)
+* AI limitations disclaimer
+* Account termination rights
+* Liability limitation
+
+Refund Policy:
+
+* Subscription rules
+* Refund eligibility
+* Non-refundable cases
+* Contact process
+
+---
+
+# 🎨 PART 3 — UI INTEGRATION
+
+* Add links in footer (visible on all pages)
+* Add links in signup/login screen
+* Add links in Settings panel
+
+---
+
+# ⚙️ PART 4 — SIGNUP FLOW UPDATE
+
+* Add checkbox:
+  "I agree to Terms & Privacy Policy"
+* Block signup if unchecked
+
+---
+
+# 📧 PART 5 — CONTACT SYSTEM
+
+* Add support email display ([support@yourdomain.com](mailto:support@yourdomain.com))
+* Link from all legal pages
+
+---
+
+# 🛡️ PART 6 — BASIC COMPLIANCE
+
+* Add cookie notice banner (simple version)
+* Add "Data request / delete account" option in settings
+
+---
+
+# 🧪 PART 7 — VALIDATION
+
+Confirm:
+
+* Pages load correctly
+* Links work everywhere
+* Signup requires agreement
+* No broken navigation
+
+---
+
+# 🚀 FINAL RESULT
+
+System must confirm:
+
+"LEGAL & COMPLIANCE LAYER FULLY IMPLEMENTED AND USER TRUST READY"
+
+---
+
+# 🔥 AFTER THIS
+
+Next phase will be:
+→ Change Password (in-account)
+→ Deployment readiness finalization
+
+Proceed now.

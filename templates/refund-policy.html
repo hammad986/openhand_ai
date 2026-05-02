@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refund Policy — Nexora AI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; }
+    a { color: #bc8cff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .page-header { background: #161b22; border-bottom: 1px solid #30363d; padding: 16px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 10; }
+    .logo { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 700; color: #e6edf3; text-decoration: none; }
+    .logo span { color: #bc8cff; }
+    .back-btn { margin-left: auto; background: #21262d; border: 1px solid #30363d; color: #8b949e; border-radius: 6px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; font-family: inherit; }
+    .back-btn:hover { border-color: #bc8cff; color: #e6edf3; }
+    .container { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+    .page-title { font-size: 2rem; font-weight: 800; color: #e6edf3; margin-bottom: 6px; }
+    .page-subtitle { font-size: 0.9rem; color: #8b949e; margin-bottom: 40px; }
+    h2 { font-size: 1.15rem; font-weight: 700; color: #bc8cff; margin: 36px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #21262d; }
+    p { font-size: 0.93rem; line-height: 1.75; color: #c9d1d9; margin-bottom: 12px; }
+    ul { margin: 8px 0 12px 20px; }
+    li { font-size: 0.93rem; line-height: 1.75; color: #c9d1d9; margin-bottom: 4px; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+    @media (max-width: 560px) { .summary-grid { grid-template-columns: 1fr; } }
+    .summary-card { border-radius: 8px; padding: 16px 18px; border: 1px solid; }
+    .summary-card.yes { background: #0d1f0d; border-color: #2ea043; }
+    .summary-card.no { background: #1f0d0d; border-color: #f85149; }
+    .summary-card .card-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 8px; }
+    .summary-card.yes .card-label { color: #3fb950; }
+    .summary-card.no .card-label { color: #f85149; }
+    .summary-card ul { margin: 0 0 0 14px; }
+    .summary-card li { font-size: 0.85rem; color: #c9d1d9; margin-bottom: 3px; }
+    .process-step { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #21262d; }
+    .process-step:last-child { border-bottom: none; }
+    .step-num { min-width: 28px; height: 28px; border-radius: 50%; background: #bc8cff; color: #0d1117; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .step-content h4 { font-size: 0.93rem; font-weight: 700; color: #e6edf3; margin-bottom: 4px; }
+    .step-content p { font-size: 0.85rem; color: #8b949e; margin: 0; }
+    .contact-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px 24px; margin-top: 36px; }
+    .contact-box h3 { font-size: 1rem; font-weight: 700; color: #e6edf3; margin-bottom: 8px; }
+    .contact-box p { margin: 0; }
+    .legal-footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid #21262d; display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; font-size: 0.8rem; color: #8b949e; }
+    .legal-footer a { color: #8b949e; }
+    .legal-footer a:hover { color: #bc8cff; }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <a href="/" class="logo">
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+      <polygon points="16,3 20.5,11.5 30,13 23,20 24.7,29.5 16,25 7.3,29.5 9,20 2,13 11.5,11.5" fill="#bc8cff" stroke="#6b3fa0" stroke-width="0.5"/>
+    </svg>
+    Nexora <span>AI</span>
+  </a>
+  <button class="back-btn" onclick="history.back()">← Back</button>
+</header>
+
+<div class="container">
+  <div class="page-title">Refund Policy</div>
+  <div class="page-subtitle">Last updated: May 2, 2026 &nbsp;·&nbsp; We want you to be satisfied with your subscription.</div>
+
+  <h2>1. Subscription Model</h2>
+  <p>Nexora AI operates on a monthly recurring subscription basis. When you subscribe to a paid plan, you are billed for the full billing period (one month) in advance. Subscriptions automatically renew at the end of each period unless cancelled.</p>
+  <p>You can cancel your subscription at any time from your Account Settings or by contacting support. Cancellation takes effect at the end of your current billing period — you retain access to paid features until then.</p>
+
+  <h2>2. Refund Eligibility</h2>
+  <div class="summary-grid">
+    <div class="summary-card yes">
+      <div class="card-label">ELIGIBLE FOR REFUND</div>
+      <ul>
+        <li>Charged after cancellation request</li>
+        <li>Duplicate charges for the same period</li>
+        <li>Service unavailable &gt;72 hours in a billing period</li>
+        <li>Technical error causing incorrect charge</li>
+        <li>First-time subscriber within 7 days of first payment</li>
+      </ul>
+    </div>
+    <div class="summary-card no">
+      <div class="card-label">NOT ELIGIBLE FOR REFUND</div>
+      <ul>
+        <li>Change of mind after using the Service</li>
+        <li>Partial month usage after cancellation</li>
+        <li>Account suspended for Terms violations</li>
+        <li>Unused AI credits or token allowance</li>
+        <li>Third-party API costs you incurred (BYOK)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>3. 7-Day Satisfaction Guarantee</h2>
+  <p>If you are a <strong>first-time paid subscriber</strong> and are not satisfied with the Service, you may request a full refund within <strong>7 days</strong> of your first payment. This guarantee applies only once per customer account and requires that you have not violated our Terms of Service.</p>
+
+  <h2>4. Service Downtime Credits</h2>
+  <p>If the Nexora AI platform experiences verified downtime exceeding 72 cumulative hours within a single billing month, eligible subscribers may request a pro-rated credit applied to the next billing period. Scheduled maintenance windows announced 48 hours in advance do not count toward downtime.</p>
+
+  <h2>5. Non-Refundable Items</h2>
+  <p>The following are explicitly non-refundable:</p>
+  <ul>
+    <li>Any partial-period usage after voluntary downgrade or cancellation.</li>
+    <li>Token usage consumed during the billing period.</li>
+    <li>API costs for BYOK (Bring Your Own Key) configurations — these are billed by the respective AI provider.</li>
+    <li>Accounts terminated due to violations of our Terms of Service.</li>
+    <li>Add-on features, one-time purchases, or promotional pricing items.</li>
+  </ul>
+
+  <h2>6. How to Request a Refund</h2>
+  <div style="margin-top:8px">
+    <div class="process-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Email Support</h4>
+        <p>Send an email to <a href="mailto:support@nexora.ai">support@nexora.ai</a> with the subject line "Refund Request".</p>
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Include Your Details</h4>
+        <p>Provide your registered email address, the approximate date of the charge, and the reason for the request.</p>
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Review Period</h4>
+        <p>We will review your request within 3–5 business days and notify you of our decision by email.</p>
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Refund Processing</h4>
+        <p>Approved refunds are returned to the original payment method within 5–10 business days, depending on your bank or card issuer.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>7. Chargebacks</h2>
+  <p>We strongly encourage you to contact us before initiating a chargeback with your bank. Fraudulent chargebacks may result in account suspension. We are committed to resolving legitimate disputes fairly and promptly.</p>
+
+  <h2>8. Cancellation vs. Refund</h2>
+  <p>Cancelling your subscription stops future billing but does not automatically entitle you to a refund for the current period. If you believe you qualify for a refund, you must request one explicitly using the process above.</p>
+
+  <div class="contact-box">
+    <h3>Need Help?</h3>
+    <p>Reach our billing team at <a href="mailto:support@nexora.ai">support@nexora.ai</a></p>
+    <p style="margin-top:6px;font-size:0.82rem;color:#8b949e">We respond to all billing inquiries within 3 business days.</p>
+  </div>
+
+  <div class="legal-footer">
+    <span>© 2026 Nexora AI. All rights reserved.</span>
+    <a href="/privacy-policy">Privacy Policy</a>
+    <a href="/terms-of-service">Terms of Service</a>
+    <a href="/refund-policy">Refund Policy</a>
+    <a href="mailto:support@nexora.ai">Contact</a>
+  </div>
+</div>
+
+</body>
+</html>
