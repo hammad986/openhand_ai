@@ -1,0 +1,212 @@
+Proceed with Phase: Developer Control Panel (Admin System) — Enterprise Grade.
+
+This is NOT a basic admin panel. This is a full control plane for a production SaaS AI platform.
+
+Zero compromise. All logic must be safe, versioned, and production-ready.
+
+---
+
+# 🎯 OBJECTIVE
+
+Build a complete Admin Control System with:
+
+* full system control
+* real-time config updates
+* safe restart-based changes
+* role-based access
+* dynamic AI routing control
+
+---
+
+# 🧱 PART 1 — ROLE-BASED ACCESS (RBAC)
+
+Roles:
+
+* super_admin (full access)
+* admin (most controls)
+* support (tickets + read-only metrics)
+
+All admin routes must require admin JWT role.
+
+---
+
+# 🧱 PART 2 — ADMIN DATABASE CONFIG
+
+Create table: system_config
+
+* key
+* value (JSON)
+* version
+* updated_at
+
+Create table: config_history
+
+* id
+* key
+* old_value
+* new_value
+* changed_by
+* timestamp
+
+---
+
+# 🧠 PART 3 — CONFIG ENGINE
+
+Build centralized config manager:
+
+* load from DB (not hardcoded)
+* cache in memory
+* support versioning
+* support rollback
+
+---
+
+# ⚡ PART 4 — INSTANT CONTROLS
+
+Admin UI must allow real-time update for:
+
+* pricing (plans)
+* coupons
+* token limits
+* feature toggles
+* rate limits
+* user controls (ban/unban)
+* provider enable/disable
+
+Changes must reflect immediately without restart.
+
+---
+
+# 🔄 PART 5 — RESTART-BASED CONTROLS
+
+Separate section:
+
+"⚠ Requires Restart"
+
+Includes:
+
+* model selection (planning/coding/debugging)
+* API provider schema add
+* routing config
+* concurrency limits
+
+Provide:
+
+* “Save + Restart Required” indicator
+* “Apply on next restart” option
+
+---
+
+# 🤖 PART 6 — AI MODEL CONTROL PANEL
+
+Admin must control:
+
+* planning model
+* coding model
+* debugging model
+
+Per plan (Lite / Pro / Elite)
+
+UI must include:
+
+* dropdown per role
+* provider badge
+* context length
+* fallback chain
+
+---
+
+# 🌐 PART 7 — DYNAMIC API PROVIDER SYSTEM
+
+Admin can:
+
+* add provider (name, base_url, auth type)
+* add API key
+* enable/disable
+* set priority
+* assign to roles
+
+Support unlimited providers.
+
+---
+
+# 📊 PART 8 — LOGS & MONITORING
+
+Add dashboard:
+
+* API calls
+* failures
+* provider errors
+* user usage
+* system load
+
+---
+
+# 🧾 PART 9 — USER CONTROL
+
+Admin can:
+
+* view users
+* ban/unban
+* adjust usage
+* change plan manually
+
+---
+
+# 🛡️ PART 10 — SAFETY SYSTEM
+
+* config validation before save
+* rollback button
+* version history
+* prevent invalid configs
+
+---
+
+# 🧠 PART 11 — DEPLOYMENT SAFETY
+
+* config change must NOT break running sessions
+* new config applied only to new tasks
+* existing tasks continue safely
+
+---
+
+# 🎨 PART 12 — UI
+
+Separate admin dashboard:
+
+/admin
+
+Features:
+
+* sidebar navigation
+* config panels
+* save + apply buttons
+* visual indicators (instant vs restart)
+
+---
+
+# 🧪 PART 13 — TESTING
+
+Test:
+
+* live config change
+* rollback
+* invalid config rejection
+* role permissions
+* model switching
+
+---
+
+# 🚀 FINAL RESULT
+
+System must confirm:
+
+"DEVELOPER CONTROL PANEL FULLY OPERATIONAL — PRODUCTION SAFE"
+
+---
+
+# 🔥 NOTE
+
+This is the brain of the platform. Treat it like a control tower.
+
+No unsafe changes allowed.
