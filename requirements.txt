@@ -17,3 +17,13 @@ python-dotenv
 razorpay
 requests
 tiktoken
+bcrypt
+Flask
+gunicorn
+psutil
+PyJWT
+python-docx
+python-dotenv
+razorpay
+requests
+tiktoken
