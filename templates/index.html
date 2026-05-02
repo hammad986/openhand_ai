@@ -1660,6 +1660,60 @@ body {
   transition: all var(--dur); display: flex; align-items: center; gap: 4px;
 }
 .nx-icon-btn:hover { border-color: var(--panel-border-hover); color: var(--text); background: var(--panel2); }
+
+/* ── Notification Bell ── */
+.nx-bell-wrap { position: relative; }
+.nx-bell-btn {
+  background: none; border: 1px solid var(--panel-border); color: var(--text-muted);
+  width: 34px; height: 30px; border-radius: 7px; cursor: pointer; font-size: 13px;
+  transition: all var(--dur); display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.nx-bell-btn:hover { border-color: var(--accent,#58a6ff); color: var(--accent,#58a6ff); background: var(--panel2); }
+.nx-bell-btn.has-unread { border-color: rgba(88,166,255,0.4); }
+.nx-bell-badge {
+  position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px;
+  background: #f85149; color: #fff; font-size: 10px; font-weight: 700;
+  border-radius: 8px; line-height: 16px; text-align: center; padding: 0 3px;
+  border: 1.5px solid var(--bg,#0d1117); pointer-events: none;
+}
+.nx-notif-panel {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 340px;
+  background: var(--panel,#161b22); border: 1px solid var(--panel-border,#30363d);
+  border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  z-index: 9999; overflow: hidden;
+}
+.nx-notif-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--panel-border,#30363d);
+}
+.nx-notif-title { font-size: 13px; font-weight: 600; color: var(--text,#e6edf3); }
+.nx-notif-readall {
+  background: none; border: none; font-size: 11px; color: var(--accent,#58a6ff);
+  cursor: pointer; padding: 0;
+}
+.nx-notif-readall:hover { text-decoration: underline; }
+.nx-notif-list { max-height: 360px; overflow-y: auto; }
+.nx-notif-empty { padding: 24px; text-align: center; color: var(--text-dim,#8b949e); font-size: 12px; }
+.nx-notif-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px;
+  border-bottom: 1px solid var(--panel-border,#30363d); cursor: pointer;
+  transition: background var(--dur,.15s); position: relative;
+}
+.nx-notif-item:last-child { border-bottom: none; }
+.nx-notif-item:hover { background: var(--panel2,#1c2128); }
+.nx-notif-item.unread { background: rgba(88,166,255,0.04); }
+.nx-notif-item.unread::before {
+  content: ''; position: absolute; left: 6px; top: 50%; transform: translateY(-50%);
+  width: 5px; height: 5px; border-radius: 50%; background: var(--accent,#58a6ff);
+}
+.nx-notif-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.nx-notif-body { flex: 1; min-width: 0; }
+.nx-notif-item-title { font-size: 12px; font-weight: 600; color: var(--text,#e6edf3); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nx-notif-item-msg { font-size: 11px; color: var(--text-dim,#8b949e); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nx-notif-item-time { font-size: 10px; color: var(--text-dim,#8b949e); margin-top: 4px; }
+.nx-notif-item.priority-warning .nx-notif-icon { filter: drop-shadow(0 0 3px #d29922); }
+.nx-notif-item.priority-critical .nx-notif-icon { filter: drop-shadow(0 0 3px #f85149); }
 .nx-status-badge {
   font-size: 10px; padding: 3px 8px; border-radius: 8px; font-weight: 600;
   background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.2);
@@ -3210,6 +3264,23 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       <span id="p8SubIcon">🆓</span>
       <span id="p8SubName">Free</span>
       <span id="p8SubExpiry" style="font-size:9px;opacity:.7;display:none"></span>
+    </div>
+    <!-- Notification Bell -->
+    <div class="nx-bell-wrap" id="nxBellWrap">
+      <button class="nx-bell-btn" id="nxBellBtn" onclick="nxBellToggle(event)" title="Notifications" aria-label="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="nx-bell-badge" id="nxBellBadge" style="display:none">0</span>
+      </button>
+      <!-- Dropdown panel -->
+      <div class="nx-notif-panel" id="nxNotifPanel" style="display:none">
+        <div class="nx-notif-header">
+          <span class="nx-notif-title">Notifications</span>
+          <button class="nx-notif-readall" id="nxNotifReadAll" onclick="nxNotifMarkAllRead()">Mark all read</button>
+        </div>
+        <div class="nx-notif-list" id="nxNotifList">
+          <div class="nx-notif-empty" id="nxNotifEmpty">No notifications yet</div>
+        </div>
+      </div>
     </div>
     <button class="nx-icon-btn" title="Settings" onclick="openSettings()">⚙</button>
   </div>
@@ -6844,6 +6915,201 @@ function validateKeyInput(pid) {
     warn.style.display = '';
 }
 
+
+
+// ─── Notification Bell ──────────────────────────────────────────────────────
+(function() {
+  const POLL_MS  = 12000;
+  const TYPE_ICON = { task: '🤖', support: '🎫', billing: '💳', system: '⚙️' };
+  const PRIO_ICON = { warning: '⚠️', critical: '🔴' };
+  let _items    = [];
+  let _panelOpen = false;
+  let _sseConn  = null;
+
+  function _badge(n) {
+    const el = document.getElementById('nxBellBadge');
+    const btn = document.getElementById('nxBellBtn');
+    if (!el || !btn) return;
+    if (n > 0) {
+      el.style.display = '';
+      el.textContent = n > 99 ? '99+' : String(n);
+      btn.classList.add('has-unread');
+    } else {
+      el.style.display = 'none';
+      btn.classList.remove('has-unread');
+    }
+  }
+
+  function _timeAgo(iso) {
+    if (!iso) return '';
+    const d   = new Date(iso + 'Z');
+    const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (sec < 60) return 'just now';
+    if (sec < 3600) return Math.floor(sec/60) + 'm ago';
+    if (sec < 86400) return Math.floor(sec/3600) + 'h ago';
+    return Math.floor(sec/86400) + 'd ago';
+  }
+
+  function _render() {
+    const list  = document.getElementById('nxNotifList');
+    const empty = document.getElementById('nxNotifEmpty');
+    if (!list) return;
+    if (!_items.length) {
+      empty && (empty.style.display = '');
+      list.querySelectorAll('.nx-notif-item').forEach(el => el.remove());
+      return;
+    }
+    empty && (empty.style.display = 'none');
+    list.querySelectorAll('.nx-notif-item').forEach(el => el.remove());
+    _items.forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'nx-notif-item' +
+        (n.is_read ? '' : ' unread') +
+        ' priority-' + (n.priority || 'info');
+      div.dataset.id = n.id;
+      const icon = PRIO_ICON[n.priority] || TYPE_ICON[n.type] || '🔔';
+      div.innerHTML = `
+        <div class="nx-notif-icon">${icon}</div>
+        <div class="nx-notif-body">
+          <div class="nx-notif-item-title">${_esc(n.title)}</div>
+          <div class="nx-notif-item-msg">${_esc(n.message)}</div>
+          <div class="nx-notif-item-time">${_timeAgo(n.created_at)}</div>
+        </div>`;
+      div.onclick = () => _clickItem(n);
+      list.appendChild(div);
+    });
+  }
+
+  function _esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function _clickItem(n) {
+    if (!n.is_read) {
+      fetch('/api/notifications/' + n.id + '/read', {method:'PATCH'}).then(r=>r.json()).then(d=>{
+        n.is_read = true;
+        _badge(d.unread || 0);
+        _render();
+      }).catch(()=>{});
+    }
+    if (n.link) {
+      if (n.link.startsWith('#')) {
+        const tab = n.link.slice(1);
+        if (typeof nxOpenPanel === 'function') nxOpenPanel(tab);
+        else if (tab === 'support' && typeof openSupportTab === 'function') openSupportTab();
+      } else {
+        window.location.href = n.link;
+      }
+    }
+    _closePanel();
+  }
+
+  function _closePanel() {
+    _panelOpen = false;
+    const p = document.getElementById('nxNotifPanel');
+    if (p) p.style.display = 'none';
+  }
+
+  window.nxBellToggle = function(e) {
+    e && e.stopPropagation();
+    const p = document.getElementById('nxNotifPanel');
+    if (!p) return;
+    _panelOpen = !_panelOpen;
+    p.style.display = _panelOpen ? '' : 'none';
+    if (_panelOpen) _fetchNotifications();
+  };
+
+  window.nxNotifMarkAllRead = function() {
+    fetch('/api/notifications/read-all', {method:'POST'}).then(r=>r.json()).then(()=>{
+      _items.forEach(n => n.is_read = true);
+      _badge(0);
+      _render();
+    }).catch(()=>{});
+  };
+
+  function _fetchNotifications() {
+    fetch('/api/notifications?limit=30').then(r=>r.json()).then(d=>{
+      if (!d.ok) return;
+      _items = d.notifications || [];
+      _badge(d.unread || 0);
+      _render();
+    }).catch(()=>{});
+  }
+
+  function _addItem(n) {
+    _items.unshift(n);
+    if (_items.length > 30) _items.pop();
+    const unread = _items.filter(x=>!x.is_read).length;
+    _badge(unread);
+    _render();
+    _toast(n);
+  }
+
+  function _toast(n) {
+    const icon = PRIO_ICON[n.priority] || TYPE_ICON[n.type] || '🔔';
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;'+
+      'background:#161b22;border:1px solid #30363d;border-radius:10px;'+
+      'padding:12px 16px;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.5);'+
+      'display:flex;gap:10px;align-items:flex-start;cursor:pointer;animation:nxFadeIn .25s ease;';
+    t.innerHTML = `<span style="font-size:18px">${icon}</span>`+
+      `<div><div style="font-size:12px;font-weight:600;color:#e6edf3;margin-bottom:2px">${_esc(n.title)}</div>`+
+      `<div style="font-size:11px;color:#8b949e">${_esc(n.message.slice(0,80))}</div></div>`;
+    t.onclick = () => { t.remove(); _clickItem(n); };
+    setTimeout(() => { try { t.remove(); } catch(_) {} }, 6000);
+    document.body.appendChild(t);
+  }
+
+  function _connectSSE() {
+    if (_sseConn) { try { _sseConn.close(); } catch(_) {} }
+    try {
+      const es = new EventSource('/api/notifications/stream');
+      _sseConn = es;
+      es.addEventListener('init', e => {
+        try {
+          const d = JSON.parse(e.data);
+          _badge(d.unread || 0);
+        } catch(_) {}
+      });
+      es.onmessage = e => {
+        try { _addItem(JSON.parse(e.data)); } catch(_) {}
+      };
+      es.onerror = () => {
+        es.close();
+        _sseConn = null;
+        setTimeout(_connectSSE, 15000);
+      };
+    } catch(_) {}
+  }
+
+  // Add keyframe if not present
+  if (!document.getElementById('nxBellStyle')) {
+    const s = document.createElement('style');
+    s.id = 'nxBellStyle';
+    s.textContent = '@keyframes nxFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}';
+    document.head.appendChild(s);
+  }
+
+  // Close panel when clicking outside
+  document.addEventListener('click', e => {
+    if (!_panelOpen) return;
+    const wrap = document.getElementById('nxBellWrap');
+    if (wrap && !wrap.contains(e.target)) _closePanel();
+  });
+
+  // Boot: fetch + start SSE + poll fallback
+  function _boot() {
+    _fetchNotifications();
+    _connectSSE();
+    setInterval(_fetchNotifications, POLL_MS);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _boot);
+  } else {
+    _boot();
+  }
+})();
 
 
 // ─── Settings modal ────────────────────────────────────────────────────

@@ -357,6 +357,21 @@ def get_ticket_messages(ticket_id: str) -> list:
     return rows
 
 
+def _notify_support_reply(ticket: dict, sender: str):
+    """Fire a notification to the ticket owner when admin replies."""
+    if sender != "admin":
+        return
+    try:
+        from notifications import notify_support_reply
+        notify_support_reply(
+            user_id=ticket.get("user_id", ""),
+            ticket_id=ticket.get("id", ""),
+            subject=ticket.get("subject", ""),
+        )
+    except Exception as e:
+        logger.debug("[Support] notify_support_reply failed: %s", e)
+
+
 def reply_to_ticket(ticket_id: str, message: str,
                     sender: str = "user", user_id: str = "",
                     is_admin: bool = False) -> dict:
@@ -402,6 +417,7 @@ def reply_to_ticket(ticket_id: str, message: str,
     ticket = get_ticket(ticket_id, is_admin=True)
     if ticket:
         _email_ticket_reply(ticket, message, sender)
+        _notify_support_reply(ticket, sender)
     return {"id": mid, "ticket_id": ticket_id, "sender": sender,
             "message": message, "created_at": now}
 

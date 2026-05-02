@@ -284,6 +284,13 @@ def activate_subscription(plan: str, billing_cycle: str, payment_id: str,
             invoice_id=inv["id"],
         )
 
+    # Fire in-app notification for payment success
+    try:
+        from notifications import notify_payment_success
+        notify_payment_success(user_id=user_id, plan=plan, expiry=expiry.date().isoformat())
+    except Exception:
+        pass
+
     return {"subscription_id": sub_id, "invoice_id": inv["id"], "expiry": expiry.date().isoformat()}
 
 

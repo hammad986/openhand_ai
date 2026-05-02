@@ -100,6 +100,43 @@ Production-grade transaction safety system. All tables live in `saas_platform.db
 - `GET /api/idempotency/status` — engine status + protected routes list + token stats
 - `GET /api/idempotency/token-usage` — current user daily token usage
 
+## Real-Time Notification & Event System (`notifications.py`)
+
+Production-grade push notification engine. DB: `saas_platform.db` (`notifications` table).
+
+**Features**:
+- Persistent DB storage with 30-day auto-expiry and background cleanup every 2 hours
+- SSE push via in-memory per-user queues (one queue per open browser tab)
+- Priority levels: `info` / `warning` / `critical`
+- Types: `task` / `support` / `billing` / `system`
+- Email fallback for `critical` events via Resend (`EMAIL_API_KEY`)
+- Polling fallback every 12 seconds if SSE drops
+
+**Event Triggers** (automatic):
+- Task completed → `notify_task_complete(user_id, task_label, sid)`
+- Task failed → `notify_task_failed(user_id, task_label, reason, sid)`
+- Admin support reply → `notify_support_reply(user_id, ticket_id, subject)` (in `support.py`)
+- Payment activated → `notify_payment_success(user_id, plan, expiry)` (in `payments.py`)
+- Plan expiring → `notify_plan_expiry_warning(user_id, plan, days_left)` (in `payments.py`)
+
+**API Endpoints**:
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/notifications/stream` | SSE endpoint — browser keeps open for push |
+| GET | `/api/notifications` | List notifications (`?limit`, `?unread_only`, `?type`) |
+| POST | `/api/notifications` | Create notification (admin/system use) |
+| PATCH | `/api/notifications/<id>/read` | Mark one as read |
+| POST | `/api/notifications/read-all` | Mark all as read |
+| DELETE | `/api/notifications/<id>` | Delete a notification |
+
+**UI**:
+- Bell icon (🔔) in header with red unread badge (top-right of bell)
+- Dropdown panel (340px) with scrollable list of up to 30 notifications
+- "Mark all read" button, type/priority icons, relative timestamps
+- Toast pop-up (bottom-right, 6s auto-dismiss) for every incoming notification
+- Clicking a notification marks it read and navigates to its `link` if set
+- Blue dot on left of unread items; highlighted background for unread
+
 ## Customer Support System (`support.py`)
 
 Enterprise-grade support ticketing. DB: `support.db`.
@@ -146,4 +183,4 @@ Coupon codes: `NEXORA`, `NEXORA90`, `HAMMAD30`, `ELITE7`, `TRYAGENT`, `AGENTELIT
 - **Core Packages**: Flask, gunicorn, requests, psutil, bcrypt, PyJWT, python-dotenv, tiktoken, razorpay.
 - **Optional/Lazy-loaded Packages**: chromadb, sentence-transformers, playwright.
 - **Third-party Services**: OpenAI, Gemini, Anthropic, Groq, OpenRouter, xAI/Grok, AWS Bedrock, Azure OpenAI, Together AI, Fireworks AI, NVIDIA NIM, DeepSeek, Mistral, Cohere, HuggingFace, Replicate, ElevenLabs, Deepgram (for various LLM and multimodal capabilities). Razorpay (payments), Resend (invoice emails).
-- **Database**: SQLite — `sessions.db` (sessions, settings, scheduler), `billing.db` (subscriptions, invoices, payment events).
+- **Database**: SQLite — `sessions.db` (sessions, settings, scheduler), `billing.db` (subscriptions, invoices, payment events), `saas_platform.db` (users, auth_sessions, notifications, request_logs, daily_token_usage, payment_dedup).

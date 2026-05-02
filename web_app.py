@@ -69,6 +69,15 @@ except Exception as _sup_err:
     _slog.getLogger(__name__).warning("[Support] Module unavailable: %s", _sup_err)
     _SUPPORT_AVAILABLE = False
 
+# ── Real-Time Notification Engine ─────────────────────────────────────────────
+try:
+    import notifications as _notif
+    _NOTIF_AVAILABLE = True
+except Exception as _notif_err:
+    import logging as _nlog
+    _nlog.getLogger(__name__).warning("[Notifications] Module unavailable: %s", _notif_err)
+    _NOTIF_AVAILABLE = False
+
 # ────────────────────────────────────────────────────────────────────────────
 # Paths & app
 # ────────────────────────────────────────────────────────────────────────────
@@ -1569,6 +1578,19 @@ def run_session(sid):
             db_chat_add(sid, "assistant", ai_reply,
                         meta={"status": status, "elapsed": usage["elapsed_seconds"],
                               "files": files[:10]})
+        except Exception:
+            pass
+        # ── Real-Time Notification: task done/failed ─────────────────────────
+        try:
+            if _NOTIF_AVAILABLE:
+                _n_uid = cfg.get("_notify_user_id", "")
+                if _n_uid:
+                    _task_label = (sess.get("task") or "")[:120]
+                    if status == "success":
+                        _notif.notify_task_complete(_n_uid, _task_label, sid=sid)
+                    elif status == "failed":
+                        _notif.notify_task_failed(_n_uid, _task_label,
+                                                  reason=f"exit code {exit_code}", sid=sid)
         except Exception:
             pass
         # Phase 14 — async self-improvement: reflect on the completed task
@@ -3152,6 +3174,14 @@ def api_queue_task():
 
     # Inject plan mode into session config
     cfg["plan_mode"] = plan_mode
+    # Pass user_id so run_session can fire completion notifications
+    try:
+        import flask as _fl
+        _req_uid = str(getattr(_fl.g, "user_id", ""))
+        if _req_uid:
+            cfg["_notify_user_id"] = _req_uid
+    except Exception:
+        pass
 
     # Managed-mode rate limiting
     if cfg.get("mode") == "managed":
@@ -10574,6 +10604,99 @@ def api_support_stats():
         return jsonify({"ok": False, "error": "Support system unavailable"}), 503
     stats = _support.get_support_stats()
     return jsonify({"ok": True, **stats})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ── Real-Time Notification API Endpoints ─────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _notif_user_id() -> str:
+    """Return current user_id for notification calls, fall back to 'anon'."""
+    try:
+        import flask as _f
+        return str(getattr(_f.g, "user_id", "anon") or "anon")
+    except Exception:
+        return "anon"
+
+
+@app.route("/api/notifications/stream")
+def api_notifications_stream():
+    """SSE endpoint — browser keeps this open to receive push notifications."""
+    if not _NOTIF_AVAILABLE:
+        return jsonify({"error": "Notification engine unavailable"}), 503
+    uid = _notif_user_id()
+    from flask import Response, stream_with_context
+    headers = {
+        "Content-Type":      "text/event-stream",
+        "Cache-Control":     "no-cache, no-transform",
+        "X-Accel-Buffering": "no",
+        "Connection":        "keep-alive",
+    }
+    return Response(stream_with_context(_notif.sse_stream(uid)), headers=headers)
+
+
+@app.route("/api/notifications", methods=["GET"])
+def api_get_notifications():
+    """GET /api/notifications — list notifications for current user."""
+    if not _NOTIF_AVAILABLE:
+        return jsonify({"ok": False, "notifications": [], "unread": 0}), 200
+    uid         = _notif_user_id()
+    limit       = min(int(request.args.get("limit", 30)), 100)
+    unread_only = request.args.get("unread_only", "").lower() in ("1", "true", "yes")
+    ntype       = request.args.get("type", "") or None
+    items       = _notif.get_notifications(uid, limit=limit, unread_only=unread_only, type=ntype)
+    unread      = _notif.count_unread(uid)
+    return jsonify({"ok": True, "notifications": items, "unread": unread})
+
+
+@app.route("/api/notifications", methods=["POST"])
+def api_create_notification():
+    """POST /api/notifications — create a notification (admin / system use)."""
+    if not _NOTIF_AVAILABLE:
+        return jsonify({"ok": False, "error": "Notification engine unavailable"}), 503
+    data     = request.get_json() or {}
+    uid      = data.get("user_id") or _notif_user_id()
+    title    = (data.get("title") or "").strip()
+    message  = (data.get("message") or "").strip()
+    ntype    = data.get("type", "system")
+    priority = data.get("priority", "info")
+    link     = data.get("link")
+    if not title or not message:
+        return jsonify({"ok": False, "error": "title and message required"}), 400
+    n = _notif.notify(user_id=uid, title=title, message=message,
+                      type=ntype, priority=priority, link=link)
+    return jsonify({"ok": True, "notification": n}), 201
+
+
+@app.route("/api/notifications/<nid>/read", methods=["PATCH"])
+def api_mark_notification_read(nid):
+    """PATCH /api/notifications/<id>/read — mark one notification as read."""
+    if not _NOTIF_AVAILABLE:
+        return jsonify({"ok": False}), 200
+    uid = _notif_user_id()
+    changed = _notif.mark_read(nid, uid)
+    unread  = _notif.count_unread(uid)
+    return jsonify({"ok": True, "changed": changed, "unread": unread})
+
+
+@app.route("/api/notifications/read-all", methods=["POST"])
+def api_mark_all_notifications_read():
+    """POST /api/notifications/read-all — mark every notification as read."""
+    if not _NOTIF_AVAILABLE:
+        return jsonify({"ok": True, "marked": 0}), 200
+    uid    = _notif_user_id()
+    marked = _notif.mark_all_read(uid)
+    return jsonify({"ok": True, "marked": marked, "unread": 0})
+
+
+@app.route("/api/notifications/<nid>", methods=["DELETE"])
+def api_delete_notification(nid):
+    """DELETE /api/notifications/<id> — remove a notification."""
+    if not _NOTIF_AVAILABLE:
+        return jsonify({"ok": False}), 200
+    uid     = _notif_user_id()
+    changed = _notif.delete_notification(nid, uid)
+    return jsonify({"ok": changed})
 
 
 # ─────────────────────────────────────────────────────────────────────────────
