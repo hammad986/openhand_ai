@@ -1,0 +1,45 @@
+Proceed with Phase: Enterprise Cookie Authentication & Session Persistence (Priority 1).
+
+The current JWT system is working, but it lacks browser persistence. If a user refreshes the page, they risk losing their session. We must upgrade to a production-grade, secure Cookie-based persistence model using HttpOnly cookies for the refresh token.
+
+🎯 OBJECTIVE
+1. Implement Secure, HttpOnly cookies for Refresh Tokens.
+2. Build a Silent Refresh (Auto-Login) flow on page load.
+3. Remove any vulnerable local storage implementations for refresh tokens.
+4. Ensure seamless UX (users stay logged in across tabs and reloads).
+
+🧱 PART 1 — BACKEND (Flask / web_app.py modifications)
+Modify the Auth endpoints to handle cookies securely:
+- POST `/api/auth/login` and `/api/auth/signup`:
+  * Continue returning the short-lived `access_token` in the JSON response.
+  * Instead of returning the `refresh_token` in JSON, SET it as a secure cookie.
+  * Cookie Flags REQUIRED: `HttpOnly=True`, `Secure=True` (or auto-detect based on env), `SameSite='Lax'`, and an appropriate `max_age` (e.g., 30 days).
+
+- POST `/api/auth/refresh` (Silent Refresh endpoint):
+  * Read the `refresh_token` directly from `request.cookies.get('refresh_token')`.
+  * Validate it against the database.
+  * Return a NEW `access_token` in JSON.
+  * Optionally rotate the refresh token and set a new HttpOnly cookie.
+
+- POST `/api/auth/logout`:
+  * Clear the session in the database.
+  * EXPLICITLY delete/clear the `refresh_token` cookie in the response (`response.delete_cookie('refresh_token')`).
+
+⚙️ PART 2 — FRONTEND (JavaScript / index.html modifications)
+Modify the client-side Auth Engine:
+- Remove any logic that saves the `refresh_token` to `localStorage`.
+- Create a `checkSession()` or `silentRefresh()` function.
+- On Page Load (`nxInit` or DOMContentLoaded), immediately call `/api/auth/refresh`.
+  * If it returns 200 OK with a new access token, set the token in memory/API headers, update the UI to "Logged In" state, and bypass the login screen.
+  * If it returns 401/403, clear memory and show the standard Auth Gate / Login screen.
+- Ensure the `fetch` API calls for authentication include `credentials: 'include'` so cookies are sent automatically.
+
+🛡️ PART 3 — SECURITY VALIDATION
+- Ensure the UI does NOT flash the login screen for 2 seconds before auto-logging in (use a minimal loading state or skeleton if needed).
+- Verify that CSRF protections remain intact.
+
+🚀 FINAL RESULT
+System must confirm:
+"SECURE HTTP-ONLY COOKIE AUTHENTICATION AND SILENT AUTO-LOGIN FULLY IMPLEMENTED."
+
+No broken states. No infinite login loops. Execute now.

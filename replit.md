@@ -79,6 +79,39 @@ Production-grade account security layer added on top of the auth system.
 
 **Email** (via Resend `EMAIL_API_KEY`): password reset email with expiry warning + ignore notice; verification email with branded HTML template.
 
+## Cookie Auth & Account Control
+
+Enterprise-grade session security layer replacing localStorage refresh tokens.
+
+### Cookie Authentication
+- **`nx_refresh` HttpOnly cookie** — set on login, signup, and OAuth callbacks; never exposed to JavaScript
+- **30-day expiry**, `SameSite=Lax`, `Secure` (auto, off in debug mode), `Path=/`
+- **Token rotation** — every `/api/auth/refresh` call issues a new cookie (old one revoked)
+- **Silent auto-login** — `nxAuthInit()` always attempts a silent refresh via cookie on page load; auth gate only shown if cookie is absent/expired
+- **OAuth callbacks** — Google + GitHub set cookie in redirect response; `nx_refresh` no longer appears in the redirect URL
+- **Backward compatibility** — refresh and logout still accept `refresh_token` in JSON body as fallback
+
+### Frontend Changes (`index.html`)
+- `NX_REFRESH_KEY` removed — refresh token never stored in localStorage
+- `nxRefreshNow()` — bare POST with `credentials: 'include'`, no body
+- `nxLogout()` — bare POST with `credentials: 'include'`, no body
+- `nxAuthInit()` — async, always attempts silent refresh first; shows gate only on 401
+
+### Account Control API Endpoints
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/auth/change-password` | ✓ | Verify old pw, set new pw, revoke all OTHER sessions |
+| POST | `/api/auth/delete-account` | ✓ | Verify pw (or "DELETE" for OAuth), wipe all user data |
+
+### Account Control UI
+- **Settings → 🔐 Security tab** (new, between Sessions and Memory):
+  - Change Password form (3 fields: current, new, confirm)
+  - Inline success/error feedback; button disabled during request
+  - Note that other sessions are revoked, current stays active
+- **Settings → Account → Delete Account** — now opens a modal (no more `window.confirm`):
+  - Red-bordered modal with password field (or "DELETE" text for OAuth users)
+  - Clears tokens, hides gate shows auth gate on success
+
 ## External Dependencies
 - **Core Packages**: Flask, gunicorn, requests, psutil, bcrypt, PyJWT, python-dotenv, tiktoken, razorpay.
 - **Optional/Lazy-loaded Packages**: chromadb, sentence-transformers, playwright.

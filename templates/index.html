@@ -6473,6 +6473,7 @@ window.addEventListener('load', nxInit);
                 <button class="settings-tab"        data-stab="intelligence" onclick="switchSettingsTab('intelligence')">🧠 Intelligence</button>
                 <button class="settings-tab"        data-stab="plan"         onclick="switchSettingsTab('plan')">💳 Plan</button>
                 <button class="settings-tab"        data-stab="sessions"     onclick="switchSettingsTab('sessions')">Sessions</button>
+                <button class="settings-tab"        data-stab="security"     onclick="switchSettingsTab('security')">🔐 Security</button>
                 <button class="settings-tab"        data-stab="memory"       onclick="switchSettingsTab('memory')">Memory</button>
                 <button class="settings-tab"        data-stab="advanced"     onclick="switchSettingsTab('advanced')">Advanced</button>
                 <button class="settings-tab"        data-stab="billing-setup" onclick="switchSettingsTab('billing-setup')">💳 Billing Setup</button>
@@ -6699,6 +6700,47 @@ window.addEventListener('load', nxInit);
                     <div id="sessionsList">
                         <div class="empty" style="padding:20px 0">No sessions yet.</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Security tab -->
+            <div class="settings-pane" id="spane-security">
+                <div class="section">
+                    <h3>Change Password</h3>
+                    <div class="info-box" style="font-size:0.82rem;margin-bottom:14px">
+                        Update your password. All other active sessions will be signed out immediately.
+                        <strong style="color:var(--accent)"> Your current session stays active.</strong>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div>
+                            <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:4px">Current Password</label>
+                            <input type="password" id="sec-old-pw" placeholder="••••••••"
+                                   style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:0.87rem">
+                        </div>
+                        <div>
+                            <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:4px">New Password <span style="color:var(--muted);font-weight:400">(min 8 chars)</span></label>
+                            <input type="password" id="sec-new-pw" placeholder="••••••••"
+                                   style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:0.87rem">
+                        </div>
+                        <div>
+                            <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:4px">Confirm New Password</label>
+                            <input type="password" id="sec-confirm-pw" placeholder="••••••••"
+                                   style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:0.87rem">
+                        </div>
+                        <div id="sec-pw-msg" style="font-size:0.82rem;min-height:18px"></div>
+                        <button onclick="nxChangePassword()" id="sec-pw-btn"
+                                style="background:var(--purple,#bc8cff);color:#0d1117;border:none;border-radius:6px;padding:9px 20px;font-size:0.87rem;font-weight:700;cursor:pointer;font-family:inherit;align-self:flex-start">
+                            Update Password
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3 style="color:var(--muted)">Active Sessions</h3>
+                    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:10px">
+                        Changing your password signs out all other devices. Use the Sessions tab to view and revoke individual sessions.
+                    </div>
+                    <button class="btn" onclick="switchSettingsTab('sessions')" style="font-size:0.8rem">View All Sessions →</button>
                 </div>
             </div>
 
@@ -6998,8 +7040,8 @@ window.addEventListener('load', nxInit);
                         </div>
                         <div style="padding:12px 14px;background:#1f0d0d;border:1px solid #5a1d1d;border-radius:8px">
                             <div style="font-size:0.87rem;font-weight:600;color:#f85149;margin-bottom:4px">Delete My Account</div>
-                            <div style="font-size:0.78rem;color:var(--muted,#8b949e);margin-bottom:10px">Permanently delete your account and all associated data. This action cannot be undone.</div>
-                            <button onclick="nxRequestAccountDeletion()" style="background:#f85149;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:600">Delete Account</button>
+                            <div style="font-size:0.78rem;color:var(--muted,#8b949e);margin-bottom:10px">Permanently delete your account and all associated data. This action is <strong style="color:#f85149">irreversible</strong>.</div>
+                            <button onclick="nxShowDeleteModal()" style="background:#f85149;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:600">Delete Account</button>
                         </div>
                     </div>
                 </div>
@@ -17454,24 +17496,22 @@ console.log('[Phase 18] Background Autonomous Agents + Task Scheduler active.');
 (function() {
 'use strict';
 
-const NX_TOKEN_KEY   = 'nx_access_token';
-const NX_REFRESH_KEY = 'nx_refresh_token';
-const NX_USER_KEY    = 'nx_user_info';
+const NX_TOKEN_KEY = 'nx_access_token';
+const NX_USER_KEY  = 'nx_user_info';
 
 // ── Token storage helpers ──────────────────────────────────────────
-function nxGetToken()   { return localStorage.getItem(NX_TOKEN_KEY)   || ''; }
-function nxGetRefresh() { return localStorage.getItem(NX_REFRESH_KEY) || ''; }
-function nxGetUser()    { try { return JSON.parse(localStorage.getItem(NX_USER_KEY) || '{}'); } catch { return {}; } }
+// Refresh token is now HttpOnly cookie — never touches localStorage
+function nxGetToken() { return localStorage.getItem(NX_TOKEN_KEY) || ''; }
+function nxGetUser()  { try { return JSON.parse(localStorage.getItem(NX_USER_KEY) || '{}'); } catch { return {}; } }
 
 function nxStoreTokens(data, userName) {
-    if (data.access_token)  localStorage.setItem(NX_TOKEN_KEY,   data.access_token);
-    if (data.refresh_token) localStorage.setItem(NX_REFRESH_KEY, data.refresh_token);
-    if (userName)           localStorage.setItem(NX_USER_KEY, JSON.stringify({ name: userName }));
+    if (data.access_token) localStorage.setItem(NX_TOKEN_KEY, data.access_token);
+    // refresh_token intentionally NOT stored in localStorage — handled by HttpOnly cookie
+    if (userName) localStorage.setItem(NX_USER_KEY, JSON.stringify({ name: userName }));
 }
 
 function nxClearTokens() {
     localStorage.removeItem(NX_TOKEN_KEY);
-    localStorage.removeItem(NX_REFRESH_KEY);
     localStorage.removeItem(NX_USER_KEY);
 }
 
@@ -17501,24 +17541,24 @@ function nxScheduleRefresh(expiresIn) {
 }
 
 async function nxRefreshNow() {
-    const refresh = nxGetRefresh();
-    if (!refresh) { nxShowAuthGate(); return; }
+    // Refresh token is sent automatically via HttpOnly cookie — no body or Content-Type needed
     try {
-        const r = await fetch('/api/auth/refresh', {
+        const r = await _origFetch('/api/auth/refresh', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refresh }),
+            credentials: 'include',
         });
         const d = await r.json();
         if (d.ok) {
             nxStoreTokens(d);
             nxScheduleRefresh(d.expires_in || 900);
+            return true;
         } else {
             nxClearTokens();
-            nxShowAuthGate();
+            return false;
         }
     } catch {
         nxScheduleRefresh(60); // retry in 1 min on network error
+        return false;
     }
 }
 
@@ -17806,6 +17846,133 @@ window.nxDoSignup = async function() {
     }
 };
 
+// ── Change Password ─────────────────────────────────────────────────
+window.nxChangePassword = async function() {
+    const oldPw    = (document.getElementById('sec-old-pw')?.value     || '').trim();
+    const newPw    = (document.getElementById('sec-new-pw')?.value     || '');
+    const confirmPw= (document.getElementById('sec-confirm-pw')?.value || '');
+    const msgEl    = document.getElementById('sec-pw-msg');
+    const btn      = document.getElementById('sec-pw-btn');
+
+    const setMsg = (text, color) => {
+        if (msgEl) { msgEl.textContent = text; msgEl.style.color = color; }
+    };
+
+    if (!oldPw || !newPw || !confirmPw) { setMsg('All fields are required.', 'var(--red,#f85149)'); return; }
+    if (newPw.length < 8)               { setMsg('New password must be at least 8 characters.', 'var(--red,#f85149)'); return; }
+    if (newPw !== confirmPw)             { setMsg('New passwords do not match.', 'var(--red,#f85149)'); return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Updating…'; }
+    setMsg('', '');
+    try {
+        const r = await fetch('/api/auth/change-password', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ old_password: oldPw, new_password: newPw }),
+        });
+        const d = await r.json();
+        if (d.ok) {
+            setMsg('✓ ' + d.message, 'var(--green,#3fb950)');
+            ['sec-old-pw','sec-new-pw','sec-confirm-pw'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+        } else {
+            setMsg(d.error || 'Password change failed.', 'var(--red,#f85149)');
+        }
+    } catch {
+        setMsg('Network error. Please try again.', 'var(--red,#f85149)');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Update Password'; }
+    }
+};
+
+// ── Delete Account Modal ─────────────────────────────────────────────
+window.nxShowDeleteModal = function() {
+    const existing = document.getElementById('nx-delete-modal');
+    if (existing) { existing.remove(); return; }
+
+    const token = nxDecodeJWT(nxGetToken());
+    const provider = token?.provider || 'local';
+    const isOAuth  = provider !== 'local';
+
+    const modal = document.createElement('div');
+    modal.id = 'nx-delete-modal';
+    Object.assign(modal.style, {
+        position: 'fixed', inset: '0', zIndex: '999999',
+        background: 'rgba(13,17,23,0.92)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        fontFamily: "'Inter',sans-serif",
+    });
+    modal.innerHTML = `
+        <div style="background:#1c0d0d;border:2px solid #f85149;border-radius:14px;padding:28px 28px 22px;max-width:400px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,0.7)">
+            <div style="font-size:1.4rem;font-weight:800;color:#f85149;margin-bottom:6px">⚠ Delete Account</div>
+            <div style="font-size:0.87rem;color:#c9d1d9;margin-bottom:18px;line-height:1.6">
+                This will <strong>permanently delete</strong> your account, all sessions, chat history, and data.<br>
+                <strong>This action cannot be undone.</strong>
+            </div>
+            <div style="margin-bottom:14px">
+                <label style="font-size:0.78rem;color:#8b949e;display:block;margin-bottom:5px">
+                    ${isOAuth ? 'Type <strong style="color:#f85149">DELETE</strong> to confirm' : 'Enter your password to confirm'}
+                </label>
+                <input type="${isOAuth ? 'text' : 'password'}" id="nx-del-confirm"
+                       placeholder="${isOAuth ? 'DELETE' : '••••••••'}"
+                       style="width:100%;background:#0d1117;border:1px solid #f85149;border-radius:6px;padding:9px 12px;color:#e6edf3;font-size:0.87rem">
+            </div>
+            <div id="nx-del-msg" style="font-size:0.82rem;color:#f85149;min-height:18px;margin-bottom:12px"></div>
+            <div style="display:flex;gap:10px">
+                <button onclick="document.getElementById('nx-delete-modal').remove()"
+                        style="flex:1;padding:9px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#8b949e;font-size:0.87rem;cursor:pointer;font-family:inherit">
+                    Cancel
+                </button>
+                <button id="nx-del-btn" onclick="nxConfirmDeleteAccount()"
+                        style="flex:1;padding:9px;border-radius:6px;border:none;background:#f85149;color:#fff;font-size:0.87rem;font-weight:700;cursor:pointer;font-family:inherit">
+                    Delete Forever
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => document.getElementById('nx-del-confirm')?.focus(), 50);
+};
+
+window.nxConfirmDeleteAccount = async function() {
+    const confirm = (document.getElementById('nx-del-confirm')?.value || '').trim();
+    const msgEl   = document.getElementById('nx-del-msg');
+    const btn     = document.getElementById('nx-del-btn');
+
+    if (!confirm) {
+        if (msgEl) msgEl.textContent = 'This field is required.';
+        return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
+    try {
+        const r = await fetch('/api/auth/delete-account', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: confirm }),
+        });
+        const d = await r.json();
+        if (d.ok) {
+            nxClearTokens();
+            clearTimeout(_nxRefreshTimer);
+            document.getElementById('nx-delete-modal')?.remove();
+            nxRemoveUserBadge();
+            nxShowAuthGate();
+            setTimeout(() => nxAuthErr('Your account has been permanently deleted.'), 200);
+        } else {
+            if (msgEl) msgEl.textContent = d.error || 'Deletion failed. Please try again.';
+            if (btn) { btn.disabled = false; btn.textContent = 'Delete Forever'; }
+        }
+    } catch {
+        if (msgEl) msgEl.textContent = 'Network error. Please try again.';
+        if (btn) { btn.disabled = false; btn.textContent = 'Delete Forever'; }
+    }
+};
+
 // ── Cookie Consent ─────────────────────────────────────────────────
 window.nxAcceptCookies = function() {
     localStorage.setItem('nx_cookie_ok', '1');
@@ -17841,12 +18008,12 @@ function nxGetProfile() {
 
 // ── Logout ─────────────────────────────────────────────────────────
 window.nxLogout = async function() {
-    const refresh = nxGetRefresh();
+    // Cookie is sent automatically; no need to pass refresh_token in body
     try {
         await _origFetch('/api/auth/logout', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refresh }),
         });
     } catch {}
     nxClearTokens();
@@ -17970,46 +18137,45 @@ window.nxRevokeSession = async function(sessionId, btn) {
 // ── Handle OAuth callback tokens in URL ────────────────────────────
 function nxHandleOAuthCallback() {
     const params = new URLSearchParams(window.location.search);
-    const token   = params.get('nx_token');
-    const refresh = params.get('nx_refresh');
-    const name    = params.get('nx_name');
-    const error   = params.get('auth_error');
+    const token  = params.get('nx_token');
+    const name   = params.get('nx_name');
+    const error  = params.get('auth_error');
 
     if (error) {
         const msgs = {
-            invalid_state:  'OAuth security check failed. Please try again.',
-            no_email:       'Could not retrieve email from OAuth provider.',
-            google_failed:  'Google sign-in failed. Please try again.',
-            github_failed:  'GitHub sign-in failed. Please try again.',
+            invalid_state: 'OAuth security check failed. Please try again.',
+            no_email:      'Could not retrieve email from OAuth provider.',
+            google_failed: 'Google sign-in failed. Please try again.',
+            github_failed: 'GitHub sign-in failed. Please try again.',
         };
+        history.replaceState({}, '', window.location.pathname);
         nxShowAuthGate();
         setTimeout(() => nxAuthErr(msgs[error] || 'Sign-in failed'), 200);
-        history.replaceState({}, '', window.location.pathname);
-        return;
+        return true; // handled (error case)
     }
 
-    if (token && refresh) {
-        nxStoreTokens({ access_token: token, refresh_token: refresh }, decodeURIComponent(name || ''));
+    if (token) {
+        // Refresh cookie is already set by the server-side redirect
+        nxStoreTokens({ access_token: token }, decodeURIComponent(name || ''));
         history.replaceState({}, '', window.location.pathname);
         nxScheduleRefresh(900);
         nxHideAuthGate();
         nxRenderUserBadge();
+        setTimeout(nxCheckVerification, 2000);
         console.log('[Auth] OAuth sign-in successful');
+        return true; // handled
     }
+
+    return false; // nothing to handle
 }
 
-// ── Init: check auth state on page load ────────────────────────────
-function nxAuthInit() {
-    nxHandleOAuthCallback();
+// ── Init: check auth state on page load — no flash, cookie-first ───
+async function nxAuthInit() {
+    // Handle OAuth callback first — if it handles it, we're done
+    if (nxHandleOAuthCallback()) return;
 
-    const token   = nxGetToken();
-    const refresh = nxGetRefresh();
-
-    if (!token && !refresh) {
-        nxShowAuthGate();
-        return;
-    }
-
+    // If we have a non-expired access token in memory, use it immediately
+    const token = nxGetToken();
     if (token && !nxIsTokenExpired(token)) {
         nxHideAuthGate();
         nxRenderUserBadge();
@@ -18017,19 +18183,16 @@ function nxAuthInit() {
         return;
     }
 
-    if (refresh) {
-        nxRefreshNow().then(() => {
-            if (nxGetToken()) {
-                nxHideAuthGate();
-                nxRenderUserBadge();
-            } else {
-                nxShowAuthGate();
-            }
-        });
-        return;
+    // Always attempt silent refresh via HttpOnly cookie —
+    // this covers: expired access token, fresh page load, cross-tab restore
+    const ok = await nxRefreshNow();
+    if (ok) {
+        nxHideAuthGate();
+        nxRenderUserBadge();
+    } else {
+        nxClearTokens();
+        nxShowAuthGate();
     }
-
-    nxShowAuthGate();
 }
 
 if (document.readyState === 'loading') {

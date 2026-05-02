@@ -8044,6 +8044,33 @@ def _get_oauth_redirect_base() -> str:
     return request.host_url.rstrip("/")
 
 
+# ─── Cookie helpers ───────────────────────────────────────────────────────────
+
+_NX_COOKIE = "nx_refresh"
+_NX_COOKIE_DAYS = int(os.environ.get("REFRESH_TOKEN_DAYS", "30"))
+
+def _nx_cookie_secure() -> bool:
+    return os.environ.get("FLASK_DEBUG", "0").strip() != "1"
+
+def _nx_set_refresh_cookie(resp, refresh_token: str):
+    resp.set_cookie(
+        _NX_COOKIE, refresh_token,
+        max_age=_NX_COOKIE_DAYS * 24 * 3600,
+        httponly=True,
+        secure=_nx_cookie_secure(),
+        samesite="Lax",
+        path="/",
+    )
+    return resp
+
+def _nx_clear_refresh_cookie(resp):
+    resp.delete_cookie(_NX_COOKIE, path="/")
+    return resp
+
+def _nx_get_refresh_cookie() -> str:
+    return request.cookies.get(_NX_COOKIE, "").strip()
+
+
 # ─── Signup ───────────────────────────────────────────────────────────────────
 
 @app.route("/api/auth/signup", methods=["POST"])
@@ -8063,10 +8090,15 @@ def api_auth_signup():
         return jsonify({"ok": False, "error": result}), 400
 
     user_id = result
+    from security import get_client_ip
     ip = get_client_ip(request)
     device_info = request.headers.get("User-Agent", "")[:255]
     tokens = create_session(user_id, device_info=device_info, ip_address=ip)
-    return jsonify({"ok": True, "message": "Account created", **tokens})
+    resp = jsonify({"ok": True, "message": "Account created",
+                    "access_token": tokens["access_token"],
+                    "expires_in":   tokens["expires_in"],
+                    "session_id":   tokens["session_id"]})
+    return _nx_set_refresh_cookie(resp, tokens["refresh_token"])
 
 
 # ─── Login ────────────────────────────────────────────────────────────────────
@@ -8090,35 +8122,155 @@ def api_auth_login():
     user_id = result
     device_info = request.headers.get("User-Agent", "")[:255]
     tokens = create_session(user_id, device_info=device_info, ip_address=ip)
-    return jsonify({"ok": True, **tokens})
+    resp = jsonify({"ok": True,
+                    "access_token": tokens["access_token"],
+                    "expires_in":   tokens["expires_in"],
+                    "session_id":   tokens["session_id"]})
+    return _nx_set_refresh_cookie(resp, tokens["refresh_token"])
 
 
 # ─── Refresh ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/auth/refresh", methods=["POST"])
 def api_auth_refresh():
-    data = request.json or {}
-    refresh_token = data.get("refresh_token", "").strip()
+    # Cookie-first; fall back to JSON body for backward compatibility
+    refresh_token = _nx_get_refresh_cookie()
     if not refresh_token:
-        return jsonify({"ok": False, "error": "refresh_token required"}), 400
+        data = request.get_json(silent=True) or {}
+        refresh_token = data.get("refresh_token", "").strip()
+    if not refresh_token:
+        return jsonify({"ok": False, "error": "No refresh token"}), 401
 
     from security import get_client_ip
     ip = get_client_ip(request)
     success, result = refresh_access_token(refresh_token, ip_address=ip)
     if not success:
-        return jsonify({"ok": False, "error": result}), 401
-    return jsonify({"ok": True, **result})
+        err_resp = jsonify({"ok": False, "error": result})
+        return _nx_clear_refresh_cookie(err_resp), 401
+    resp = jsonify({"ok": True,
+                    "access_token": result["access_token"],
+                    "expires_in":   result["expires_in"]})
+    return _nx_set_refresh_cookie(resp, result["refresh_token"])
 
 
 # ─── Logout ───────────────────────────────────────────────────────────────────
 
 @app.route("/api/auth/logout", methods=["POST"])
 def api_auth_logout():
-    data = request.json or {}
-    refresh_token = data.get("refresh_token", "").strip()
+    # Read from cookie first, then JSON body
+    refresh_token = _nx_get_refresh_cookie()
+    if not refresh_token:
+        data = request.get_json(silent=True) or {}
+        refresh_token = data.get("refresh_token", "").strip()
     if refresh_token:
         revoke_session(refresh_token)
-    return jsonify({"ok": True, "message": "Logged out"})
+    resp = jsonify({"ok": True, "message": "Logged out"})
+    return _nx_clear_refresh_cookie(resp)
+
+
+# ─── Change Password ──────────────────────────────────────────────────────────
+
+@app.route("/api/auth/change-password", methods=["POST"])
+@token_required
+def api_auth_change_password():
+    import bcrypt as _bcrypt
+    import sqlite3 as _sqlite3
+
+    data = request.json or {}
+    old_password = data.get("old_password", "")
+    new_password = data.get("new_password", "")
+
+    if not old_password or not new_password:
+        return jsonify({"ok": False, "error": "Both current and new passwords are required"}), 400
+    if len(new_password) < 8:
+        return jsonify({"ok": False, "error": "New password must be at least 8 characters"}), 400
+
+    conn = _sqlite3.connect("saas_platform.db")
+    c = conn.cursor()
+    c.execute("SELECT password FROM users WHERE id = ?", (g.user_id,))
+    row = c.fetchone()
+    if not row or not row[0]:
+        conn.close()
+        return jsonify({"ok": False, "error": "Password change is not available for OAuth accounts"}), 400
+
+    if not _bcrypt.checkpw(old_password.encode("utf-8"), row[0].encode("utf-8")):
+        conn.close()
+        return jsonify({"ok": False, "error": "Current password is incorrect"}), 401
+
+    new_hash = _bcrypt.hashpw(new_password.encode("utf-8"), _bcrypt.gensalt()).decode("utf-8")
+    c.execute("UPDATE users SET password = ? WHERE id = ?", (new_hash, g.user_id))
+
+    # Revoke all OTHER sessions; keep the current device logged in
+    current_refresh = _nx_get_refresh_cookie()
+    if current_refresh:
+        c.execute(
+            "DELETE FROM auth_sessions WHERE user_id = ? AND refresh_token != ?",
+            (g.user_id, current_refresh),
+        )
+    else:
+        c.execute("DELETE FROM auth_sessions WHERE user_id = ?", (g.user_id,))
+
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True, "message": "Password updated. All other devices have been signed out."})
+
+
+# ─── Delete Account ───────────────────────────────────────────────────────────
+
+@app.route("/api/auth/delete-account", methods=["POST"])
+@token_required
+def api_auth_delete_account():
+    import bcrypt as _bcrypt
+    import sqlite3 as _sqlite3
+
+    data = request.json or {}
+    password = data.get("password", "")
+    if not password:
+        return jsonify({"ok": False, "error": "Password confirmation required"}), 400
+
+    conn = _sqlite3.connect("saas_platform.db")
+    c = conn.cursor()
+    c.execute("SELECT password, provider FROM users WHERE id = ?", (g.user_id,))
+    row = c.fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"ok": False, "error": "User not found"}), 404
+
+    pw_hash, provider = row[0], (row[1] or "local")
+    # Local accounts must verify password; OAuth accounts must type "DELETE"
+    if provider == "local":
+        if not pw_hash or not _bcrypt.checkpw(password.encode("utf-8"), pw_hash.encode("utf-8")):
+            conn.close()
+            return jsonify({"ok": False, "error": "Incorrect password"}), 401
+    else:
+        if password.strip().upper() != "DELETE":
+            conn.close()
+            return jsonify({"ok": False, "error": 'Type DELETE to confirm'}), 400
+
+    uid = g.user_id
+    c.execute("DELETE FROM auth_sessions WHERE user_id = ?", (uid,))
+    # Best-effort deletes for tables that may or may not exist
+    for tbl in ("password_resets", "email_verifications"):
+        try:
+            c.execute(f"DELETE FROM {tbl} WHERE user_id = ?", (uid,))
+        except _sqlite3.OperationalError:
+            pass
+    c.execute("DELETE FROM users WHERE id = ?", (uid,))
+    conn.commit()
+    conn.close()
+
+    # Best-effort: remove agent sessions from sessions.db
+    try:
+        sconn = _sqlite3.connect("sessions.db")
+        sc = sconn.cursor()
+        sc.execute("DELETE FROM sessions WHERE user_id = ?", (uid,))
+        sconn.commit()
+        sconn.close()
+    except Exception:
+        pass
+
+    resp = jsonify({"ok": True, "message": "Account permanently deleted"})
+    return _nx_clear_refresh_cookie(resp)
 
 
 @app.route("/api/auth/logout-all", methods=["POST"])
@@ -8234,11 +8386,12 @@ def api_auth_google_callback():
         device_info = request.headers.get("User-Agent", "")[:255]
         tokens = create_session(user_id, device_info=device_info, ip_address=ip)
 
-        return redirect(
+        from urllib.parse import quote as _quote
+        resp = redirect(
             f"/?nx_token={tokens['access_token']}"
-            f"&nx_refresh={tokens['refresh_token']}"
-            f"&nx_name={__import__('urllib.parse', fromlist=['quote']).quote(name)}"
+            f"&nx_name={_quote(name)}"
         )
+        return _nx_set_refresh_cookie(resp, tokens["refresh_token"])
     except Exception as e:
         logger.error("[OAuth/Google] callback error: %s", e)
         return redirect("/?auth_error=google_failed")
@@ -8330,11 +8483,12 @@ def api_auth_github_callback():
         device_info = request.headers.get("User-Agent", "")[:255]
         tokens = create_session(user_id, device_info=device_info, ip_address=ip)
 
-        return redirect(
+        from urllib.parse import quote as _quote
+        resp = redirect(
             f"/?nx_token={tokens['access_token']}"
-            f"&nx_refresh={tokens['refresh_token']}"
-            f"&nx_name={__import__('urllib.parse', fromlist=['quote']).quote(name)}"
+            f"&nx_name={_quote(name)}"
         )
+        return _nx_set_refresh_cookie(resp, tokens["refresh_token"])
     except Exception as e:
         logger.error("[OAuth/GitHub] callback error: %s", e)
         return redirect("/?auth_error=github_failed")

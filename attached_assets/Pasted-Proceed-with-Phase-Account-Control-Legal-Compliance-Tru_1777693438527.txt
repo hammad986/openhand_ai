@@ -1,0 +1,163 @@
+Proceed with Phase: Account Control + Legal Compliance + Trust Layer.
+
+The authentication system is now production-grade. The next step is to complete user trust, legal compliance, and full account control features required for a real SaaS platform.
+
+This phase must be implemented with strict correctness, security, and production-readiness. No placeholders, no partial flows.
+
+---
+
+# 🎯 OBJECTIVE
+
+Implement:
+
+1. Change Password (in-app)
+2. Delete Account (full data wipe)
+3. Legal Pages (Privacy, Terms, Refund)
+4. Email Notifications (critical flows)
+5. Signup compliance enforcement
+
+---
+
+# 🔐 PART 1 — CHANGE PASSWORD (IN-APP)
+
+Backend:
+
+* POST `/api/auth/change-password`
+
+  * Requires: old_password, new_password
+  * Validate old password using bcrypt
+  * Enforce strong password rules (min 8 chars, mixed)
+  * Update password hash
+  * Revoke all refresh sessions except current
+
+Frontend:
+
+* Add in Settings → Security section
+* Fields: Old Password, New Password, Confirm Password
+* Show success/error messages
+* Auto logout all other sessions
+
+---
+
+# 🗑️ PART 2 — DELETE ACCOUNT (CRITICAL)
+
+Backend:
+
+* POST `/api/auth/delete-account`
+
+  * Require password confirmation
+  * Delete:
+
+    * user record
+    * sessions
+    * chat history
+    * memory
+    * artifacts/files
+  * Return success response
+
+Frontend:
+
+* Settings → Danger Zone
+* "Delete Account" button with confirmation modal
+* Warning text:
+  "This action is permanent and cannot be undone."
+
+---
+
+# ⚖️ PART 3 — LEGAL PAGES
+
+Create routes:
+
+* `/privacy-policy`
+* `/terms-of-service`
+* `/refund-policy`
+
+Content must include:
+
+Privacy:
+
+* Data collection (email, prompts, usage)
+* Third-party providers (AI APIs, Razorpay)
+* Data retention & deletion
+* Contact email
+
+Terms:
+
+* Acceptable use
+* AI limitation disclaimer
+* Abuse policy
+* Termination rights
+
+Refund:
+
+* Subscription rules
+* Refund eligibility
+* Non-refundable cases
+
+---
+
+# 🎨 PART 4 — UI INTEGRATION
+
+* Add footer across app:
+  Privacy • Terms • Refund
+
+* Add links in:
+
+  * Login/Signup screen
+  * Settings panel
+
+---
+
+# ✔️ PART 5 — SIGNUP COMPLIANCE
+
+* Add checkbox:
+  "I agree to Terms & Privacy Policy"
+
+* Block signup if unchecked
+
+---
+
+# 📧 PART 6 — EMAIL SYSTEM (MANDATORY)
+
+Integrate email for:
+
+1. Signup welcome email
+2. Email verification
+3. Password reset
+4. Payment success (invoice/receipt)
+5. Plan expiry warning (optional but recommended)
+
+Use existing EMAIL_API_KEY (Resend)
+
+---
+
+# 🛡️ PART 7 — BASIC DATA RIGHTS
+
+Add in Settings:
+
+* "Export My Data" (JSON download)
+* "Delete My Data" (same as account delete)
+
+---
+
+# 🧪 PART 8 — VALIDATION
+
+Verify:
+
+* Password change works correctly
+* Account deletion removes all data
+* Legal pages accessible everywhere
+* Signup requires agreement checkbox
+* Emails send successfully
+
+---
+
+# 🚀 FINAL RESULT
+
+System must confirm:
+
+"ACCOUNT CONTROL + LEGAL COMPLIANCE + TRUST LAYER FULLY IMPLEMENTED"
+
+No broken flows. No missing UI links. No insecure operations.
+
+Execute now.
