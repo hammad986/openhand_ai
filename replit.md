@@ -21,6 +21,28 @@ A comprehensive real SaaS billing system is integrated, including `payments.py` 
 
 The authentication system is multi-tenant, managing `users` and `auth_sessions` in `saas_platform.db`. It supports email/password and OAuth (Google, GitHub) logins, JWT access tokens, refresh token rotation, and session management. An Idempotency + Billing Safety Layer (`idempotency.py`) provides transaction safety, daily token usage tracking, payment deduplication, provider failure logging, and protected routes with caching and replay mechanisms. A Real-Time Notification & Event System (`notifications.py`) offers persistent, prioritized, SSE-pushed notifications with email fallbacks, storing data in `saas_platform.db`. A Customer Support System (`support.py`) manages support tickets in `support.db`, featuring AI auto-tagging, billing info auto-attachment, and email notifications.
 
+## Phase 33 — Real-Time AI Execution Visualization
+
+Transparent AI UX layer showing live execution state directly from the existing SSE session log stream. No fake animations — all updates reflect real backend execution state.
+
+**Components:**
+- **⚡ Live tab** — New primary tab in the center panel with:
+  - **Execution Pipeline Bar** — Planning → Coding → Debugging → Done with animated pulsing dot on the active stage
+  - **Live Code Stream pane** — Left half shows code lines streamed in real-time as the agent writes files, with file label display and auto-scroll toggle
+  - **Live Terminal pane** — Right half shows terminal commands, shell output, errors, and system messages with color-coded line classes (cmd=blue, ok=green, err=red, warn=amber, info=purple)
+  - **Status bar** — Live counts of total lines, code chunks, and commands processed; connection status
+- **Compact pipeline bar** — shown at the top of the Logs tab during execution with a "⚡ Full View" button; auto-hidden when idle
+- **Auto-switch** — Automatically switches to Live tab when a session starts (if user is on Logs tab)
+- **Pulsing tab dot** — The Live tab button shows a pulsing green dot while a session is running
+
+**Implementation:**
+- `NxExecVis` JS module (IIFE in `templates/index.html`) hooks into `ingestLogRow()` via monkey-patch to intercept every SSE log row the instant it arrives
+- Phase detection uses regex patterns on log text (`[STAGE]`, `[STEP`, `[RETRY]`, `[ERROR]`, `▶ Starting task`, etc.) — same markers the backend already emits
+- Code chunk detection identifies Python/JS/HTML/CSS/SQL lines and streams them to the code pane
+- Terminal line detection identifies shell commands, `Running:`, `$`, pip/npm/git/etc. prefixes
+- Session lifecycle tracked by polling the `#stStatus` DOM element every 600ms (no new backend endpoints needed)
+- CSS specificity carefully managed: ID selectors avoided for display control to not override `.nx-tab-content` class
+
 ## Legal & Compliance Layer
 
 Standalone legal pages + full UI integration added for payment/data compliance.

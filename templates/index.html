@@ -1477,6 +1477,141 @@
         transition:width 0.4s ease;
     }
 
+    /* ═══════════════════════════════════════════════════════
+       PHASE 33 — Real-Time AI Execution Visualization
+       ═══════════════════════════════════════════════════════ */
+
+    /* Pipeline bar (inline in Logs tab + full version in Live tab) */
+    .nx-exec-pipeline {
+        display:flex; align-items:center; gap:0;
+        padding:8px 14px; background:var(--surface);
+        border-bottom:1px solid var(--border);
+        flex-shrink:0; overflow:hidden;
+    }
+    .nx-exec-stage {
+        display:flex; align-items:center; gap:6px;
+        padding:5px 12px; border-radius:6px;
+        font-size:0.74rem; font-weight:500; color:var(--muted);
+        transition:all 0.3s ease; position:relative; flex-shrink:0;
+        background:transparent;
+    }
+    .nx-exec-stage::after {
+        content:'→'; margin-left:6px; color:var(--border); font-size:0.7rem;
+    }
+    .nx-exec-stage:last-child::after { content:''; margin-left:0; }
+    .nx-exec-stage .nx-stage-dot {
+        width:7px; height:7px; border-radius:50%;
+        background:var(--border); transition:all 0.3s ease; flex-shrink:0;
+    }
+    .nx-exec-stage.active {
+        color:var(--accent); background:rgba(56,139,253,0.1);
+    }
+    .nx-exec-stage.active .nx-stage-dot {
+        background:var(--accent);
+        box-shadow:0 0 0 3px rgba(56,139,253,0.25);
+        animation:nxDotPulse 1.4s ease-in-out infinite;
+    }
+    .nx-exec-stage.done { color:#4ade80; }
+    .nx-exec-stage.done .nx-stage-dot { background:#4ade80; }
+    .nx-exec-stage.error { color:#f87171; }
+    .nx-exec-stage.error .nx-stage-dot { background:#f87171; }
+    @keyframes nxDotPulse {
+        0%,100% { box-shadow:0 0 0 3px rgba(56,139,253,0.25); }
+        50%      { box-shadow:0 0 0 6px rgba(56,139,253,0.08); }
+    }
+
+    /* Live tab layout — display controlled by .nx-tab-content / .nx-tab-content.active */
+    #nxTab-live {
+        flex-direction:column; overflow:hidden;
+    }
+    .nx-live-split {
+        display:flex; flex:1; overflow:hidden; gap:1px;
+        background:var(--border);
+    }
+    .nx-live-pane {
+        display:flex; flex-direction:column; flex:1; overflow:hidden;
+        background:var(--bg);
+        min-width:0;
+    }
+    .nx-live-pane-hdr {
+        padding:6px 12px; font-size:0.72rem; font-weight:600;
+        color:var(--muted); text-transform:uppercase; letter-spacing:0.07em;
+        background:var(--surface); border-bottom:1px solid var(--border);
+        display:flex; align-items:center; gap:6px; flex-shrink:0;
+    }
+    .nx-live-pane-hdr .nx-live-dot {
+        width:6px; height:6px; border-radius:50%; background:var(--border);
+        flex-shrink:0;
+    }
+    .nx-live-pane-hdr .nx-live-dot.active {
+        background:#4ade80; animation:nxDotPulse 1.4s ease-in-out infinite;
+    }
+    .nx-live-code-area {
+        flex:1; overflow-y:auto; overflow-x:hidden;
+        font-family:ui-monospace,'Cascadia Code','Fira Code',monospace;
+        font-size:0.76rem; line-height:1.55; padding:10px 14px;
+        color:#c9d1d9; white-space:pre-wrap; word-break:break-all;
+        background:#0d1117;
+    }
+    .nx-live-code-area .nx-code-file {
+        display:block; color:#79c0ff; font-weight:600; margin:8px 0 4px;
+        font-size:0.7rem; opacity:0.8;
+    }
+    .nx-live-code-area .nx-code-chunk {
+        display:block; animation:nxFadeSlide 0.12s ease;
+    }
+    .nx-live-term-area {
+        flex:1; overflow-y:auto;
+        font-family:ui-monospace,'Cascadia Code','Fira Code',monospace;
+        font-size:0.76rem; line-height:1.5; padding:10px 14px;
+        background:#0a0f1a; color:#c9d1d9;
+    }
+    .nx-term-line {
+        display:block; padding:1px 0; animation:nxFadeSlide 0.1s ease;
+        white-space:pre-wrap; word-break:break-all;
+    }
+    .nx-term-line.nx-term-cmd   { color:#79c0ff; font-weight:600; }
+    .nx-term-line.nx-term-ok    { color:#4ade80; }
+    .nx-term-line.nx-term-err   { color:#f87171; }
+    .nx-term-line.nx-term-warn  { color:#fbbf24; }
+    .nx-term-line.nx-term-info  { color:#a5b4fc; }
+    .nx-term-line.nx-term-system{ color:#8b949e; }
+    @keyframes nxFadeSlide {
+        from { opacity:0; transform:translateY(3px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* Live status bar */
+    .nx-live-statusbar {
+        padding:4px 14px; font-size:0.7rem; color:var(--muted);
+        background:var(--surface); border-top:1px solid var(--border);
+        display:flex; align-items:center; gap:10px; flex-shrink:0;
+    }
+    .nx-live-statusbar .nx-lsb-item { display:flex; gap:4px; align-items:center; }
+    .nx-live-statusbar .nx-lsb-val  { color:var(--text); font-weight:500; }
+
+    /* Compact pipeline bar inside Logs tab */
+    #nxLogsPipeline {
+        display:none;
+        border-bottom:1px solid var(--border);
+        background:var(--surface);
+        flex-shrink:0;
+    }
+
+    /* Fix: when nxInit() moves tabLogs into nxTab-logs, ensure it fills remaining flex space
+       despite nxInit setting height:100% (which overflows in a flex-column container) */
+    #nxTab-logs #tabLogs {
+        flex: 1 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: auto;
+    }
+
+    /* Live tab actions bar */
+    #nxTabActions-live {
+        display:flex; gap:6px; align-items:center;
+    }
+
     /* Phase 32 — Analysis panel (code/image results) */
     .analysis-panel {
         background:#0d1117; border:1px solid #2a3140;
@@ -3674,6 +3809,10 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
           💬 Chat
           <span class="nx-tab-dot" id="p12ChatDot"></span>
         </button>
+        <button class="nx-tab" data-nxtab="live" onclick="nxSetTab('live')" id="nxLiveTabBtn" title="Real-time execution view">
+          ⚡ Live
+          <span class="nx-tab-dot" id="nxLiveDot" style="display:none"></span>
+        </button>
 
         <!-- More ▾ dropdown for secondary tabs -->
         <div class="nx-more-wrap">
@@ -3728,7 +3867,16 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       </div>
 
       <!-- Logs tab (position:relative for overlay banners) -->
-      <div class="nx-tab-content" id="nxTab-logs" style="position:relative">
+      <div class="nx-tab-content" id="nxTab-logs" style="position:relative;display:flex;flex-direction:column;overflow:hidden">
+        <!-- Phase 33 compact pipeline bar (shown during execution) -->
+        <div class="nx-exec-pipeline" id="nxLogsPipeline" style="display:none">
+          <div class="nx-exec-stage" id="nlp-planning"><span class="nx-stage-dot"></span>Planning</div>
+          <div class="nx-exec-stage" id="nlp-coding"><span class="nx-stage-dot"></span>Coding</div>
+          <div class="nx-exec-stage" id="nlp-debugging"><span class="nx-stage-dot"></span>Debugging</div>
+          <div class="nx-exec-stage" id="nlp-done"><span class="nx-stage-dot"></span>Done</div>
+          <div style="flex:1"></div>
+          <button class="btn tiny" onclick="nxSetTab('live')" style="font-size:0.68rem;padding:2px 8px">⚡ Full View</button>
+        </div>
         <div id="nxLogsBanner" style="display:none"></div>
       </div>
       <!-- Preview tab -->
@@ -3745,6 +3893,75 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
       <div class="nx-tab-content" id="nxTab-timeline"></div>
       <!-- Steps tab -->
       <div class="nx-tab-content" id="nxTab-steps"></div>
+
+      <!-- Phase 33 — Live Execution Visualization tab -->
+      <div class="nx-tab-content" id="nxTab-live" style="flex-direction:column;overflow:hidden">
+
+        <!-- Full pipeline bar -->
+        <div class="nx-exec-pipeline" id="nxLivePipeline">
+          <div class="nx-exec-stage" data-stage="planning" id="nls-planning">
+            <span class="nx-stage-dot"></span>Planning
+          </div>
+          <div class="nx-exec-stage" data-stage="coding" id="nls-coding">
+            <span class="nx-stage-dot"></span>Coding
+          </div>
+          <div class="nx-exec-stage" data-stage="debugging" id="nls-debugging">
+            <span class="nx-stage-dot"></span>Debugging
+          </div>
+          <div class="nx-exec-stage" data-stage="done" id="nls-done">
+            <span class="nx-stage-dot"></span>Done
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn tiny" onclick="NxExecVis.clearLive()" title="Clear live panels" style="font-size:0.68rem;padding:2px 8px">Clear</button>
+          <button class="btn tiny" onclick="nxSetTab('logs')" style="font-size:0.68rem;padding:2px 8px">← Logs</button>
+        </div>
+
+        <!-- Split view: code stream | terminal stream -->
+        <div class="nx-live-split">
+
+          <!-- Left pane: live code stream -->
+          <div class="nx-live-pane">
+            <div class="nx-live-pane-hdr">
+              <span class="nx-live-dot" id="nxCodeStreamDot"></span>
+              Live Code Stream
+              <span id="nxCodeFileLabel" style="color:var(--accent);font-size:0.68rem;font-weight:500;margin-left:4px"></span>
+              <div style="flex:1"></div>
+              <label style="display:flex;align-items:center;gap:4px;font-size:0.68rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);cursor:pointer">
+                <input type="checkbox" id="nxCodeAutoScroll" checked style="margin:0"> auto-scroll
+              </label>
+            </div>
+            <div id="nxLiveCodeArea" class="nx-live-code-area" style="flex:1">
+              <span style="color:var(--muted);font-size:0.75rem">Waiting for code to stream…</span>
+            </div>
+          </div>
+
+          <!-- Right pane: live terminal output -->
+          <div class="nx-live-pane" style="max-width:50%">
+            <div class="nx-live-pane-hdr">
+              <span class="nx-live-dot" id="nxTermStreamDot"></span>
+              Live Terminal
+              <div style="flex:1"></div>
+              <label style="display:flex;align-items:center;gap:4px;font-size:0.68rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);cursor:pointer">
+                <input type="checkbox" id="nxTermAutoScroll" checked style="margin:0"> auto-scroll
+              </label>
+            </div>
+            <div id="nxLiveTermArea" class="nx-live-term-area" style="flex:1">
+              <span class="nx-term-line nx-term-system">Waiting for terminal output…</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Status bar -->
+        <div class="nx-live-statusbar">
+          <div class="nx-lsb-item">Stage: <span class="nx-lsb-val" id="nxLiveStageVal">—</span></div>
+          <div class="nx-lsb-item">Lines: <span class="nx-lsb-val" id="nxLiveLineCount">0</span></div>
+          <div class="nx-lsb-item">Code chunks: <span class="nx-lsb-val" id="nxLiveCodeCount">0</span></div>
+          <div class="nx-lsb-item">Commands: <span class="nx-lsb-val" id="nxLiveCmdCount">0</span></div>
+          <div style="flex:1"></div>
+          <span id="nxLiveConnStatus" style="font-size:0.68rem;color:var(--muted)">Not connected</span>
+        </div>
+      </div>
 
       <!-- Phase 15: Learning Dashboard tab -->
       <div class="nx-tab-content" id="nxTab-learning" style="overflow-y:auto;padding:0">
@@ -4418,6 +4635,9 @@ const NX_TAB_ACTIONS = {
   agents: `<button class="nx-tiny-btn" onclick="loadAgentsState()">Refresh</button>`,
   timeline: `<button class="nx-tiny-btn" onclick="loadTimeline()">Refresh</button>`,
   steps: `<button class="nx-tiny-btn" onclick="loadStepTrace()">Refresh</button>`,
+  live:  `<span style="font-size:11px;color:var(--text-muted)">Real-time execution view</span>
+          <button class="nx-tiny-btn" onclick="NxExecVis.clearLive()">Clear</button>
+          <button class="nx-tiny-btn" onclick="nxSetTab('logs')">← Logs</button>`,
 };
 
 function nxInit() {
@@ -17485,6 +17705,427 @@ console.log('[Phase 18] Background Autonomous Agents + Task Scheduler active.');
 
 })();
 </script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 33 — Real-Time AI Execution Visualization
+   Drives: pipeline bar, live code stream, live terminal stream.
+   Data source: existing /api/session/<sid>/stream SSE (no backend
+   changes needed). Hooks into ingestLogRow() to intercept every log
+   row the moment it arrives.
+   ═══════════════════════════════════════════════════════════════════ */
+(function () {
+'use strict';
+
+/* ── Phase detection patterns ───────────────────────────────────── */
+const PHASE_PATTERNS = {
+    planning: [
+        /\[STAGE\]\s*(plan|think|analy|design|understand|decompos)/i,
+        /\bTHINK(?:ING)?\b/,
+        /▶\s*Starting task/i,
+        /\bplanning\b/i,
+        /\banalyzing\b/i,
+        /\bbreaking\s+down\b/i,
+    ],
+    coding: [
+        /\[STAGE\]\s*(cod|impl|generat|writ|build|creat)/i,
+        /\[STEP\s+\d/i,
+        /Writing\s+(?:file|to)/i,
+        /Creating\s+(?:file)/i,
+        /\[EXECUTE\]/i,
+        /\bimplementing\b/i,
+        /\bgenerating\b/i,
+    ],
+    debugging: [
+        /\[STAGE\]\s*(debug|test|fix|verif|retry|patch)/i,
+        /\[RETRY/i,
+        /\[VALIDATION\]/i,
+        /\[FINAL CHECK\]/i,
+        /\[FALLBACK\]/i,
+        /\[ERROR\]/i,
+        /\bdebugging\b/i,
+        /\bfixing\b/i,
+        /\bretrying\b/i,
+    ],
+    done: [
+        /\[Task finished/i,
+        /exit=\d+\s+status=success/i,
+        /\bTask completed successfully\b/i,
+        /✅.*(?:done|complete|success)/i,
+    ],
+};
+
+/* ── Code line detection ───────────────────────────────────────── */
+const CODE_LINE_RE = [
+    /^(def |class |import |from |async def |export |export default )/,
+    /^(function |const |let |var |return |if\s*\(|for\s*\(|while\s*\()/,
+    /^(\s{4}|\t)[\w"'$({[\-@]/,
+    /^(#!\/|#\s|\/\/|\/\*|\*\s|\*\/)/,
+    /^[{}()\[\]]/,
+    /^<\/?[a-zA-Z]/,
+    /```/,
+    /^\s*(public|private|protected|static|class|interface|struct|fn |impl )/,
+    /^(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\b/i,
+];
+function _isCodeLine(text) {
+    return CODE_LINE_RE.some(re => re.test(text));
+}
+
+/* ── Terminal line detection ─────────────────────────────────────── */
+const TERM_CMD_RE = /^(\$\s+|>\s+|Running:\s+|Executing:\s+|CMD:\s+|>>\s+)/;
+const TERM_SHELL_RE = /^(pip\s+|npm\s+|node\s+|python\s+|python3\s+|bash\s+|sh\s+|git\s+|mkdir\s+|cd\s+|ls\s+|cat\s+|echo\s+|curl\s+|wget\s+|make\s+|cargo\s+|go\s+run\s+|apt\s+|sudo\s+)/i;
+function _isTermLine(text) {
+    return TERM_CMD_RE.test(text) || TERM_SHELL_RE.test(text);
+}
+
+/* ── File write detection ────────────────────────────────────────── */
+const FILE_WRITE_RE = /(?:Writing|Creating|Saving|Wrote)\s+(?:file\s+)?['"]?([^\s'"]+\.\w+)['"]?/i;
+const FILE_PATH_RE  = /(?:^|\s)(['"]?)([/\w.-]+\.\w+)\1(?:\s|$)/;
+
+/* ── State ───────────────────────────────────────────────────────── */
+const S = {
+    phase:     'idle',    // current execution phase
+    lineCount:  0,
+    codeCount:  0,
+    cmdCount:   0,
+    lastFile:   '',
+    codeBuffer: [],       // queued code spans not yet flushed
+    termBuffer: [],       // queued terminal spans not yet flushed
+    flushTimer: null,
+    active:     false,    // true while a session is running
+    initDone:   false,
+};
+
+/* ── DOM helpers ─────────────────────────────────────────────────── */
+function _qs(id)  { return document.getElementById(id); }
+function _esc(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _setVal(id, v) { const n = _qs(id); if (n) n.textContent = v; }
+
+/* ── Pipeline bar update (both Logs tab mini-bar + Live tab bar) ─── */
+const PHASE_ORDER = ['planning', 'coding', 'debugging', 'done'];
+
+function _setPipeline(phase) {
+    if (phase === S.phase && phase !== 'idle') return;
+    S.phase = phase;
+
+    const phaseIdx = PHASE_ORDER.indexOf(phase);
+
+    // Update both the Logs tab mini-pipeline and the Live tab pipeline
+    [
+        { prefix: 'nlp-',  phases: PHASE_ORDER },
+        { prefix: 'nls-',  phases: PHASE_ORDER },
+    ].forEach(({ prefix }) => {
+        PHASE_ORDER.forEach((p, i) => {
+            const el = _qs(prefix + p);
+            if (!el) return;
+            el.classList.remove('active', 'done', 'error');
+            if (phase === 'error' && i <= phaseIdx) {
+                el.classList.add(i === phaseIdx ? 'error' : 'done');
+            } else if (i < phaseIdx) {
+                el.classList.add('done');
+            } else if (i === phaseIdx) {
+                el.classList.add('active');
+            }
+        });
+    });
+
+    _setVal('nxLiveStageVal', phase === 'idle' ? '—' : phase);
+
+    // Show Logs tab pipeline bar when active
+    const logsPipe = _qs('nxLogsPipeline');
+    if (logsPipe) {
+        logsPipe.style.display = (phase !== 'idle') ? 'flex' : 'none';
+    }
+}
+
+/* ── Detect phase from a log row ─────────────────────────────────── */
+function _detectPhase(text) {
+    for (const [phase, patterns] of Object.entries(PHASE_PATTERNS)) {
+        if (patterns.some(re => re.test(text))) return phase;
+    }
+    return null;
+}
+
+/* ── Stream code line ────────────────────────────────────────────── */
+let _lastFileLabel = '';
+function _appendCode(text, file) {
+    if (file && file !== _lastFileLabel) {
+        _lastFileLabel = file;
+        S.codeBuffer.push(`<span class="nx-code-file">// ${_esc(file)}</span>`);
+        const lbl = _qs('nxCodeFileLabel');
+        if (lbl) lbl.textContent = file;
+    }
+    S.codeBuffer.push(`<span class="nx-code-chunk">${_esc(text)}</span>\n`);
+    S.codeCount++;
+
+    // Activate code stream dot
+    const dot = _qs('nxCodeStreamDot');
+    if (dot) dot.classList.add('active');
+    _scheduleFlush();
+}
+
+/* ── Stream terminal line ────────────────────────────────────────── */
+function _termClass(text, level) {
+    if (level === 'error' || /\[error\]/i.test(text) || /\btraceback\b/i.test(text)) return 'nx-term-err';
+    if (level === 'success' || /✅/.test(text)) return 'nx-term-ok';
+    if (level === 'validation') return 'nx-term-warn';
+    if (level === 'system')     return 'nx-term-system';
+    if (level === 'info')       return 'nx-term-info';
+    if (TERM_CMD_RE.test(text)) return 'nx-term-cmd';
+    if (/warning|warn/i.test(text)) return 'nx-term-warn';
+    return '';
+}
+
+function _appendTerm(text, level) {
+    const cls = _termClass(text, level);
+    S.termBuffer.push(`<span class="nx-term-line ${cls}">${_esc(text)}</span>`);
+    if (TERM_CMD_RE.test(text) || TERM_SHELL_RE.test(text)) S.cmdCount++;
+    const dot = _qs('nxTermStreamDot');
+    if (dot) dot.classList.add('active');
+    _scheduleFlush();
+}
+
+/* ── Batched DOM flush (max 60fps) ─────────────────────────────────*/
+function _scheduleFlush() {
+    if (S.flushTimer) return;
+    S.flushTimer = requestAnimationFrame(_flush);
+}
+
+function _flush() {
+    S.flushTimer = null;
+
+    if (S.codeBuffer.length) {
+        const area = _qs('nxLiveCodeArea');
+        if (area) {
+            if (area.querySelector('span[style]')) area.innerHTML = '';
+            const html = S.codeBuffer.join('');
+            area.insertAdjacentHTML('beforeend', html);
+            const as = _qs('nxCodeAutoScroll');
+            if (!as || as.checked) area.scrollTop = area.scrollHeight;
+        }
+        S.codeBuffer = [];
+    }
+
+    if (S.termBuffer.length) {
+        const area = _qs('nxLiveTermArea');
+        if (area) {
+            if (area.querySelector('span[style]')) area.innerHTML = '';
+            area.insertAdjacentHTML('beforeend', S.termBuffer.join(''));
+            const as = _qs('nxTermAutoScroll');
+            if (!as || as.checked) area.scrollTop = area.scrollHeight;
+        }
+        S.termBuffer = [];
+    }
+
+    // Update counters
+    _setVal('nxLiveLineCount',  S.lineCount);
+    _setVal('nxLiveCodeCount',  S.codeCount);
+    _setVal('nxLiveCmdCount',   S.cmdCount);
+}
+
+/* ── Process a single log row (called from ingestLogRow hook) ─────── */
+function _onRow(row) {
+    if (!row || typeof row.text !== 'string') return;
+    const text  = row.text;
+    const level = row.level || 'log';
+    S.lineCount++;
+
+    // Phase detection (but not from the initial "starting" message alone)
+    const detectedPhase = _detectPhase(text);
+    if (detectedPhase) {
+        // Phase transitions are sticky — don't go backwards except to done
+        const cur = PHASE_ORDER.indexOf(S.phase);
+        const nxt = PHASE_ORDER.indexOf(detectedPhase);
+        if (detectedPhase === 'done' || nxt >= cur) {
+            _setPipeline(detectedPhase);
+        }
+    }
+
+    // Check for file being written
+    let currentFile = S.lastFile;
+    const fm = FILE_WRITE_RE.exec(text);
+    if (fm) currentFile = S.lastFile = fm[1];
+
+    // Classify line: code | terminal | general
+    if (level === 'system' || level === 'info') {
+        // System lines go to terminal view as informational
+        _appendTerm(text, level);
+    } else if (level === 'error') {
+        _appendTerm(text, level);
+    } else if (level === 'success' || level === 'validation') {
+        _appendTerm(text, level);
+    } else if (_isCodeLine(text)) {
+        _appendCode(text, currentFile);
+    } else if (_isTermLine(text)) {
+        _appendTerm(text, level);
+    } else {
+        // Generic log lines: short ones look like terminal output,
+        // longer ones with code smell → code pane
+        if (text.length < 120 && !text.startsWith(' ')) {
+            _appendTerm(text, level);
+        } else {
+            _appendCode(text, currentFile);
+        }
+    }
+}
+
+/* ── Session lifecycle hooks ─────────────────────────────────────── */
+function _onSessionStart(sid) {
+    S.active    = true;
+    S.phase     = 'idle';
+    S.lineCount = 0;
+    S.codeCount = 0;
+    S.cmdCount  = 0;
+    S.lastFile  = '';
+    _lastFileLabel = '';
+    S.codeBuffer = [];
+    S.termBuffer = [];
+
+    // Reset pipeline to idle (all dots neutral)
+    PHASE_ORDER.forEach(p => {
+        ['nlp-', 'nls-'].forEach(pfx => {
+            const el = _qs(pfx + p);
+            if (el) el.classList.remove('active', 'done', 'error');
+        });
+    });
+
+    // Clear live panels and show placeholders
+    const codeArea = _qs('nxLiveCodeArea');
+    if (codeArea) codeArea.innerHTML = '<span style="color:var(--muted);font-size:0.75rem">Starting…</span>';
+    const termArea = _qs('nxLiveTermArea');
+    if (termArea) termArea.innerHTML = '<span class="nx-term-line nx-term-system">Starting session…</span>';
+
+    // Reset stat labels
+    _setVal('nxLiveLineCount', '0');
+    _setVal('nxLiveCodeCount', '0');
+    _setVal('nxLiveCmdCount',  '0');
+    _setVal('nxLiveStageVal',  'starting…');
+
+    // Reset header dots
+    const cdot = _qs('nxCodeStreamDot');
+    const tdot = _qs('nxTermStreamDot');
+    if (cdot) cdot.classList.remove('active');
+    if (tdot) tdot.classList.remove('active');
+
+    // Pulse the Live tab button dot
+    const liveDot = _qs('nxLiveDot');
+    if (liveDot) liveDot.style.display = '';
+
+    // Show conn status
+    _setVal('nxLiveConnStatus', 'Connected — receiving live data');
+
+    // Show logs pipeline bar
+    const logsPipe = _qs('nxLogsPipeline');
+    if (logsPipe) logsPipe.style.display = 'flex';
+
+    // Auto-switch to Live tab if Logs tab is active
+    if (typeof NX !== 'undefined' && NX.activeTab === 'logs') {
+        nxSetTab('live');
+    }
+}
+
+function _onSessionEnd(status) {
+    S.active = false;
+
+    if (status === 'success') {
+        _setPipeline('done');
+    } else if (status === 'failed') {
+        S.phase = 'error';
+        ['nlp-', 'nls-'].forEach(pfx => {
+            const el = _qs(pfx + 'debugging');
+            if (el) { el.classList.remove('active'); el.classList.add('error'); }
+        });
+    }
+
+    const liveDot = _qs('nxLiveDot');
+    if (liveDot) liveDot.style.display = 'none';
+
+    // Fade the stream dots
+    const cdot = _qs('nxCodeStreamDot');
+    const tdot = _qs('nxTermStreamDot');
+    if (cdot) cdot.classList.remove('active');
+    if (tdot) tdot.classList.remove('active');
+
+    _setVal('nxLiveConnStatus', `Session ended (${status || 'done'})`);
+
+    // Append done marker to terminal
+    const doneMsg = status === 'success'
+        ? '<span class="nx-term-line nx-term-ok">✅ Task completed successfully</span>'
+        : `<span class="nx-term-line nx-term-err">❌ Session ended: ${_esc(status||'')}</span>`;
+    const termArea = _qs('nxLiveTermArea');
+    if (termArea) {
+        termArea.insertAdjacentHTML('beforeend', doneMsg);
+        termArea.scrollTop = termArea.scrollHeight;
+    }
+}
+
+/* ── Hook into ingestLogRow (monkey-patch, idempotent) ─────────────*/
+function _hookIngestLogRow() {
+    if (typeof ingestLogRow !== 'function') {
+        setTimeout(_hookIngestLogRow, 200);
+        return;
+    }
+    if (ingestLogRow._nxExecHooked) return;
+    const _orig = ingestLogRow;
+    window.ingestLogRow = function(row, area) {
+        _orig(row, area);
+        try { NxExecVis.onRow(row); } catch(_) {}
+    };
+    window.ingestLogRow._nxExecHooked = true;
+}
+
+/* ── Watch session state changes (poll, since selectSession calls ─── */
+/* loadStatus which updates stStatus element) */
+let _lastSessionState = null;
+function _pollSessionState() {
+    const statusEl = document.getElementById('stStatus');
+    const status = statusEl ? statusEl.textContent.trim().toLowerCase() : '';
+
+    if (status === 'running' && _lastSessionState !== 'running') {
+        _lastSessionState = 'running';
+        const sid = (typeof currentSession !== 'undefined') ? currentSession : null;
+        if (sid) NxExecVis.onSessionStart(sid);
+
+    } else if (status && status !== 'running' && status !== 'no session' && _lastSessionState === 'running') {
+        _lastSessionState = status;
+        NxExecVis.onSessionEnd(status);
+
+    } else if (status && status !== 'running') {
+        _lastSessionState = status;
+    }
+}
+
+/* ── Public API ──────────────────────────────────────────────────── */
+window.NxExecVis = {
+    onRow:          _onRow,
+    onSessionStart: _onSessionStart,
+    onSessionEnd:   _onSessionEnd,
+    clearLive() {
+        const c = _qs('nxLiveCodeArea');
+        const t = _qs('nxLiveTermArea');
+        if (c) c.innerHTML = '<span style="color:var(--muted);font-size:0.75rem">Cleared.</span>';
+        if (t) t.innerHTML = '<span class="nx-term-line nx-term-system">Cleared.</span>';
+        S.codeCount = 0;
+        S.cmdCount  = 0;
+        S.lineCount = 0;
+        _lastFileLabel = '';
+        _flush();
+    },
+};
+
+/* ── Init ─────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+    _hookIngestLogRow();
+    setInterval(_pollSessionState, 600);
+    console.log('[Phase 33] Real-Time AI Execution Visualization active.');
+});
+
+// nxSetTab already handles the .active class which triggers display:flex from CSS.
+// No wrapper needed — the Live tab inherits flex-direction:column from nx-tab-content.
+
+})();
+</script>
+
 </div></body></html>
 
 <script>

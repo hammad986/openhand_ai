@@ -1,0 +1,148 @@
+Proceed with Phase: REAL-TIME AI EXECUTION VISUALIZATION (Transparent AI UX Layer)
+
+This is a CRITICAL user experience phase. The goal is to eliminate "blackbox AI" perception and make every AI action visible in real-time to the user.
+
+No fake animations. All UI updates must reflect actual backend execution state.
+
+---
+
+🎯 OBJECTIVES
+
+1. Live Code Writing (Editor stream)
+2. Live Terminal Execution (Command stream)
+3. Live Step Status (Execution pipeline)
+4. Smooth, non-blocking UI (no lag, no flicker)
+
+---
+
+🧱 PART 1 — REAL-TIME STREAMING ARCHITECTURE
+
+* Extend existing SSE (/api/session/stream or equivalent)
+* Add structured event types:
+
+{
+"type": "step",
+"value": "planning | coding | debugging"
+}
+
+{
+"type": "code_chunk",
+"file": "app.js",
+"content": "partial code..."
+}
+
+{
+"type": "terminal",
+"command": "npm install",
+"output": "installing..."
+}
+
+---
+
+🧠 PART 2 — STEP VISUALIZATION (UX STATE ENGINE)
+
+* Add a visible execution bar:
+
+Planning → Coding → Debugging → Done
+
+* Highlight current step
+* Animate transitions smoothly
+* Persist state even if page refresh happens
+
+---
+
+💻 PART 3 — LIVE CODE EDITOR (CRITICAL)
+
+* Integrate Monaco Editor (VS Code-like)
+
+* When "code_chunk" arrives:
+
+  * Append text progressively (simulate typing)
+  * Maintain cursor position
+  * Avoid full re-render (diff update only)
+
+* Support:
+
+  * multi-file tabs
+  * auto-switch active file
+
+---
+
+⚡ PART 4 — TERMINAL SYSTEM (REALISTIC)
+
+* Build a terminal panel:
+
+Requirements:
+
+* monospace font
+* scrollable output
+* colored logs:
+
+  * success (green)
+  * error (red)
+  * warning (yellow)
+
+Behavior:
+
+* show command first:
+
+  > npm install
+* stream output line-by-line
+* keep history
+
+---
+
+🎨 PART 5 — UI LAYOUT (SINGLE SCREEN)
+
+Top:
+
+* Task input box
+
+Middle:
+
+* Chat + Output
+
+Right OR Bottom (collapsible):
+
+* Code Editor
+* Terminal
+
+DO NOT create clutter.
+Everything must feel minimal and professional.
+
+---
+
+⚙️ PART 6 — PERFORMANCE RULES
+
+* No blocking UI thread
+* Debounce rendering
+* Batch updates if needed
+* Handle slow networks gracefully
+
+---
+
+🛡️ PART 7 — FALLBACK MODE
+
+If streaming fails:
+
+* fallback to standard output mode
+* show message: "Live mode unavailable"
+
+---
+
+🚀 FINAL RESULT
+
+System must confirm:
+
+"REAL-TIME AI EXECUTION VISUALIZATION FULLY OPERATIONAL — NO BLACKBOX BEHAVIOR"
+
+---
+
+⚠️ STRICT RULES
+
+* Do NOT simulate fake progress
+* Only show real execution data
+* No UI lag or freeze allowed
+* Keep code modular and maintainable
+
+Execute with precision.
