@@ -10987,6 +10987,24 @@ def terms_of_service():
 def refund_policy():
     return render_template("refund-policy.html")
 
+# ── /api/write-doc — write internal markdown docs (Phase UX-IT) ──────────────
+@app.route("/api/write-doc", methods=["POST"])
+def api_write_doc():
+    data = request.get_json(force=True) or {}
+    rel_path = data.get("path", "").strip().lstrip("/")
+    content  = data.get("content", "")
+    if not rel_path or ".." in rel_path:
+        return jsonify({"ok": False, "error": "Invalid path"}), 400
+    try:
+        full = os.path.join(os.path.dirname(os.path.abspath(__file__)), rel_path)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "w", encoding="utf-8") as f:
+            f.write(content)
+        return jsonify({"ok": True, "path": rel_path})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     # Phase 19: debug mode controlled by env var — never True in production

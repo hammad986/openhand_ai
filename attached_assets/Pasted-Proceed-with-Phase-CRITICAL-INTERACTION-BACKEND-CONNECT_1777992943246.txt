@@ -1,0 +1,136 @@
+Proceed with Phase: CRITICAL INTERACTION & BACKEND CONNECTIVITY DEBUG (ZERO TOLERANCE)
+
+The application UI renders correctly, but user interactions are broken.
+
+Symptoms:
+- Signup/Login buttons do not respond
+- Form submissions do nothing
+- UI behaves like a static dummy interface
+
+This is a CRITICAL BLOCKER. The system is unusable.
+
+You must perform a FULL ROOT-CAUSE DEBUG — not assumptions.
+
+---
+
+🎯 OBJECTIVE
+
+Restore FULL frontend ↔ backend interaction:
+
+- Buttons must work
+- Forms must submit
+- Auth must function
+- API calls must execute
+
+---
+
+🧠 PART 1 — FRONTEND EVENT DEBUG
+
+- Verify ALL buttons:
+  - login
+  - signup
+  - submit
+  - navigation
+
+Check:
+- Are event listeners attached?
+- Are functions actually firing?
+- Add temporary console logs for every click handler
+
+If missing:
+- rebind events properly after DOM load
+
+---
+
+🧱 PART 2 — JAVASCRIPT ENGINE VALIDATION
+
+- Check browser console for:
+  - JS errors
+  - undefined functions
+  - broken imports
+
+Fix:
+- any script load order issues
+- missing dependencies
+
+---
+
+📡 PART 3 — API CONNECTION TEST
+
+For auth endpoints:
+- /api/auth/signup
+- /api/auth/login
+
+Check:
+- Are fetch calls firing?
+- Are requests reaching backend?
+
+If not:
+- fix fetch configuration
+- ensure correct base URL
+
+---
+
+🔐 PART 4 — AUTH FLOW DEBUG
+
+Verify:
+- JWT creation
+- token storage (memory/cookie)
+- headers applied correctly
+
+Check:
+- fetch includes `credentials: 'include'` if cookies used
+
+---
+
+🧠 PART 5 — NETWORK PANEL ANALYSIS
+
+Simulate real user:
+
+- open DevTools → Network tab
+- click login/signup
+
+Ensure:
+- request appears
+- response received
+
+If no request:
+→ frontend broken
+
+If request fails:
+→ backend issue
+
+---
+
+⚙️ PART 6 — BACKEND ROUTE VALIDATION
+
+Check:
+- routes exist
+- methods correct (POST/GET)
+- CORS enabled properly
+
+---
+
+🛡 PART 7 — FAILSAFE UI
+
+If API fails:
+- show error message
+- do NOT silently fail
+
+---
+
+🚀 FINAL RESULT
+
+System must confirm:
+
+"INTERACTION FULLY RESTORED — ALL BUTTONS, FORMS, AND AUTH FLOW WORKING CORRECTLY"
+
+---
+
+STRICT RULES:
+
+- No assumptions
+- No skipping steps
+- Validate each layer (UI → JS → API → Backend)
+
+This is a BLOCKER — fix completely.

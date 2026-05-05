@@ -169,6 +169,54 @@ Enterprise-grade session security layer replacing localStorage refresh tokens.
   - Red-bordered modal with password field (or "DELETE" text for OAuth users)
   - Clears tokens, hides gate shows auth gate on success
 
+## Phase STABLE — Final Stability, UX Hardening & Pre-Launch Validation
+
+Self-contained layer injected at the end of `templates/index.html`. Zero changes to existing code — purely additive.
+
+### Parts Implemented
+
+**Part 1 — Global Loading Bar + Toast Notifications**
+- Animated 2px top-of-screen loading bar (blue→purple→green shimmer) shown on every `/api/` fetch call
+- Toast container (`#nx-toasts`, top-right) with 4 types: `success`, `error`, `warning`, `info`
+- `window.nxToast(type, message, title?, duration?)` exposed globally
+- `window.fetch` patched to auto-show loading bar and surface 5xx/429 errors as toasts
+- Offline/online event listeners: toasts + failsafe banner on network loss
+
+**Part 2 — Onboarding Panel (new users / empty state)**
+- `#nx-onboard-panel` injected into main hero area
+- Only shown when user is authenticated but has 0 sessions (checked via `/api/sessions`)
+- 3 clickable example prompts pre-fill the task input and trigger `nxSetTask()`
+- Dismissed permanently via `localStorage` key `nx_onboard_dismissed_v2`
+
+**Part 3 — Session Recovery**
+- `selectSession()` patched to persist active session ID to `localStorage`
+- On page load, last session auto-restored if no session is active (verifies via `/api/session/:id`)
+- `openLogStream()` patched with exponential back-off SSE auto-reconnect (2s→15s max)
+- SSE reconnect status badge (`#nx-sse-status`) shown during reconnect attempts
+
+**Part 4 — Failsafe System**
+- `#nx-failsafe-banner` (sticky, red) shown on network errors or execution errors
+- `nxSetGlobalStatus('error')` patched to auto-trigger banner + error toast
+- `window.nxStableRetry()`: calls `/api/stop` then resets state
+- Banner dismissible manually
+
+**Part 5 — Log Filter Bar**
+- Injected into the log toolbar: All / Errors / Success / System filter buttons
+- `window.nxLogFilter(level, btn)` hides/shows log lines by CSS class
+- Log line CSS classes for colour-coding: `.error`, `.success`, `.warning`, `.system`
+
+**Part 6 — Security Validation**
+- On boot: checks if JWT is expired → triggers silent refresh via `nxRefreshNow()`
+- Ensures token refresh is scheduled via `nxScheduleRefresh()`
+- Falls back to showing auth gate if refresh fails
+
+**Part 7 — Interaction Validation**
+- Verifies critical button handler bindings (`nxDoLogin`, `nxDoSignup`) on boot
+- Logs warnings and provides fallback onclick if handlers are missing
+
+### Backend Addition (`web_app.py`)
+- `POST /api/write-doc` — writes markdown docs to any relative path (used by auto-documentation feature in Phase UX-IT). Path-traversal protected (`..` check), auto-creates directories.
+
 ## External Dependencies
 - **Core Packages**: Flask, gunicorn, requests, psutil, bcrypt, PyJWT, python-dotenv, tiktoken, razorpay.
 - **Optional/Lazy-loaded Packages**: chromadb, sentence-transformers, playwright.
