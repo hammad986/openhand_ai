@@ -1,0 +1,185 @@
+Proceed with Phase: UX INTELLIGENCE & TRUST LAYER (Replit-Grade Experience System)
+
+This phase is NOT about new backend features.
+This is about perception, clarity, and trust.
+
+The system already executes tasks correctly.
+Now it must FEEL intelligent, transparent, and premium.
+
+Do NOT break existing execution system.
+Enhance it.
+
+---
+
+🎯 OBJECTIVE
+
+Make users FEEL:
+
+- AI is thinking
+- AI is working step-by-step
+- AI is not guessing — it is reasoning
+- System is alive and responsive
+
+---
+
+🧠 PART 1 — AI THINKING VISIBILITY (PRO / ELITE ONLY)
+
+Implement a "Thinking Phase" layer:
+
+When AI starts:
+- Show:
+  "Analyzing your request..."
+  "Planning execution steps..."
+  "Preparing environment..."
+
+Display:
+- thinking timer (e.g., "Thinking for 3.2s")
+
+Rules:
+- Only visible in Pro / Elite
+- Lite mode skips thinking UI
+
+---
+
+🧱 PART 2 — SMART MESSAGE COLLAPSE
+
+When new system phase starts:
+
+- Automatically collapse old messages
+- Keep only:
+  - latest user prompt
+  - current execution block
+
+Add:
+- "Show previous steps" toggle
+
+---
+
+⏱ PART 3 — EXECUTION TIMER
+
+Track per session:
+
+- start time
+- active time
+
+Display:
+
+- "Worked for 2 min 14 sec"
+- update live
+
+Also show:
+
+- "Last action: 3s ago"
+
+---
+
+📊 PART 4 — ACTIVITY TIMELINE (LIKE REPLIT)
+
+Create vertical timeline:
+
+- Planning
+- Writing file
+- Running command
+- Fixing error
+
+Each entry:
+- timestamp
+- short message
+- clickable to jump
+
+---
+
+🧠 PART 5 — CONTEXTUAL STATUS TEXT
+
+Dynamic status updates:
+
+- "AI is planning..."
+- "Writing app.py..."
+- "Running server..."
+- "Fixing error..."
+
+Must sync with SSE events.
+
+---
+
+📂 PART 6 — FILE ACTION FEEDBACK
+
+When file is written:
+
+- highlight filename
+- show badge:
+  "Created"
+  "Updated"
+
+Add:
+- quick open button
+
+---
+
+🧠 PART 7 — TERMINAL UX POLISH
+
+Enhance terminal:
+
+- show command BEFORE execution
+- animate output stream
+- show success/failure summary
+
+---
+
+🎨 PART 8 — MICRO INTERACTIONS
+
+Add:
+
+- pulsing indicators
+- subtle transitions (no fake typing)
+- smooth updates
+
+---
+
+🛡 PART 9 — MODE DIFFERENTIATION
+
+Lite:
+- no thinking phase
+- simplified UI
+
+Pro / Elite:
+- full thinking layer
+- timeline
+- advanced visibility
+
+---
+
+📘 PART 10 — AUTO DOCUMENTATION (IMPORTANT)
+
+After each phase completion:
+
+- generate internal markdown:
+
+/docs/system_execution_log.md
+
+Include:
+- features added
+- APIs used
+- changes made
+
+Purpose:
+- debugging
+- developer clarity
+
+---
+
+🚀 FINAL RESULT
+
+System must confirm:
+
+"UX INTELLIGENCE LAYER ACTIVE — THINKING VISIBILITY + TIMELINE + EXECUTION FEEDBACK FULLY OPERATIONAL"
+
+---
+
+STRICT RULES:
+
+- No fake execution
+- No simulated delays
+- No breaking existing flow
+
+Enhance only.

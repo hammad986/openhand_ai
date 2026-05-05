@@ -19543,4 +19543,942 @@ document.addEventListener('DOMContentLoaded', function() {
 
 })();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     UX INTELLIGENCE & TRUST LAYER  — Phase UX-IT
+     Perception · Clarity · Trust · Premium Feel
+     Enhances existing system — does NOT modify execution logic.
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<style>
+/* ── UX-IT: CSS Variables & Base ─────────────────────────────────────────── */
+:root {
+  --ux-think-bg: rgba(88,166,255,0.07);
+  --ux-think-border: rgba(88,166,255,0.25);
+  --ux-timeline-dot: #30363d;
+  --ux-timeline-line: #21262d;
+  --ux-toast-bg: #1c2230;
+}
+
+/* ── Part 1: Thinking Phase Banner ──────────────────────────────────────── */
+#uxit-thinking-banner {
+  display: none;
+  background: var(--ux-think-bg);
+  border: 1px solid var(--ux-think-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 10px;
+  position: relative;
+  overflow: hidden;
+}
+#uxit-thinking-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(88,166,255,0.08), transparent);
+  animation: uxit-shimmer 2s infinite;
+}
+@keyframes uxit-shimmer {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+.uxit-think-phase {
+  font-size: 0.78rem;
+  color: #58a6ff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.uxit-think-phase .uxit-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #58a6ff;
+  animation: uxit-pulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes uxit-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+.uxit-think-timer {
+  font-size: 0.68rem;
+  color: var(--muted, #8b949e);
+  margin-top: 4px;
+  padding-left: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.uxit-think-steps {
+  margin-top: 6px;
+  padding-left: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.uxit-think-step {
+  font-size: 0.72rem;
+  color: var(--muted, #8b949e);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.3s;
+}
+.uxit-think-step.done   { color: #3fb950; }
+.uxit-think-step.active { color: #e6edf3; }
+.uxit-think-step .uxit-step-icon { font-size: 0.65rem; width: 12px; text-align: center; }
+
+/* ── Part 2: Smart Collapse ──────────────────────────────────────────────── */
+.uxit-collapse-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: var(--panel2, #1c2230);
+  border: 1px solid var(--border, #30363d);
+  border-radius: 5px;
+  margin: 6px 0;
+  font-size: 0.7rem;
+  color: var(--muted, #8b949e);
+  cursor: pointer;
+  user-select: none;
+}
+.uxit-collapse-bar:hover { background: #21262d; color: #e6edf3; }
+.uxit-collapse-bar .uxit-cb-count {
+  background: var(--border, #30363d);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+.uxit-collapsed-block { display: none !important; }
+
+/* ── Part 3: Execution Timer ─────────────────────────────────────────────── */
+#uxit-exec-timer {
+  display: none;
+  background: var(--panel2, #1c2230);
+  border: 1px solid var(--border, #30363d);
+  border-radius: 7px;
+  padding: 7px 11px;
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  color: var(--muted, #8b949e);
+}
+#uxit-exec-timer.active { border-color: rgba(63,185,80,0.3); }
+.uxit-timer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.uxit-timer-worked {
+  color: #3fb950;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+}
+.uxit-timer-last {
+  font-size: 0.68rem;
+  color: var(--muted, #8b949e);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Part 4: Activity Timeline ───────────────────────────────────────────── */
+#uxit-timeline-panel { margin-top: 10px; }
+.uxit-tl-header {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted, #8b949e);
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.uxit-tl-header span { cursor: pointer; color: #58a6ff; font-size: 0.68rem; }
+.uxit-tl-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-left: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+}
+.uxit-tl-list::-webkit-scrollbar { width: 3px; }
+.uxit-tl-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+.uxit-tl-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 4px 4px 0;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.uxit-tl-entry:hover { background: rgba(88,166,255,0.05); }
+.uxit-tl-spine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 14px;
+}
+.uxit-tl-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ux-timeline-dot);
+  background: var(--panel, #161b22);
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.uxit-tl-dot.plan    { border-color: #58a6ff; background: rgba(88,166,255,0.2); }
+.uxit-tl-dot.file    { border-color: #3fb950; background: rgba(63,185,80,0.2); }
+.uxit-tl-dot.cmd     { border-color: #d29922; background: rgba(210,153,34,0.2); }
+.uxit-tl-dot.error   { border-color: #f85149; background: rgba(248,81,73,0.2); }
+.uxit-tl-dot.success { border-color: #3fb950; background: #3fb950; }
+.uxit-tl-dot.active  { border-color: #58a6ff; animation: uxit-pulse 1s infinite; }
+.uxit-tl-line { width: 1px; flex: 1; min-height: 12px; background: var(--ux-timeline-line); }
+.uxit-tl-body { flex: 1; min-width: 0; }
+.uxit-tl-msg {
+  font-size: 0.73rem;
+  color: #e6edf3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.uxit-tl-ts {
+  font-size: 0.63rem;
+  color: var(--muted, #8b949e);
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.uxit-tl-empty {
+  font-size: 0.73rem;
+  color: var(--muted, #8b949e);
+  font-style: italic;
+  padding: 6px 0;
+}
+
+/* ── Part 5: Contextual Status Text ─────────────────────────────────────── */
+#uxit-ctx-status {
+  display: none;
+  font-size: 0.74rem;
+  color: #58a6ff;
+  font-weight: 500;
+  padding: 5px 10px;
+  background: rgba(88,166,255,0.06);
+  border-left: 2px solid #58a6ff;
+  border-radius: 0 5px 5px 0;
+  margin: 0 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#uxit-ctx-status.error   { color: #f85149; border-left-color: #f85149; background: rgba(248,81,73,0.06); }
+#uxit-ctx-status.success { color: #3fb950; border-left-color: #3fb950; background: rgba(63,185,80,0.06); }
+
+/* ── Part 6: File Action Toasts ──────────────────────────────────────────── */
+#uxit-file-toasts {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 9999;
+  pointer-events: none;
+}
+.uxit-file-toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ux-toast-bg, #1c2230);
+  border: 1px solid var(--border, #30363d);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: #e6edf3;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  animation: uxit-toast-in 0.25s ease, uxit-toast-out 0.3s ease 2.7s forwards;
+  pointer-events: auto;
+  max-width: 300px;
+}
+@keyframes uxit-toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes uxit-toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(20px); }
+}
+.uxit-toast-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.uxit-toast-badge.created { background: rgba(63,185,80,0.2);  color: #3fb950; }
+.uxit-toast-badge.updated { background: rgba(210,153,34,0.2); color: #d29922; }
+.uxit-toast-name {
+  color: #58a6ff;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+.uxit-toast-open {
+  margin-left: auto;
+  cursor: pointer;
+  color: var(--muted, #8b949e);
+  font-size: 0.67rem;
+  flex-shrink: 0;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+}
+.uxit-toast-open:hover { color: #58a6ff; background: rgba(88,166,255,0.1); }
+
+/* ── Part 7: Terminal Command Pre-display ────────────────────────────────── */
+.uxit-term-cmd-pre {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(88,166,255,0.06);
+  border-left: 2px solid #58a6ff;
+  border-radius: 0 4px 4px 0;
+  margin: 2px 0;
+  font-size: 0.73rem;
+  font-family: monospace;
+  color: #58a6ff;
+  word-break: break-all;
+}
+
+/* ── Part 8: Micro-interactions ──────────────────────────────────────────── */
+.uxit-log-new {
+  animation: uxit-log-slide 0.2s ease;
+}
+@keyframes uxit-log-slide {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.nx-pulse.uxit-live-pulse {
+  animation: uxit-beacon 1s ease-in-out infinite !important;
+}
+@keyframes uxit-beacon {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(88,166,255,0.6); }
+  50%       { box-shadow: 0 0 0 5px rgba(88,166,255,0); }
+}
+
+/* ── Part 9: Mode Badge ──────────────────────────────────────────────────── */
+#uxit-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+#uxit-mode-badge.lite  { background: rgba(139,148,158,0.15); color: #8b949e; }
+#uxit-mode-badge.pro   { background: rgba(88,166,255,0.15);  color: #58a6ff; }
+#uxit-mode-badge.elite { background: rgba(188,140,255,0.18); color: #bc8cff; }
+</style>
+
+<script>
+/* ─── UX INTELLIGENCE & TRUST LAYER — Phase UX-IT ─────────────────────── */
+(function() {
+'use strict';
+
+/* ── Utilities ────────────────────────────────────────────────────────────── */
+function $id(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtSecs(s) {
+  s = Math.floor(s);
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m > 0 ? `${m} min ${sec}s` : `${sec}s`;
+}
+function fmtAgo(ts) {
+  const d = (Date.now() - ts) / 1000;
+  if (d < 5)  return 'just now';
+  if (d < 60) return `${Math.floor(d)}s ago`;
+  if (d < 3600) return `${Math.floor(d/60)} min ago`;
+  return 'a while ago';
+}
+function nowTime() {
+  return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+/* ── Plan mode ────────────────────────────────────────────────────────────── */
+function getPlanMode() {
+  const el = $id('nxActivePlanMode');
+  if (!el) return 'pro';
+  const t = el.textContent.toLowerCase();
+  if (t.includes('lite'))  return 'lite';
+  if (t.includes('elite')) return 'elite';
+  return 'pro';
+}
+function isProOrElite() { return getPlanMode() !== 'lite'; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DOM INJECTION
+   ══════════════════════════════════════════════════════════════════════════ */
+function injectDOM() {
+  /* File toast container */
+  if (!$id('uxit-file-toasts')) {
+    const t = document.createElement('div');
+    t.id = 'uxit-file-toasts';
+    document.body.appendChild(t);
+  }
+
+  const leftBody = $id('nxLeftBody');
+  if (!leftBody) return;
+
+  /* Thinking banner */
+  if (!$id('uxit-thinking-banner')) {
+    const banner = document.createElement('div');
+    banner.id = 'uxit-thinking-banner';
+    banner.innerHTML = `
+      <div class="uxit-think-phase">
+        <div class="uxit-dot"></div>
+        <span id="uxit-think-msg">Analyzing your request…</span>
+      </div>
+      <div class="uxit-think-timer" id="uxit-think-timer">Thinking for 0.0s</div>
+      <div class="uxit-think-steps" id="uxit-think-steps">
+        <div class="uxit-think-step" id="uxit-step-analyze"><span class="uxit-step-icon">○</span>Analyzing request</div>
+        <div class="uxit-think-step" id="uxit-step-plan"><span class="uxit-step-icon">○</span>Planning execution steps</div>
+        <div class="uxit-think-step" id="uxit-step-env"><span class="uxit-step-icon">○</span>Preparing environment</div>
+      </div>`;
+    leftBody.insertBefore(banner, leftBody.firstChild);
+  }
+
+  /* Contextual status */
+  if (!$id('uxit-ctx-status')) {
+    const cs = document.createElement('div');
+    cs.id = 'uxit-ctx-status';
+    leftBody.insertBefore(cs, leftBody.firstChild);
+  }
+
+  /* Execution timer */
+  if (!$id('uxit-exec-timer')) {
+    const tmr = document.createElement('div');
+    tmr.id = 'uxit-exec-timer';
+    tmr.innerHTML = `<div class="uxit-timer-row">
+      <span class="uxit-timer-worked" id="uxit-timer-worked">—</span>
+      <span class="uxit-timer-last"   id="uxit-timer-last">Ready</span>
+    </div>`;
+    leftBody.insertBefore(tmr, leftBody.firstChild);
+  }
+
+  /* Activity Timeline */
+  if (!$id('uxit-timeline-panel')) {
+    const tl = document.createElement('div');
+    tl.id = 'uxit-timeline-panel';
+    tl.innerHTML = `
+      <div class="uxit-tl-header">
+        Activity Timeline
+        <span onclick="UXIT.clearTimeline()" title="Clear">✕</span>
+      </div>
+      <div class="uxit-tl-list" id="uxit-tl-list">
+        <div class="uxit-tl-empty" id="uxit-tl-empty">No activity yet.</div>
+      </div>`;
+    leftBody.appendChild(tl);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PART 1 — AI THINKING VISIBILITY (Pro / Elite only)
+   ══════════════════════════════════════════════════════════════════════════ */
+let _thinkStart = null, _thinkTimer = null, _thinkPhase = 0;
+const THINK_PHASES = [
+  { id:'uxit-step-analyze', msg:'Analyzing your request…'    },
+  { id:'uxit-step-plan',    msg:'Planning execution steps…'  },
+  { id:'uxit-step-env',     msg:'Preparing environment…'     },
+];
+
+function startThinkingPhase() {
+  if (!isProOrElite()) return;
+  const banner = $id('uxit-thinking-banner');
+  if (!banner) return;
+  banner.style.display = 'block';
+  _thinkStart = Date.now();
+  _thinkPhase = 0;
+  _updateThinkStep(0);
+  clearInterval(_thinkTimer);
+  _thinkTimer = setInterval(() => {
+    const elapsed = (Date.now() - _thinkStart) / 1000;
+    const timerEl = $id('uxit-think-timer');
+    if (timerEl) timerEl.textContent = `Thinking for ${elapsed.toFixed(1)}s`;
+    if (_thinkPhase === 0 && elapsed > 0.8) _updateThinkStep(1);
+    if (_thinkPhase === 1 && elapsed > 2.2) _updateThinkStep(2);
+  }, 100);
+}
+
+function _updateThinkStep(idx) {
+  _thinkPhase = idx;
+  THINK_PHASES.forEach((p, i) => {
+    const el = $id(p.id);
+    if (!el) return;
+    const icon = el.querySelector('.uxit-step-icon');
+    if (i < idx)  { el.className='uxit-think-step done';   if(icon) icon.textContent='✓'; }
+    if (i===idx)  { el.className='uxit-think-step active'; if(icon) icon.textContent='›'; }
+    if (i > idx)  { el.className='uxit-think-step';        if(icon) icon.textContent='○'; }
+  });
+  const msgEl = $id('uxit-think-msg');
+  if (msgEl && THINK_PHASES[idx]) msgEl.textContent = THINK_PHASES[idx].msg;
+}
+
+function stopThinkingPhase() {
+  clearInterval(_thinkTimer); _thinkTimer = null;
+  const banner = $id('uxit-thinking-banner');
+  if (!banner) return;
+  THINK_PHASES.forEach(p => {
+    const el = $id(p.id);
+    if (el) { el.className='uxit-think-step done'; const ic=el.querySelector('.uxit-step-icon'); if(ic) ic.textContent='✓'; }
+  });
+  setTimeout(() => { if (banner) banner.style.display='none'; }, 900);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PART 3 — EXECUTION TIMER
+   ══════════════════════════════════════════════════════════════════════════ */
+let _execStart=null, _execStop=null, _execRunning=false;
+let _lastActionTime=null, _execTickTimer=null;
+
+function startExecTimer() {
+  _execStart=Date.now(); _execStop=null; _execRunning=true; _lastActionTime=Date.now();
+  const el=$id('uxit-exec-timer');
+  if (el) { el.style.display='block'; el.classList.add('active'); }
+  clearInterval(_execTickTimer);
+  _execTickTimer = setInterval(_tickExec, 500);
+}
+function stopExecTimer() {
+  _execRunning=false; _execStop=Date.now();
+  const el=$id('uxit-exec-timer');
+  if (el) el.classList.remove('active');
+  clearInterval(_execTickTimer);
+  _tickExec();
+}
+function _tickExec() {
+  const we=$id('uxit-timer-worked'), le=$id('uxit-timer-last');
+  if (!we||!le) return;
+  if (_execStart) {
+    const dur = ((_execRunning ? Date.now() : _execStop||Date.now()) - _execStart) / 1000;
+    we.textContent = `Worked for ${fmtSecs(dur)}`;
+  }
+  if (_lastActionTime) le.textContent = `Last action: ${fmtAgo(_lastActionTime)}`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PART 4 — ACTIVITY TIMELINE
+   ══════════════════════════════════════════════════════════════════════════ */
+const _timeline=[];
+const MAX_TL=50;
+
+function tlAdd(type, msg) {
+  const last = _timeline[_timeline.length-1];
+  if (last && last.msg===msg && (Date.now()-last.ts)<2000) return;
+  _timeline.push({ type, msg, ts:Date.now(), time:nowTime() });
+  if (_timeline.length>MAX_TL) _timeline.shift();
+  _lastActionTime = Date.now();
+  _renderTimeline();
+}
+
+function _renderTimeline() {
+  const list=$id('uxit-tl-list');
+  if (!list) return;
+  list.innerHTML = _timeline.slice().reverse().map((e,i) => {
+    const isFirst = (i===0);
+    const dotCls  = isFirst && _execRunning ? 'active' : e.type;
+    return `<div class="uxit-tl-entry" onclick="UXIT.tlJump(${_timeline.length-1-i})" title="${esc(e.msg)}">
+      <div class="uxit-tl-spine">
+        <div class="uxit-tl-dot ${dotCls}"></div>
+        ${!isFirst ? '<div class="uxit-tl-line"></div>' : ''}
+      </div>
+      <div class="uxit-tl-body">
+        <div class="uxit-tl-msg">${esc(e.msg)}</div>
+        <div class="uxit-tl-ts">${e.time}</div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="uxit-tl-empty">No activity yet.</div>';
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PART 5 — CONTEXTUAL STATUS TEXT
+   ══════════════════════════════════════════════════════════════════════════ */
+function setCtxStatus(msg, cls) {
+  const el=$id('uxit-ctx-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = cls || '';
+  el.style.display = msg ? 'block' : 'none';
+}
+
+const STATUS_PATTERNS = [
+  [/writing file[:\s]+([^\s\]]+)/i,   m => [`Writing ${m[1]}…`,                    '']],
+  [/created? file[:\s]+([^\s\]]+)/i,  m => [`Created ${m[1]}`,                     '']],
+  [/updated? file[:\s]+([^\s\]]+)/i,  m => [`Updated ${m[1]}`,                     '']],
+  [/running command[:\s]+(.+)/i,      m => [`Running: ${m[1].slice(0,50)}`,         '']],
+  [/\$ (.+)/,                         m => [`$ ${m[1].slice(0,50)}`,               '']],
+  [/planning/i,                       ()=> ['AI is planning…',                      '']],
+  [/generating|writing code/i,        ()=> ['Writing code…',                        '']],
+  [/running server|starting server/i, ()=> ['Running server…',                      '']],
+  [/fix(ing)?.*error/i,               ()=> ['Fixing error…',                   'error']],
+  [/error|exception|traceback/i,      ()=> ['Error detected',                  'error']],
+  [/success|complete|done|finished/i, ()=> ['Task complete ✓',               'success']],
+  [/install(ing)?/i,                  ()=> ['Installing dependencies…',             '']],
+  [/test(ing)?/i,                     ()=> ['Running tests…',                       '']],
+  [/deploy(ing)?/i,                   ()=> ['Deploying…',                           '']],
+];
+
+function _parseStatus(text) {
+  if (!text) return null;
+  for (const [re, fn] of STATUS_PATTERNS) {
+    const m = text.match(re);
+    if (m) return fn(m);
+  }
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PART 6 — FILE ACTION FEEDBACK
+   ══════════════════════════════════════════════════════════════════════════ */
+const _shownFiles = new Set();
+const FILE_PATTERNS = [
+  [/\[WRITE\]\s*(.+)/i,                    'updated'],
+  [/\[CREATE\]\s*(.+)/i,                   'created'],
+  [/wrote file[:\s]+([^\s]+)/i,            'updated'],
+  [/created? file[:\s]+([^\s\]]+)/i,       'created'],
+  [/writing[:\s]+([^\s\]]+\.\w{1,6})/i,   'updated'],
+  [/saved[:\s]+([^\s\]]+\.\w{1,6})/i,     'updated'],
+  [/new file[:\s]+([^\s\]]+)/i,            'created'],
+];
+
+function _parseFileAction(text) {
+  if (!text) return null;
+  for (const [re, action] of FILE_PATTERNS) {
+    const m = text.match(re);
+    if (m && m[1]) {
+      const fname = m[1].trim().replace(/['"]/g,'');
+      if (fname.length>0 && fname.length<120) return { fname, action };
+    }
+  }
+  return null;
+}
+
+function showFileToast(filename, action) {
+  const key = `${action}:${filename}`;
+  if (_shownFiles.has(key)) return;
+  _shownFiles.add(key);
+  setTimeout(() => _shownFiles.delete(key), 6000);
+  const container = $id('uxit-file-toasts');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'uxit-file-toast';
+  const shortName = filename.split('/').pop() || filename;
+  toast.innerHTML = `
+    <span class="uxit-toast-badge ${action}">${action}</span>
+    <span class="uxit-toast-name" title="${esc(filename)}">${esc(shortName)}</span>
+    <span class="uxit-toast-open" onclick="UXIT.openFile('${esc(filename)}')" title="Open in Files tab">↗ Open</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { try { container.removeChild(toast); } catch(_){} }, 3200);
+}
+
+function openFile(path) {
+  if (typeof window.nxSetTab==='function') window.nxSetTab('files');
+  if (typeof window.openFilePath!=='undefined') window.openFilePath = path;
+  if (typeof window.loadFilesTree==='function') setTimeout(window.loadFilesTree, 50);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TIMELINE CLASSIFICATION
+   ══════════════════════════════════════════════════════════════════════════ */
+function _classifyLog(text) {
+  if (!text) return null;
+  const fa = _parseFileAction(text);
+  if (fa) return ['file', `${fa.action==='created'?'Created':'Wrote'} ${fa.fname}`];
+  if (/planning|plan\s|decompos|steps:/i.test(text))    return ['plan',    'Planning: '+text.slice(0,55)];
+  if (/\$ |\brun\b|executing|command|install|npm|python|bash/i.test(text))
+                                                         return ['cmd',     text.replace(/^\[.*?\]\s*/,'').slice(0,55)];
+  if (/error|exception|traceback|failed|fix/i.test(text)) return ['error', text.replace(/^\[.*?\]\s*/,'').slice(0,55)];
+  if (/success|complete|done|finished|✓/i.test(text))   return ['success', text.replace(/^\[.*?\]\s*/,'').slice(0,55)];
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MONKEY-PATCH: ingestLogRow
+   ══════════════════════════════════════════════════════════════════════════ */
+let _patchedIngest = false;
+function patchIngestLogRow() {
+  if (_patchedIngest || typeof window.ingestLogRow!=='function') {
+    if (!_patchedIngest) setTimeout(patchIngestLogRow, 300);
+    return;
+  }
+  _patchedIngest = true;
+  const orig = window.ingestLogRow;
+  window.ingestLogRow = function(e, area) {
+    orig.call(this, e, area);
+    const text = (e && e.text) || '';
+    if (!text) return;
+    _lastActionTime = Date.now();
+
+    // Part 5: contextual status
+    if (_execRunning) {
+      const ps = _parseStatus(text);
+      if (ps) setCtxStatus(ps[0], ps[1]);
+    }
+    // Part 4: timeline
+    const cl = _classifyLog(text);
+    if (cl) tlAdd(cl[0], cl[1]);
+    // Part 6: file toasts
+    const fa = _parseFileAction(text);
+    if (fa) showFileToast(fa.fname, fa.action);
+    // Part 7: pre-display terminal command in Live pane
+    const cmdM = text.match(/^\$\s+(.+)/);
+    if (cmdM) {
+      const area2 = $id('nxLiveTermArea');
+      if (area2) {
+        const pre = document.createElement('div');
+        pre.className='uxit-term-cmd-pre'; pre.textContent=cmdM[1];
+        area2.appendChild(pre);
+        if ($id('nxTermAutoScroll')&&$id('nxTermAutoScroll').checked) area2.scrollTop=area2.scrollHeight;
+      }
+    }
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MONKEY-PATCH: nxSetGlobalStatus
+   ══════════════════════════════════════════════════════════════════════════ */
+let _patchedGlobalStatus = false;
+function patchNxSetGlobalStatus() {
+  if (_patchedGlobalStatus || typeof window.nxSetGlobalStatus!=='function') {
+    if (!_patchedGlobalStatus) setTimeout(patchNxSetGlobalStatus, 300);
+    return;
+  }
+  _patchedGlobalStatus = true;
+  const orig = window.nxSetGlobalStatus;
+  window.nxSetGlobalStatus = function(status) {
+    orig.call(this, status);
+    if (status==='running') {
+      // Part 1
+      if (isProOrElite()) startThinkingPhase();
+      else { const b=$id('uxit-thinking-banner'); if(b) b.style.display='none'; }
+      // Part 3
+      startExecTimer();
+      // Part 5
+      setCtxStatus('AI is thinking…');
+      // Part 4
+      tlAdd('plan','Session started');
+      // Part 8: beacon pulse
+      const pulse=$id('nxThinkPulse');
+      if (pulse) pulse.classList.add('uxit-live-pulse');
+    } else {
+      stopThinkingPhase();
+      stopExecTimer();
+      const isErr=(status==='error');
+      setCtxStatus(isErr?'Error encountered':'Task complete ✓', isErr?'error':'success');
+      tlAdd(isErr?'error':'success', isErr?'Error encountered':'Execution complete ✓');
+      setTimeout(()=>setCtxStatus('',''), 4000);
+      const pulse=$id('nxThinkPulse');
+      if (pulse) pulse.classList.remove('uxit-live-pulse');
+      // Part 10: generate docs on completion
+      setTimeout(_generateDoc, 500);
+    }
+    updateModeBadge();
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MONKEY-PATCH: syncRunningIndicators (stage-level status)
+   ══════════════════════════════════════════════════════════════════════════ */
+let _patchedSync = false;
+function patchSyncRunning() {
+  if (_patchedSync || typeof window.syncRunningIndicators!=='function') {
+    if (!_patchedSync) setTimeout(patchSyncRunning, 400);
+    return;
+  }
+  _patchedSync = true;
+  const orig = window.syncRunningIndicators;
+  window.syncRunningIndicators = function(s, model) {
+    orig.call(this, s, model);
+    _execRunning = !!s.is_running;
+    if (s.is_running && s.stage) {
+      const stage = s.stage.toLowerCase();
+      if      (stage.includes('plan'))   setCtxStatus('AI is planning…');
+      else if (stage.includes('code'))   setCtxStatus('Writing code…');
+      else if (stage.includes('debug'))  setCtxStatus('Fixing error…');
+      else if (stage.includes('review')) setCtxStatus('Reviewing code…');
+      else if (stage.includes('test'))   setCtxStatus('Running tests…');
+      else if (stage.includes('deploy')) setCtxStatus('Deploying…');
+    }
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MONKEY-PATCH: appendLogLine (micro-animation)
+   ══════════════════════════════════════════════════════════════════════════ */
+let _patchedAppend = false;
+function patchAppendLogLine() {
+  if (_patchedAppend || typeof window.appendLogLine!=='function') {
+    if (!_patchedAppend) setTimeout(patchAppendLogLine, 400);
+    return;
+  }
+  _patchedAppend = true;
+  const orig = window.appendLogLine;
+  window.appendLogLine = function(area, e) {
+    orig.call(this, area, e);
+    const last = area && area.lastElementChild;
+    if (last && !last.classList.contains('uxit-log-new')) last.classList.add('uxit-log-new');
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PART 2 — SMART MESSAGE COLLAPSE
+   ══════════════════════════════════════════════════════════════════════════ */
+let _collapseTimer=null, _lastCollapseN=0;
+
+function _scheduleCollapse() {
+  clearTimeout(_collapseTimer);
+  _collapseTimer = setTimeout(_doCollapse, 1800);
+}
+function _doCollapse() {
+  const area=$id('logArea');
+  if (!area) return;
+  const lines=area.querySelectorAll('.log-line:not(.uxit-collapsed-block)');
+  if (lines.length<25) return;
+  if (area.querySelector('.uxit-collapse-bar')) return;
+  const n = lines.length - 10;
+  if (n<=0 || n===_lastCollapseN) return;
+  _lastCollapseN = n;
+  for (let i=0;i<n;i++) lines[i].classList.add('uxit-collapsed-block');
+  const bar = document.createElement('div');
+  bar.className='uxit-collapse-bar';
+  let expanded=false;
+  function _updateBar() {
+    bar.innerHTML = expanded
+      ? `<span>▾ Hide previous steps</span><span class="uxit-cb-count">${n}</span>`
+      : `<span>▸ Show previous steps</span><span class="uxit-cb-count">${n}</span>`;
+  }
+  _updateBar();
+  bar.onclick=()=>{
+    expanded=!expanded;
+    area.querySelectorAll('.uxit-collapsed-block').forEach(el=>{ el.style.display=expanded?'':''; });
+    _updateBar();
+    if (!expanded) area.scrollTop=area.scrollHeight;
+  };
+  const firstVis=lines[n];
+  if (firstVis) area.insertBefore(bar, firstVis);
+}
+function _initLogObserver() {
+  const area=$id('logArea');
+  if (!area) { setTimeout(_initLogObserver,500); return; }
+  new MutationObserver(_scheduleCollapse).observe(area,{childList:true});
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PART 9 — MODE BADGE
+   ══════════════════════════════════════════════════════════════════════════ */
+function updateModeBadge() {
+  const old=$id('uxit-mode-badge');
+  if (old) old.remove();
+  const planEl=$id('nxActivePlanMode');
+  if (!planEl) return;
+  const mode=getPlanMode();
+  const badge=document.createElement('span');
+  badge.id='uxit-mode-badge';
+  badge.className=mode;
+  badge.textContent=mode.toUpperCase();
+  planEl.parentNode.insertBefore(badge, planEl.nextSibling);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PART 10 — AUTO DOCUMENTATION
+   ══════════════════════════════════════════════════════════════════════════ */
+function _generateDoc() {
+  if (!_timeline.length) return;
+  const sid = (typeof currentSession!=='undefined'?currentSession:'unknown');
+  const lines=[
+    '# System Execution Log',
+    '',
+    `**Generated:** ${new Date().toISOString()}`,
+    `**Session:** ${sid}`,
+    `**Plan Mode:** ${getPlanMode()}`,
+    '',
+    '## Activity Timeline',
+    '',
+    ..._timeline.map(e=>`- **[${e.time}]** \`${e.type.toUpperCase()}\` — ${e.msg}`),
+    '',
+    '## Summary',
+    `- Total events: ${_timeline.length}`,
+    _execStart ? `- Execution duration: ${fmtSecs(((_execStop||Date.now())-_execStart)/1000)}` : '',
+    '',
+    '---',
+    '*Auto-generated by UX Intelligence Layer — Phase UX-IT*',
+  ].filter(l=>l!==undefined).join('\n');
+
+  fetch('/api/write-doc',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ path:'docs/system_execution_log.md', content:lines })
+  }).catch(()=>{
+    try { sessionStorage.setItem('uxit_exec_log',lines); } catch(_){}
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PUBLIC API
+   ══════════════════════════════════════════════════════════════════════════ */
+window.UXIT = {
+  clearTimeline: ()=>{ _timeline.length=0; _renderTimeline(); },
+  tlJump(idx) {
+    const area=$id('logArea');
+    if (!area||idx<0) return;
+    const lines=area.querySelectorAll('.log-line');
+    const target=lines[Math.min(Math.floor(idx*lines.length/Math.max(_timeline.length,1)), lines.length-1)];
+    if (target) target.scrollIntoView({behavior:'smooth',block:'center'});
+  },
+  openFile,
+  getLog: ()=>sessionStorage.getItem('uxit_exec_log')||'(no log)',
+  generateLog: _generateDoc,
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════════════════ */
+function boot() {
+  injectDOM();
+  patchIngestLogRow();
+  patchNxSetGlobalStatus();
+  patchSyncRunning();
+  patchAppendLogLine();
+  _initLogObserver();
+  updateModeBadge();
+
+  // Watch plan mode changes
+  const planEl=$id('nxActivePlanMode');
+  if (planEl) new MutationObserver(updateModeBadge).observe(planEl,{childList:true,characterData:true,subtree:true});
+
+  // Auto-generate doc on page unload
+  window.addEventListener('beforeunload', _generateDoc);
+  // Periodic doc gen while running
+  setInterval(()=>{ if(_execRunning&&_timeline.length>0) _generateDoc(); }, 60000);
+
+  console.log('[UX-IT] UX INTELLIGENCE LAYER ACTIVE — THINKING VISIBILITY + TIMELINE + EXECUTION FEEDBACK FULLY OPERATIONAL');
+}
+
+if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+else setTimeout(boot, 150);
+
+})();
+</script>
+
 </script>
