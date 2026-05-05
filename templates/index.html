@@ -12864,6 +12864,301 @@ setInterval(()=>{
 
 console.log('[Phase 35] Enterprise Autonomous System Dashboard active.');
 </script>
+
+<!-- ── FEEDBACK SYSTEM ──────────────────────────────────────────────────────── -->
+<style>
+#feedback-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9000;
+  background: linear-gradient(135deg, #7c5af0, #5b3fd4);
+  color: #fff;
+  border: none;
+  border-radius: 28px;
+  padding: 11px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 4px 18px rgba(124,90,240,.45);
+  transition: transform .15s, box-shadow .15s;
+  letter-spacing: .01em;
+}
+#feedback-fab:hover { transform: translateY(-2px); box-shadow: 0 7px 24px rgba(124,90,240,.55); }
+#feedback-fab:active { transform: translateY(0); }
+
+#feedback-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(3px);
+  align-items: center;
+  justify-content: center;
+}
+#feedback-overlay.open { display: flex; }
+
+#feedback-modal {
+  background: #1a1a2e;
+  border: 1px solid rgba(124,90,240,.3);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 460px;
+  padding: 28px 28px 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.7);
+  position: relative;
+}
+#feedback-modal h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  color: #e4e4f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#feedback-modal .fb-subtitle {
+  font-size: 12.5px;
+  color: #8880a8;
+  margin: 0 0 20px;
+}
+#feedback-modal .fb-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #8880a8;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background .12s, color .12s;
+}
+#feedback-modal .fb-close:hover { background: rgba(255,255,255,.06); color: #e4e4f0; }
+
+.fb-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9490b8;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 6px;
+}
+.fb-cats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.fb-cat {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 8px;
+  border: 1.5px solid rgba(124,90,240,.22);
+  background: rgba(124,90,240,.06);
+  color: #9490b8;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .13s, background .13s, color .13s;
+}
+.fb-cat:hover { border-color: rgba(124,90,240,.5); color: #c4b8ff; }
+.fb-cat.selected { border-color: #7c5af0; background: rgba(124,90,240,.18); color: #c4b8ff; }
+
+.fb-textarea {
+  width: 100%;
+  min-height: 110px;
+  background: #12112a;
+  border: 1.5px solid rgba(124,90,240,.2);
+  border-radius: 8px;
+  color: #e4e4f0;
+  font-size: 13.5px;
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  margin-bottom: 12px;
+  transition: border-color .13s;
+}
+.fb-textarea:focus { border-color: #7c5af0; }
+.fb-textarea::placeholder { color: #5e5c80; }
+
+.fb-email-input {
+  width: 100%;
+  background: #12112a;
+  border: 1.5px solid rgba(124,90,240,.2);
+  border-radius: 8px;
+  color: #e4e4f0;
+  font-size: 13.5px;
+  padding: 9px 12px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  margin-bottom: 20px;
+  transition: border-color .13s;
+}
+.fb-email-input:focus { border-color: #7c5af0; }
+.fb-email-input::placeholder { color: #5e5c80; }
+
+.fb-submit {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, #7c5af0, #5b3fd4);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: opacity .13s, transform .13s;
+  letter-spacing: .02em;
+}
+.fb-submit:hover { opacity: .9; transform: translateY(-1px); }
+.fb-submit:active { transform: translateY(0); }
+.fb-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+.fb-success {
+  text-align: center;
+  padding: 12px 0 6px;
+}
+.fb-success .fb-check { font-size: 44px; margin-bottom: 10px; }
+.fb-success h4 { margin: 0 0 6px; color: #e4e4f0; font-size: 16px; }
+.fb-success p { margin: 0; color: #8880a8; font-size: 13px; }
+
+.fb-err {
+  color: #ff6b6b;
+  font-size: 12.5px;
+  margin-bottom: 10px;
+  display: none;
+}
+</style>
+
+<button id="feedback-fab" onclick="openFeedbackModal()">
+  <span>🐛</span> Report Issue
+</button>
+
+<div id="feedback-overlay" onclick="closeFeedbackOnOverlay(event)">
+  <div id="feedback-modal">
+    <button class="fb-close" onclick="closeFeedbackModal()" title="Close">×</button>
+    <h3>🐛 Report an Issue</h3>
+    <p class="fb-subtitle">Help us improve — tell us what went wrong or what you'd like to see.</p>
+
+    <div id="fb-form-body">
+      <label class="fb-label">Category</label>
+      <div class="fb-cats">
+        <div class="fb-cat selected" data-cat="bug" onclick="selectFbCat(this)">🐛 Bug</div>
+        <div class="fb-cat" data-cat="suggestion" onclick="selectFbCat(this)">💡 Suggestion</div>
+        <div class="fb-cat" data-cat="confusion" onclick="selectFbCat(this)">😕 Confusion</div>
+      </div>
+
+      <label class="fb-label">Message</label>
+      <textarea id="fb-message" class="fb-textarea" placeholder="Describe the issue or idea in detail…"></textarea>
+
+      <label class="fb-label">Email (optional)</label>
+      <input id="fb-email" type="email" class="fb-email-input" placeholder="you@example.com — so we can follow up" />
+
+      <div id="fb-err" class="fb-err"></div>
+      <button class="fb-submit" id="fb-submit-btn" onclick="submitFeedback()">Send Report</button>
+    </div>
+
+    <div id="fb-success-body" class="fb-success" style="display:none">
+      <div class="fb-check">✅</div>
+      <h4>Feedback received!</h4>
+      <p>Thanks for helping make Nexora better. We'll review your report shortly.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var _fbCat = 'bug';
+
+  window.openFeedbackModal = function() {
+    document.getElementById('fb-form-body').style.display = '';
+    document.getElementById('fb-success-body').style.display = 'none';
+    document.getElementById('fb-err').style.display = 'none';
+    document.getElementById('fb-err').textContent = '';
+    document.getElementById('feedback-overlay').classList.add('open');
+    setTimeout(function(){ document.getElementById('fb-message').focus(); }, 80);
+  };
+
+  window.closeFeedbackModal = function() {
+    document.getElementById('feedback-overlay').classList.remove('open');
+  };
+
+  window.closeFeedbackOnOverlay = function(e) {
+    if (e.target === document.getElementById('feedback-overlay')) closeFeedbackModal();
+  };
+
+  window.selectFbCat = function(el) {
+    document.querySelectorAll('.fb-cat').forEach(function(c){ c.classList.remove('selected'); });
+    el.classList.add('selected');
+    _fbCat = el.getAttribute('data-cat');
+  };
+
+  window.submitFeedback = function() {
+    var msg   = (document.getElementById('fb-message').value || '').trim();
+    var email = (document.getElementById('fb-email').value || '').trim();
+    var errEl = document.getElementById('fb-err');
+    var btn   = document.getElementById('fb-submit-btn');
+
+    if (!msg || msg.length < 5) {
+      errEl.textContent = 'Please enter at least 5 characters.';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    var token = '';
+    try { token = localStorage.getItem('nx_access_token') || ''; } catch(e){}
+
+    fetch('/api/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? ('Bearer ' + token) : '',
+      },
+      body: JSON.stringify({ category: _fbCat, message: msg, email: email }),
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      btn.textContent = 'Send Report';
+      if (data.ok) {
+        document.getElementById('fb-form-body').style.display = 'none';
+        document.getElementById('fb-success-body').style.display = '';
+        document.getElementById('fb-message').value = '';
+        document.getElementById('fb-email').value = '';
+        setTimeout(closeFeedbackModal, 2800);
+      } else {
+        errEl.textContent = data.error || 'Submission failed. Please try again.';
+        errEl.style.display = 'block';
+      }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = 'Send Report';
+      errEl.textContent = 'Network error. Please try again.';
+      errEl.style.display = 'block';
+    });
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeFeedbackModal();
+  });
+
+  console.log('[Feedback] FEEDBACK SYSTEM ACTIVE — USER INPUT CAPTURED SUCCESSFULLY');
+})();
+</script>
 </body>
 </html>
 <script>

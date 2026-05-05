@@ -665,3 +665,46 @@ def admin_me():
         "email": g.admin_email,
         "role": g.admin_role,
     })
+
+
+# ── PART 13: Feedback viewer ──────────────────────────────────────────────────
+
+try:
+    import feedback as _feedback_mod
+    _FB_AVAIL = True
+except Exception:
+    _FB_AVAIL = False
+
+
+@admin_bp.route("/api/feedback", methods=["GET"])
+@require_role("support")
+def admin_list_feedback():
+    if not _FB_AVAIL:
+        return jsonify({"ok": False, "error": "Feedback module unavailable"}), 503
+    category  = request.args.get("category", "").strip()
+    user_id   = request.args.get("user_id", "").strip()
+    date_from = request.args.get("date_from", "").strip()
+    date_to   = request.args.get("date_to", "").strip()
+    limit     = min(int(request.args.get("limit", 100)), 500)
+    offset    = int(request.args.get("offset", 0))
+    try:
+        data = _feedback_mod.list_feedback(
+            category=category, user_id=user_id,
+            date_from=date_from, date_to=date_to,
+            limit=limit, offset=offset,
+        )
+        return jsonify({"ok": True, **data})
+    except Exception as e:
+        logger.error("[Admin/Feedback] list error: %s", e)
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@admin_bp.route("/api/feedback/stats", methods=["GET"])
+@require_role("support")
+def admin_feedback_stats():
+    if not _FB_AVAIL:
+        return jsonify({"ok": False, "error": "Feedback module unavailable"}), 503
+    try:
+        return jsonify({"ok": True, **_feedback_mod.get_feedback_stats()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500

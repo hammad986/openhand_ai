@@ -233,6 +233,7 @@ tr:hover td { background: var(--bg3); }
   <div class="nav-section">System</div>
   <div class="nav-item" onclick="showPanel('history')"><span class="icon">📜</span> Config History</div>
   <div class="nav-item" onclick="showPanel('killswitch')"><span class="icon">🛑</span> Kill Switch</div>
+  <div class="nav-item" onclick="showPanel('feedback')"><span class="icon">💬</span> User Feedback</div>
 
   <div class="sidebar-footer">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -523,6 +524,63 @@ tr:hover td { background: var(--bg3); }
       </div>
     </div>
 
+    <!-- ── User Feedback ── -->
+    <div id="panel-feedback" class="panel">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">📊 Feedback Summary</div>
+        <div class="grid4" id="fb-stats-row">
+          <div class="stat"><div class="stat-label">Total Submissions</div><div class="stat-value blue" id="fb-stat-total">—</div></div>
+          <div class="stat"><div class="stat-label">🐛 Bugs</div><div class="stat-value red" id="fb-stat-bug">—</div></div>
+          <div class="stat"><div class="stat-label">💡 Suggestions</div><div class="stat-value green" id="fb-stat-suggestion">—</div></div>
+          <div class="stat"><div class="stat-label">😕 Confusion</div><div class="stat-value yellow" id="fb-stat-confusion">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">All Feedback</div>
+        <div class="form-row" style="margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div class="form-group" style="min-width:150px">
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">CATEGORY</label>
+            <select id="fb-filter-cat" onchange="loadFeedback()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:13px;width:100%">
+              <option value="">All Categories</option>
+              <option value="bug">🐛 Bug</option>
+              <option value="suggestion">💡 Suggestion</option>
+              <option value="confusion">😕 Confusion</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width:160px">
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">USER ID</label>
+            <input id="fb-filter-user" placeholder="Filter by user ID…" oninput="loadFeedback()" style="width:100%" />
+          </div>
+          <div class="form-group" style="min-width:140px">
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">FROM DATE</label>
+            <input id="fb-filter-from" type="date" onchange="loadFeedback()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:13px" />
+          </div>
+          <div class="form-group" style="min-width:140px">
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">TO DATE</label>
+            <input id="fb-filter-to" type="date" onchange="loadFeedback()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:13px" />
+          </div>
+          <div class="form-group" style="align-self:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="clearFbFilters()">Clear</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadFeedback()" style="margin-left:6px">🔄 Refresh</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:44px">Cat</th>
+              <th>Message</th>
+              <th>User ID</th>
+              <th>Email</th>
+              <th>Session</th>
+              <th>Submitted</th>
+            </tr></thead>
+            <tbody id="fb-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text2)">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div id="fb-pagination" style="margin-top:12px;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text2)"></div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -607,6 +665,7 @@ const PANEL_TITLES = {
   routing: 'Model Routing', concurrency: 'Concurrency',
   'dynamic-providers': 'API Providers', history: 'Config History',
   killswitch: 'Kill Switch',
+  feedback: 'User Feedback',
 };
 
 function showPanel(name) {
@@ -625,6 +684,7 @@ function showPanel(name) {
     providers: loadProviderFlags, routing: loadRouting, concurrency: loadConcurrency,
     'dynamic-providers': loadDynamicProviders, history: loadHistory,
     killswitch: loadKillSwitch,
+    feedback: loadFeedback,
   };
   if (loaders[name]) loaders[name]();
 }
@@ -1126,6 +1186,85 @@ function updateKsUI(active) {
     sidebarDot.className = 'status-dot';
     sidebarTxt.textContent = 'Connected';
   }
+}
+
+// ── User Feedback ─────────────────────────────────────────────────────────────
+let fbPage = 0;
+const FB_LIMIT = 50;
+const FB_CAT_ICONS = { bug: '🐛', suggestion: '💡', confusion: '😕' };
+
+async function loadFeedback() {
+  fbPage = 0;
+  await _fetchFeedback();
+}
+
+async function _fetchFeedback() {
+  const cat      = document.getElementById('fb-filter-cat')?.value || '';
+  const userId   = (document.getElementById('fb-filter-user')?.value || '').trim();
+  const dateFrom = document.getElementById('fb-filter-from')?.value || '';
+  const dateTo   = document.getElementById('fb-filter-to')?.value || '';
+
+  const params = new URLSearchParams({ limit: FB_LIMIT, offset: fbPage * FB_LIMIT });
+  if (cat)      params.set('category',  cat);
+  if (userId)   params.set('user_id',   userId);
+  if (dateFrom) params.set('date_from', dateFrom);
+  if (dateTo)   params.set('date_to',   dateTo);
+
+  const [data, stats] = await Promise.all([
+    adminFetch(`/admin/api/feedback?${params}`),
+    adminFetch('/admin/api/feedback/stats'),
+  ]);
+
+  if (stats?.ok) {
+    setText('fb-stat-total',      stats.total ?? '—');
+    setText('fb-stat-bug',        stats.by_category?.bug ?? 0);
+    setText('fb-stat-suggestion', stats.by_category?.suggestion ?? 0);
+    setText('fb-stat-confusion',  stats.by_category?.confusion ?? 0);
+  }
+
+  const tbody = document.getElementById('fb-tbody');
+  if (!data?.ok) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red)">${esc(data?.error || 'Failed to load feedback')}</td></tr>`;
+    return;
+  }
+
+  if (!data.items?.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2)">No feedback yet.</td></tr>';
+    document.getElementById('fb-pagination').textContent = '';
+    return;
+  }
+
+  tbody.innerHTML = data.items.map(f => `
+    <tr>
+      <td title="${esc(f.category)}" style="font-size:18px;text-align:center">${FB_CAT_ICONS[f.category] || '❓'}</td>
+      <td style="max-width:340px;word-break:break-word;font-size:13px">${esc(f.message)}</td>
+      <td style="font-size:12px;color:var(--text2)">${esc(f.user_id)}</td>
+      <td style="font-size:12px;color:var(--text2)">${esc(f.email || '—')}</td>
+      <td style="font-size:11px;color:var(--text3);max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${esc(f.session_id)}">${esc(f.session_id || '—')}</td>
+      <td style="font-size:11px;color:var(--text3);white-space:nowrap">${fmtTime(f.timestamp)}</td>
+    </tr>
+  `).join('');
+
+  const pag = document.getElementById('fb-pagination');
+  const total = data.total || 0;
+  const from  = fbPage * FB_LIMIT + 1;
+  const to    = Math.min((fbPage + 1) * FB_LIMIT, total);
+  pag.innerHTML = `
+    Showing ${from}–${to} of ${total}
+    <button class="btn btn-ghost btn-sm" onclick="fbPrev()" ${fbPage === 0 ? 'disabled' : ''}>← Prev</button>
+    <button class="btn btn-ghost btn-sm" onclick="fbNext(${total})" ${to >= total ? 'disabled' : ''}>Next →</button>
+  `;
+}
+
+async function fbPrev() { if (fbPage > 0) { fbPage--; await _fetchFeedback(); } }
+async function fbNext(total) { if ((fbPage + 1) * FB_LIMIT < total) { fbPage++; await _fetchFeedback(); } }
+
+function clearFbFilters() {
+  ['fb-filter-cat','fb-filter-user','fb-filter-from','fb-filter-to'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  loadFeedback();
 }
 
 // ── Polling ───────────────────────────────────────────────────────────────────

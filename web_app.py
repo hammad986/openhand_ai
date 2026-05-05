@@ -10974,6 +10974,85 @@ def api_delete_notification(nid):
     return jsonify({"ok": changed})
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Feedback System — API endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+
+try:
+    import feedback as _feedback
+    _FEEDBACK_AVAILABLE = True
+except Exception as _fb_err:
+    import logging as _fblog
+    _fblog.getLogger(__name__).warning("[Feedback] Module unavailable: %s", _fb_err)
+    _FEEDBACK_AVAILABLE = False
+
+@app.route("/api/feedback", methods=["POST"])
+def api_submit_feedback():
+    """Submit a bug report, suggestion, or confusion note."""
+    if not _FEEDBACK_AVAILABLE:
+        return jsonify({"ok": False, "error": "Feedback system unavailable"}), 503
+
+    import flask as _fl
+    uid  = str(getattr(_fl.g, "user_id", "anon") or "anon")
+    sid  = str(getattr(_fl.g, "session_id", "") or "")
+    d    = request.get_json(force=True) or {}
+    category = (d.get("category") or "bug").strip().lower()
+    message  = (d.get("message") or "").strip()
+    email    = (d.get("email") or "").strip()
+
+    if not message:
+        return jsonify({"ok": False, "error": "Message is required"}), 400
+
+    try:
+        result = _feedback.submit_feedback(
+            user_id=uid, session_id=sid,
+            category=category, message=message, email=email,
+        )
+        return jsonify({"ok": True, **result}), 201
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    except Exception as e:
+        import logging as _log
+        _log.getLogger(__name__).error("[Feedback] submit error: %s", e)
+        return jsonify({"ok": False, "error": "Failed to submit feedback"}), 500
+
+
+@app.route("/api/feedback", methods=["GET"])
+def api_list_feedback():
+    """Admin: list all feedback with optional filters."""
+    if not _FEEDBACK_AVAILABLE:
+        return jsonify({"ok": False, "error": "Feedback system unavailable"}), 503
+
+    import flask as _fl
+    uid_param  = request.args.get("user_id", "").strip()
+    category   = request.args.get("category", "").strip()
+    date_from  = request.args.get("date_from", "").strip()
+    date_to    = request.args.get("date_to", "").strip()
+    limit      = min(int(request.args.get("limit", 100)), 500)
+    offset     = int(request.args.get("offset", 0))
+
+    try:
+        data = _feedback.list_feedback(
+            category=category, user_id=uid_param,
+            date_from=date_from, date_to=date_to,
+            limit=limit, offset=offset,
+        )
+        return jsonify({"ok": True, **data})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/feedback/stats", methods=["GET"])
+def api_feedback_stats():
+    """Admin: summary stats for the feedback system."""
+    if not _FEEDBACK_AVAILABLE:
+        return jsonify({"ok": False, "error": "Feedback system unavailable"}), 503
+    try:
+        return jsonify({"ok": True, **_feedback.get_feedback_stats()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 # ── Legal & Compliance Pages ──────────────────────────────────────────────────
 @app.route("/privacy-policy")
 def privacy_policy():
