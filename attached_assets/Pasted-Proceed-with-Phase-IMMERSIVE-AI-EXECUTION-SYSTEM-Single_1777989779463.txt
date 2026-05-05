@@ -1,0 +1,218 @@
+Proceed with Phase: IMMERSIVE AI EXECUTION SYSTEM (Single-Screen Hybrid UX + Real Execution Engine)
+
+This is a ZERO-COMPROMISE phase.
+The system must transition from a “log viewer” into a true “AI working environment”.
+
+Do NOT simulate. Do NOT fake output.
+Everything must reflect real execution state.
+
+🎯 OBJECTIVE
+
+Build a single unified interface where:
+- User chats with AI
+- AI executes tasks in real-time
+- Code appears live in actual files
+- Terminal shows real commands
+- User can intervene at ANY moment
+
+This is NOT a UI feature. This is a SYSTEM BEHAVIOR LAYER.
+
+---
+
+🧱 PART 1 — SINGLE SCREEN IMMERSIVE LAYOUT
+
+Replace tab-based UX with unified layout:
+
+LEFT PANEL:
+- Chat interface (persistent)
+- Editable prompt input
+- Message history
+
+CENTER PANEL:
+- Live Execution Workspace
+    - Code Editor (real files)
+    - File tree (session-based workspace)
+    - Diff overlay for changes
+
+RIGHT PANEL:
+- Terminal (real execution output)
+- Execution pipeline (Planning → Coding → Debugging → Done)
+- Step-level status + controls
+
+No tab switching allowed.
+All elements visible simultaneously.
+
+---
+
+🧠 PART 2 — REAL FILE SYSTEM INTEGRATION
+
+- All generated code MUST be written to actual session workspace
+- Files must persist per session_id
+- Introduce workspace structure:
+
+/workspace/{user_id}/{session_id}/
+
+- Code editor must:
+    - live update when AI writes
+    - allow manual edits by user
+    - track file versions
+
+Add:
+- file versioning
+- last modified tracking
+- conflict-safe write mechanism
+
+---
+
+⚙️ PART 3 — SANDBOXED TERMINAL EXECUTION
+
+Implement REAL execution layer (NOT logs):
+
+- Use sandbox (Docker or restricted subprocess)
+- Allow ONLY safe commands (whitelist)
+- Block:
+    - rm -rf
+    - system-level access
+    - network abuse
+
+Terminal must:
+- show command BEFORE execution
+- stream real stdout/stderr
+- show exit status
+
+Color coding:
+- command → blue
+- success → green
+- error → red
+- warning → amber
+
+---
+
+🧠 PART 4 — EXECUTION STATE ENGINE (CRITICAL)
+
+Introduce execution controller:
+
+States:
+- idle
+- planning
+- coding
+- executing
+- debugging
+- paused
+- stopped
+- completed
+
+System must support:
+
+1. Pause:
+   - freeze execution loop
+   - keep state intact
+
+2. Stop:
+   - terminate execution safely
+
+3. Edit mid-run:
+   - invalidate current step
+   - rebuild context
+   - resume from edited state
+
+4. Step rerun:
+   - rerun specific failed step only
+
+---
+
+🔄 PART 5 — SSE REAL-TIME SYNC (EXTEND EXISTING)
+
+Upgrade SSE:
+
+Events must include:
+- file_write
+- terminal_command
+- terminal_output
+- step_change
+- state_change
+- error
+
+All UI panels must react instantly.
+
+---
+
+🛡️ PART 6 — CONFLICT PROTECTION SYSTEM
+
+When both AI and user modify files:
+
+- introduce file lock system
+- or version diff resolution
+
+Prevent:
+- overwrite conflicts
+- data corruption
+
+Add:
+- “AI editing…” indicator
+- “User override” option
+
+---
+
+🧠 PART 7 — USER CONTROL LAYER
+
+Add visible controls:
+
+- Pause
+- Stop
+- Resume
+- Rerun step
+- Edit prompt (inline)
+
+These must directly control backend execution state.
+
+---
+
+⚠️ PART 8 — BETA SAFETY LIMITS
+
+Enforce:
+
+- max steps per session
+- max tokens per run
+- no external deployment without confirmation
+- restricted command execution
+
+Kill conditions:
+- loop detection
+- token limit breach
+
+---
+
+🎨 PART 9 — UX POLISH (CRITICAL FOR TRUST)
+
+- No fake typing
+- No delay animations
+- Everything must be real-time
+
+Add:
+
+- “AI is editing file X”
+- “Running command…”
+- “Fixing error…”
+
+User must ALWAYS know what AI is doing.
+
+---
+
+🚀 FINAL RESULT
+
+System must confirm:
+
+"IMMERSIVE AI EXECUTION SYSTEM COMPLETE — REAL FILE SYSTEM + SANDBOX TERMINAL + FULL USER CONTROL + SINGLE SCREEN UX ACTIVE"
+
+---
+
+STRICT RULES:
+
+- Do NOT break existing APIs
+- Do NOT simulate outputs
+- Do NOT skip safety checks
+- If unsure → fallback to safe execution
+
+Quality > speed
+Precision > assumptions

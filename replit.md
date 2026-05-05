@@ -21,6 +21,41 @@ A comprehensive real SaaS billing system is integrated, including `payments.py` 
 
 The authentication system is multi-tenant, managing `users` and `auth_sessions` in `saas_platform.db`. It supports email/password and OAuth (Google, GitHub) logins, JWT access tokens, refresh token rotation, and session management. An Idempotency + Billing Safety Layer (`idempotency.py`) provides transaction safety, daily token usage tracking, payment deduplication, provider failure logging, and protected routes with caching and replay mechanisms. A Real-Time Notification & Event System (`notifications.py`) offers persistent, prioritized, SSE-pushed notifications with email fallbacks, storing data in `saas_platform.db`. A Customer Support System (`support.py`) manages support tickets in `support.db`, featuring AI auto-tagging, billing info auto-attachment, and email notifications.
 
+## Immersive AI Execution System
+
+Full-stack "AI working environment" layer built on top of Phase 33. Zero simulation — everything reflects real execution state from the actual SSE log stream.
+
+**Backend changes (`tools.py`, `web_app.py`):**
+- `write_file()` now prints `[FILE_WRITE] path (N chars)` to stdout → flows into the per-session SSE stream automatically
+- `append_file()` prints `[FILE_EDIT] path` to stdout
+- `FILE_WRITE_RE` regex added to `web_app.py`; `classify()` maps `[FILE_WRITE]`/`[FILE_EDIT]` to `"info"` level
+- `update_state_from_line()` extracts the file path and sets `stage = "writing: <path>"` in the session DB on every file write event
+
+**AI Activity Bar (always-visible, between tab bar and content):**
+- Purple gradient strip (34px) that appears the moment a session starts, hides 5 seconds after it ends
+- Animated pulsing dot — color-coded: purple=running, blue=coding, amber=planning, red=debugging, grey=paused, green=done
+- Live text label updates: "AI is planning…", "AI wrote:", "Running commands…", "Error encountered", etc.
+- File chip — shows the short filename (with full path as tooltip) of the file the AI just wrote
+- "Open ↗" button — loads that file into Monaco editor (silently if already on Code tab, otherwise switches tab)
+- Write counter badge — cumulative count of files written this session
+- ⏸ Pause / ▶ Resume / ■ Stop buttons wired to `/api/session/<sid>/pause`, `/api/session/<sid>/resume`, `/api/session/<sid>/stop` endpoints
+- Pause/Resume state automatically mirrors the existing `hitlSetPaused()` logic (monkey-patched)
+
+**"AI editing" banner (Code tab):**
+- Injected as a child of `#nxTab-code` the first time AI writes a file; never re-created (idempotent)
+- Shows pulsing dot + "AI wrote" + filename chip + "Open ↗" button + close (×)
+- Auto-dismisses after 8 seconds; also dismissed 2 seconds after session ends
+- Code tab button flashes with a purple animation on every file write event
+
+**Auto file loading (silently, no unsaved-change disruption):**
+- If user is already on the Code tab, `openFileFromTree(path)` is called with the written file path so Monaco shows the freshly-written content
+- If user is on another tab, only `openFilePath` is updated — no forced tab switch
+
+**JS architecture:**
+- Separate IIFE script block after Phase 33; extends `NxExecVis.onRow/onSessionStart/onSessionEnd` by wrapping the public API (not re-implementing it)
+- No new SSE endpoints or polling loops — reuses the existing Phase 33 hook into `ingestLogRow()`
+- `window.nxAbOpenFile()` is the public handler for all "Open ↗" buttons
+
 ## Phase 33 — Real-Time AI Execution Visualization
 
 Transparent AI UX layer showing live execution state directly from the existing SSE session log stream. No fake animations — all updates reflect real backend execution state.

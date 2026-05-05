@@ -1333,6 +1333,7 @@ FINAL_RE      = re.compile(r"\[FINAL CHECK\]\s*(.+)", re.IGNORECASE)
 RESULT_RE     = re.compile(r"^\s*(?:📋\s*)?Result:\s*(.+)", re.IGNORECASE)
 SUCCESS_HINT  = re.compile(r"(?:✅|\bsuccess\b|\bdone\b|\bcompleted\b)", re.IGNORECASE)
 FAILURE_HINT  = re.compile(r"(?:❌|\bfailed\b|\berror\b|\bunable to\b)", re.IGNORECASE)
+FILE_WRITE_RE = re.compile(r"\[FILE_(?:WRITE|EDIT)\]\s*([^\s(]+)", re.IGNORECASE)
 
 
 def classify(line):
@@ -1343,6 +1344,8 @@ def classify(line):
         return "validation"
     if any(t in s for t in ("[ROUTE]", "[STAGE]", "[STEP", "[ESCALATION]",
                             "[RETRY", "[FALLBACK]", "[MODE]")):
+        return "info"
+    if "[FILE_WRITE]" in s or "[FILE_EDIT]" in s:
         return "info"
     if "✅" in line or "[SUCCESS]" in s or " DONE" in s:
         return "success"
@@ -1390,6 +1393,8 @@ def update_state_from_line(sid, line):
     m = RESULT_RE.match(line)
     if m and not (db_session(sid) or {}).get("result"):
         upd["result"] = m.group(1).strip()
+    m = FILE_WRITE_RE.search(line)
+    if m: upd["stage"] = f"writing: {m.group(1)}"
     if upd:
         db_update_session(sid, **upd)
 

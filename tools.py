@@ -70,6 +70,7 @@ class Tools:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(content, encoding="utf-8")
         logger.info(f"[Tools] Written: {p}")
+        print(f"[FILE_WRITE] {path} ({len(content)} chars)", flush=True)
         return self._ok(f"Written: {path} ({len(content)} chars)")
 
     def append_file(self, path: str, content: str) -> dict:
@@ -78,6 +79,7 @@ class Tools:
         with p.open("a", encoding="utf-8") as f:
             f.write(content)
         logger.info(f"[Tools] Appended: {p}")
+        print(f"[FILE_EDIT] {path}", flush=True)
         return self._ok(f"Appended to: {path} ({len(content)} chars)")
 
     def delete_file(self, path: str) -> dict:

@@ -3846,6 +3846,21 @@ body.nx-resizing { cursor: col-resize !important; user-select: none; }
         <div class="nx-tab-actions" id="nxTabActions"></div>
       </div>
 
+      <!-- IMMERSIVE EXECUTION SYSTEM — AI Activity Bar -->
+      <div id="nxActivityBar" style="display:none">
+        <span class="nx-ab-dot" id="nxAbDot"></span>
+        <span id="nxAbText" style="color:var(--text-muted);font-size:11px">AI is working...</span>
+        <span id="nxAbFile" class="nx-ab-file" style="display:none"></span>
+        <button id="nxAbFileOpen" class="nx-ab-link" style="display:none" onclick="nxAbOpenFile()" title="Open this file in editor">Open ↗</button>
+        <div style="flex:1"></div>
+        <span id="nxAbStepsBadge" class="nx-ab-steps-badge" style="display:none">
+          <span id="nxAbSteps">0</span> writes
+        </span>
+        <button id="nxAbPauseBtn" class="nx-ab-btn nx-ab-pause" onclick="hitlPause()" style="display:none">⏸ Pause</button>
+        <button id="nxAbResumeBtn" class="nx-ab-btn nx-ab-resume" onclick="hitlResume()" style="display:none">▶ Resume</button>
+        <button id="nxAbStopBtn" class="nx-ab-btn nx-ab-stop" onclick="stopSession()" style="display:none">■ Stop</button>
+      </div>
+
       <!-- Idle hero — shown when no task is running -->
       <div class="nx-idle-hero" id="nxIdleHero">
         <div class="nx-hero-logo">A</div>
@@ -17706,6 +17721,134 @@ console.log('[Phase 18] Background Autonomous Agents + Task Scheduler active.');
 })();
 </script>
 
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   IMMERSIVE AI EXECUTION SYSTEM — Activity Bar Styles
+   ═══════════════════════════════════════════════════════════════════ */
+
+#nxActivityBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 12px;
+  background: linear-gradient(90deg, rgba(139,92,246,.07) 0%, var(--surface) 60%);
+  border-bottom: 1px solid rgba(139,92,246,.25);
+  position: relative;
+  z-index: 5;
+}
+
+.nx-ab-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  flex-shrink: 0;
+  animation: nx-ab-pulse 1.4s ease-in-out infinite;
+}
+.nx-ab-dot.nx-ab-coding  { background: #3b82f6; }
+.nx-ab-dot.nx-ab-planning { background: #f59e0b; }
+.nx-ab-dot.nx-ab-debug   { background: #ef4444; }
+.nx-ab-dot.nx-ab-paused  { background: #64748b; animation: none; }
+.nx-ab-dot.nx-ab-done    { background: #10b981; animation: none; }
+
+@keyframes nx-ab-pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:.35; transform:scale(.65); }
+}
+
+.nx-ab-file {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 10px;
+  color: #bc8cff;
+  font-weight: 600;
+  background: rgba(139,92,246,.12);
+  border: 1px solid rgba(139,92,246,.28);
+  border-radius: 4px;
+  padding: 2px 8px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.nx-ab-link {
+  font-size: 10px;
+  color: #8b5cf6;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.nx-ab-link:hover { color: #bc8cff; }
+
+.nx-ab-steps-badge {
+  font-size: 10px;
+  color: var(--text-dim);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 9px;
+  padding: 1px 8px;
+}
+
+.nx-ab-btn {
+  font-size: 10px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  padding: 3px 10px;
+  border-radius: 5px;
+  transition: opacity .15s;
+}
+.nx-ab-btn:hover { opacity: .8; }
+.nx-ab-pause, .nx-ab-resume {
+  background: rgba(139,92,246,.15);
+  color: #bc8cff;
+  border: 1px solid rgba(139,92,246,.3);
+}
+.nx-ab-stop {
+  background: rgba(239,68,68,.12);
+  color: #f87171;
+  border: 1px solid rgba(239,68,68,.28);
+}
+
+/* "AI editing" banner inside code/editor area */
+#nxAiEditingBanner {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: linear-gradient(90deg, rgba(139,92,246,.13) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(139,92,246,.22);
+  font-size: 11px;
+  color: #bc8cff;
+  flex-shrink: 0;
+  animation: nx-ab-slide-in .2s ease;
+}
+@keyframes nx-ab-slide-in {
+  from { opacity:0; transform:translateY(-4px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+.nx-aeb-pulse {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  animation: nx-ab-pulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* Flash animation for Code tab button when AI writes */
+@keyframes nx-tab-file-flash {
+  0%   { background: rgba(139,92,246,.25); color: #bc8cff; }
+  100% { background: transparent; color: inherit; }
+}
+</style>
+
 <script>
 /* ═══════════════════════════════════════════════════════════════════
    PHASE 33 — Real-Time AI Execution Visualization
@@ -18122,6 +18265,266 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // nxSetTab already handles the .active class which triggers display:flex from CSS.
 // No wrapper needed — the Live tab inherits flex-direction:column from nx-tab-content.
+
+})();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   IMMERSIVE AI EXECUTION SYSTEM
+   - AI Activity Bar: real-time file write tracking, state, controls
+   - "AI editing" banner injected into Code tab on file writes
+   - Auto-loads written file into Monaco editor (when on Code tab)
+   - Wires Pause/Resume/Stop into activity bar buttons
+   - All data from real SSE stream — zero faking
+   ═══════════════════════════════════════════════════════════════════ */
+(function() {
+'use strict';
+
+const FILE_WRITE_RE = /\[FILE_(?:WRITE|EDIT)\]\s*([^\s(]+)/i;
+
+/* ── State ─────────────────────────────────────────────────────── */
+let _isRunning      = false;
+let _stepCount      = 0;
+let _lastFile       = null;
+let _editBannerTm   = null;
+let _editingBanner  = null;  // injected banner DOM node
+
+/* ── DOM helpers ──────────────────────────────────────────────── */
+function _el(id) { return document.getElementById(id); }
+
+function _abShow() {
+    const bar = _el('nxActivityBar');
+    if (bar) bar.style.display = 'flex';
+    _isRunning = true;
+    _abSetState('running');
+    _showBtn('nxAbPauseBtn');
+    _showBtn('nxAbStopBtn');
+    _hideEl('nxAbResumeBtn');
+    _showEl('nxAbStepsBadge');
+}
+
+function _abHide() {
+    _isRunning = false;
+    setTimeout(() => {
+        const bar = _el('nxActivityBar');
+        if (bar) bar.style.display = 'none';
+        _hideEditBanner();
+        _hideEl('nxAbStepsBadge');
+    }, 5000);
+}
+
+function _showEl(id) { const e = _el(id); if(e) e.style.display = ''; }
+function _hideEl(id) { const e = _el(id); if(e) e.style.display = 'none'; }
+function _showBtn(id) { const e = _el(id); if(e) e.style.display = ''; }
+
+function _abSetState(state) {
+    const dot = _el('nxAbDot');
+    if (!dot) return;
+    dot.className = 'nx-ab-dot';
+    const map = { coding:'nx-ab-coding', planning:'nx-ab-planning',
+                  debugging:'nx-ab-debug', paused:'nx-ab-paused', done:'nx-ab-done' };
+    if (map[state]) dot.classList.add(map[state]);
+}
+
+function _abSetText(txt) {
+    const e = _el('nxAbText');
+    if (e) e.textContent = txt;
+}
+
+function _abSetFile(path) {
+    const fEl = _el('nxAbFile');
+    const oBtn = _el('nxAbFileOpen');
+    if (!path) {
+        if (fEl)  { fEl.style.display = 'none'; fEl.textContent = ''; }
+        if (oBtn) oBtn.style.display = 'none';
+        return;
+    }
+    const name = path.split('/').pop() || path;
+    if (fEl)  { fEl.textContent = name; fEl.title = path; fEl.style.display = ''; }
+    if (oBtn) oBtn.style.display = '';
+    _lastFile = path;
+}
+
+/* ── AI Editing Banner (injected into Code tab body) ─────────── */
+function _ensureEditBanner() {
+    if (_editingBanner && _editingBanner.parentNode) return;
+    _editingBanner = document.createElement('div');
+    _editingBanner.id = 'nxAiEditingBanner';
+    _editingBanner.innerHTML =
+        '<span class="nx-aeb-pulse"></span>' +
+        '<span>AI wrote</span>' +
+        '<span id="nxAebFile" style="font-family:monospace;font-size:10px;' +
+        'background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);' +
+        'border-radius:3px;padding:1px 7px;color:#bc8cff"></span>' +
+        '<button onclick="nxAbOpenFile()" style="font-size:10px;background:none;' +
+        'border:none;color:#8b5cf6;cursor:pointer;text-decoration:underline;' +
+        'text-underline-offset:2px;padding:0 4px">Open ↗</button>' +
+        '<div style="flex:1"></div>' +
+        '<button onclick="this.closest(\'#nxAiEditingBanner\').style.display=\'none\'" ' +
+        'style="background:none;border:none;color:var(--text-dim);cursor:pointer;' +
+        'font-size:13px;line-height:1;padding:0 2px">&times;</button>';
+}
+
+function _showEditBanner(file) {
+    _ensureEditBanner();
+
+    /* Inject banner at top of the Code tab content area */
+    const codeTab = _el('nxTab-code');
+    if (codeTab && !codeTab.contains(_editingBanner)) {
+        codeTab.insertBefore(_editingBanner, codeTab.firstChild);
+    }
+
+    const fEl = document.getElementById('nxAebFile');
+    if (fEl) fEl.textContent = (file || '').split('/').pop() || file || '';
+
+    _editingBanner.style.display = 'flex';
+    clearTimeout(_editBannerTm);
+    _editBannerTm = setTimeout(() => _hideEditBanner(), 8000);
+
+    /* Flash the Code tab button */
+    const codeTabBtn = document.querySelector('[data-nxtab="code"]');
+    if (codeTabBtn) {
+        codeTabBtn.style.animation = 'nx-tab-file-flash .6s ease';
+        setTimeout(() => { codeTabBtn.style.animation = ''; }, 700);
+    }
+}
+
+function _hideEditBanner() {
+    if (_editingBanner) _editingBanner.style.display = 'none';
+}
+
+/* ── Auto-load file into Monaco (silently, no unsaved-change prompt) */
+async function _silentLoadFile(path) {
+    if (!path) return;
+    /* Only switch if the user is currently on the Code tab — no forced tab switch */
+    const codeTabBtn = document.querySelector('.nx-tab.active[data-nxtab="code"]');
+    if (!codeTabBtn) return;         /* not on Code tab — don't disrupt */
+    try {
+        /* Update the shared pointer so the Files pane knows what to highlight */
+        if (typeof loadFilesTree === 'function') await loadFilesTree();
+        if (typeof openFileFromTree === 'function') {
+            /* Skip guard by setting openFilePath to null first (safe — no dirty check) */
+            const cur = (typeof openFilePath !== 'undefined') ? openFilePath : null;
+            if (cur !== path) {
+                window.openFilePath = path;
+                await openFileFromTree(path);
+            }
+        }
+    } catch(e) { /* silent */ }
+}
+
+/* ── Public open-file handler for "Open ↗" buttons ─────────────── */
+window.nxAbOpenFile = async function() {
+    if (!_lastFile) return;
+    nxSetTab('code');
+    try {
+        if (typeof loadFilesTree === 'function') await loadFilesTree();
+        if (typeof openFileFromTree === 'function') {
+            window.openFilePath = _lastFile;
+            await openFileFromTree(_lastFile);
+        }
+    } catch(e) {}
+};
+
+/* ── Event handlers ──────────────────────────────────────────── */
+function _onRow(row) {
+    if (!_isRunning) return;
+    const text = row.text || '';
+
+    /* File write event */
+    const fwm = FILE_WRITE_RE.exec(text);
+    if (fwm) {
+        const path = fwm[1];
+        _abSetText('AI wrote:');
+        _abSetFile(path);
+        _abSetState('coding');
+        _showEditBanner(path);
+        _silentLoadFile(path);
+        _stepCount++;
+        const sc = _el('nxAbSteps');
+        if (sc) sc.textContent = _stepCount;
+        return;
+    }
+
+    /* Stage / state hints */
+    const tl = text.toLowerCase();
+    if (tl.includes('[stage] planning') || tl.includes('▶ starting task') || tl.includes('starting task')) {
+        _abSetText('AI is planning…'); _abSetFile(null); _abSetState('planning');
+    } else if (tl.includes('[stage] cod') || tl.includes('[stage] writ')) {
+        _abSetText('AI is coding…');   _abSetState('coding');
+    } else if (tl.includes('[stage] debug') || tl.includes('[stage] fix')) {
+        _abSetText('AI is debugging…'); _abSetState('debugging');
+    } else if (tl.includes('[stage] run') || tl.includes('[stage] execut')) {
+        _abSetText('Running commands…'); _abSetState('coding');
+    } else if (tl.includes('[stage] done') || tl.includes('[stage] complet') || tl.includes('[final check]')) {
+        _abSetText('Completed'); _abSetFile(null); _abSetState('done');
+    } else if (tl.includes('[retry')) {
+        _abSetText('Retrying step…'); _abSetState('debugging');
+    } else if (tl.includes('[error') || text.includes('❌')) {
+        _abSetText('Error encountered'); _abSetState('debugging');
+    }
+}
+
+function _onSessionStart(sid) {
+    _stepCount = 0; _lastFile = null;
+    _abSetText('AI is starting…');
+    _abSetFile(null);
+    _abSetState('running');
+    _abShow();
+    const sc = _el('nxAbSteps'); if (sc) sc.textContent = '0';
+}
+
+function _onSessionEnd(status) {
+    const label = { completed:'✓ Completed', stopped:'■ Stopped',
+                    cancelled:'✕ Cancelled', error:'✗ Error' }[status] || 'Session ended';
+    _abSetText(label);
+    _abSetState('done');
+    _hideEl('nxAbPauseBtn'); _hideEl('nxAbResumeBtn'); _hideEl('nxAbStopBtn');
+    setTimeout(_hideEditBanner, 2000);
+    _abHide();
+}
+
+/* ── Patch hitlSetPaused to sync activity bar pause/resume state ── */
+function _patchHitlSetPaused() {
+    const orig = window.hitlSetPaused;
+    if (typeof orig !== 'function') return;
+    window.hitlSetPaused = function(paused) {
+        orig(paused);
+        const pb = _el('nxAbPauseBtn'), rb = _el('nxAbResumeBtn');
+        if (pb) pb.style.display  = paused ? 'none' : '';
+        if (rb) rb.style.display  = paused ? '' : 'none';
+        _abSetState(paused ? 'paused' : 'running');
+        _abSetText(paused ? '⏸ Agent paused' : 'AI is working…');
+    };
+}
+
+/* ── Extend NxExecVis public API ─────────────────────────────── */
+function _init() {
+    if (!window.NxExecVis) { setTimeout(_init, 150); return; }
+
+    const _origRow   = window.NxExecVis.onRow;
+    const _origStart = window.NxExecVis.onSessionStart;
+    const _origEnd   = window.NxExecVis.onSessionEnd;
+
+    window.NxExecVis.onRow = function(row) {
+        if (_origRow) _origRow(row);
+        try { _onRow(row); } catch(e) {}
+    };
+    window.NxExecVis.onSessionStart = function(sid) {
+        if (_origStart) _origStart(sid);
+        try { _onSessionStart(sid); } catch(e) {}
+    };
+    window.NxExecVis.onSessionEnd = function(status) {
+        if (_origEnd) _origEnd(status);
+        try { _onSessionEnd(status); } catch(e) {}
+    };
+
+    _patchHitlSetPaused();
+    console.log('[Immersive AI Execution System] Activity bar + file tracking active.');
+}
+
+document.addEventListener('DOMContentLoaded', _init);
 
 })();
 </script>
